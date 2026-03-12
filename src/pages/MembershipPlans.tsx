@@ -1,263 +1,343 @@
-import React from 'react';
-import { Link } from 'react-router-dom';
+import React, { useEffect, useState, useCallback } from 'react';
+import { supabase } from '../lib/supabase';
+import { useAuth } from '../contexts/AuthContext';
+import { useRealtimeSubscription } from '../hooks/useRealtimeSubscription';
+import { useToast } from '../components/ToastProvider';
+
+interface ConfirmModal {
+  isOpen: boolean;
+  title: string;
+  message: string;
+  onConfirm: () => void;
+}
 
 export default function MembershipPlans() {
+  const { gymId } = useAuth();
+  const { showToast } = useToast();
+  const [plans, setPlans] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [showModal, setShowModal] = useState(false);
+  const [editingPlan, setEditingPlan] = useState<any>(null);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [confirmModal, setConfirmModal] = useState<ConfirmModal>({ isOpen: false, title: '', message: '', onConfirm: () => { } });
+  const [formData, setFormData] = useState({
+    name: '',
+    price: '',
+    duration_days: '30',
+    duration_type: 'DAYS',
+    description: '',
+    is_popular: false,
+  });
+
+  const fetchPlans = useCallback(async () => {
+    if (!gymId) return;
+    setLoading(true);
+    try {
+      const { data, error } = await supabase
+        .from('plans')
+        .select('id, name, price, duration_days, duration_type, description, is_popular')
+        .eq('gym_id', gymId)
+        .order('price', { ascending: true });
+      if (error) throw error;
+      setPlans(data || []);
+    } catch (error) {
+      console.error('Error fetching plans:', error);
+      showToast('Failed to load plans.', 'error');
+    } finally {
+      setLoading(false);
+    }
+  }, [gymId, showToast]);
+
+  useEffect(() => {
+    fetchPlans();
+  }, [fetchPlans]);
+
+  useRealtimeSubscription({ table: 'plans', gymId, onChange: fetchPlans });
+
+  const openCreateModal = () => {
+    setEditingPlan(null);
+    setFormData({ name: '', price: '', duration_days: '30', duration_type: 'DAYS', description: '', is_popular: false });
+    setShowModal(true);
+  };
+
+  const openEditModal = (plan: any) => {
+    setEditingPlan(plan);
+    setFormData({
+      name: plan.name,
+      price: String(plan.price),
+      duration_days: String(plan.duration_days),
+      duration_type: plan.duration_type || 'DAYS',
+      description: plan.description || '',
+      is_popular: plan.is_popular || false,
+    });
+    setShowModal(true);
+  };
+
+  const handleCloseModal = () => {
+    setShowModal(false);
+    setEditingPlan(null);
+  };
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!gymId) return;
+    setIsSubmitting(true);
+    try {
+      const payload = {
+        gym_id: gymId,
+        name: formData.name,
+        price: parseFloat(formData.price),
+        duration_days: parseInt(formData.duration_days),
+        duration_type: formData.duration_type,
+        description: formData.description || null,
+        is_popular: formData.is_popular,
+      };
+
+      if (editingPlan) {
+        const { error } = await supabase.from('plans').update(payload).eq('id', editingPlan.id);
+        if (error) throw error;
+        showToast('Plan updated successfully!', 'success');
+      } else {
+        const { error } = await supabase.from('plans').insert([payload]);
+        if (error) throw error;
+        showToast('Plan created successfully!', 'success');
+      }
+
+      handleCloseModal();
+      fetchPlans();
+    } catch (error: any) {
+      console.error('Error saving plan:', error);
+      showToast(error.message || 'Failed to save plan.', 'error');
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  const handleDelete = (plan: any) => {
+    setConfirmModal({
+      isOpen: true,
+      title: 'Delete Plan',
+      // BUG-12 FIXED: styled confirm before delete
+      message: `Are you sure you want to delete the "${plan.name}" plan? Members currently on this plan will lose their plan assignment.`,
+      onConfirm: async () => {
+        setConfirmModal(prev => ({ ...prev, isOpen: false }));
+        try {
+          // BUG-12 FIXED: Check for members using this plan first
+          const { count } = await supabase
+            .from('members')
+            .select('id', { count: 'exact', head: true })
+            .eq('plan_id', plan.id)
+            .eq('gym_id', gymId);
+
+          if ((count || 0) > 0) {
+            showToast(`Cannot delete — ${count} member(s) are on this plan. Reassign them first.`, 'error');
+            return;
+          }
+
+          const { error } = await supabase.from('plans').delete().eq('id', plan.id);
+          if (error) throw error;
+          showToast('Plan deleted.', 'success');
+          fetchPlans();
+        } catch (error: any) {
+          showToast(error.message || 'Failed to delete plan.', 'error');
+        }
+      },
+    });
+  };
+
+  const planColors = [
+    { bg: 'bg-white dark:bg-slate-900', border: 'border-slate-200 dark:border-slate-800', text: 'text-neutral-text dark:text-white', sub: 'text-slate-500', shadow: 'shadow-sm hover:shadow-xl' },
+    { bg: 'bg-white dark:bg-slate-900', border: 'border-2 border-primary-default', text: 'text-neutral-text dark:text-white', sub: 'text-primary-default', shadow: 'shadow-2xl shadow-primary-default/10 scale-[1.02] z-10' },
+    { bg: 'bg-slate-900', border: 'border-slate-800', text: 'text-white', sub: 'text-primary-default', shadow: 'shadow-sm hover:shadow-xl' },
+  ];
+
   return (
-    <div className="bg-background-light dark:bg-background-dark font-display text-slate-900 dark:text-slate-100 min-h-screen">
-      <div className="relative flex flex-col min-h-screen w-full">
-        {/* Top Navigation Bar */}
-        <header className="flex items-center justify-between border-b border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 px-6 md:px-10 py-4 sticky top-0 z-50">
-          <div className="flex items-center gap-4">
-            <div className="text-primary size-8">
-              <span className="material-symbols-outlined text-3xl">fitness_center</span>
-            </div>
-            <h2 className="text-xl font-bold leading-tight tracking-tight">LiftLegend</h2>
-          </div>
-          <div className="flex items-center gap-3">
-            <button className="flex items-center justify-center rounded-lg h-10 w-10 bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 hover:bg-slate-200 transition-colors">
-              <span className="material-symbols-outlined">notifications</span>
-            </button>
-            <button className="flex items-center justify-center rounded-lg h-10 w-10 bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 hover:bg-slate-200 transition-colors">
-              <span className="material-symbols-outlined">settings</span>
-            </button>
-            <div className="h-8 w-px bg-slate-200 dark:bg-slate-700 mx-2"></div>
-            <button className="flex items-center gap-2 rounded-lg bg-slate-100 dark:bg-slate-800 px-3 py-1.5">
-              <div className="h-7 w-7 rounded-full bg-primary/20 flex items-center justify-center">
-                <span className="material-symbols-outlined text-primary text-lg">person</span>
-              </div>
-              <span className="text-sm font-semibold hidden sm:block">Admin</span>
-            </button>
-          </div>
-        </header>
+    <div className="p-6 lg:p-8 space-y-6">
+      {/* Page Header */}
+      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+        <div>
+          <h1 className="text-2xl lg:text-3xl font-display font-extrabold text-neutral-text dark:text-white tracking-tight">
+            Membership Plans
+          </h1>
+          <p className="text-slate-500 dark:text-slate-400 text-sm mt-1">Configure and manage your gym's subscription tiers</p>
+        </div>
+        <button
+          onClick={openCreateModal}
+          className="flex items-center gap-2 bg-primary-default hover:brightness-110 text-white px-5 py-2.5 rounded-xl font-bold shadow-lg shadow-primary-default/30 transition-all active:scale-95"
+        >
+          <span className="material-symbols-outlined text-xl">add</span>
+          Create New Plan
+        </button>
+      </div>
 
-        <main className="flex-1 flex flex-col max-w-7xl mx-auto w-full px-4 md:px-10 py-8">
-          {/* Sidebar & Content Layout */}
-          <div className="flex flex-col lg:flex-row gap-8">
-            {/* Sidebar */}
-            <aside className="w-full lg:w-64 flex flex-col gap-6">
-              <div className="flex items-center gap-3 px-2">
-                <div className="h-12 w-12 rounded-xl bg-primary flex items-center justify-center shadow-lg shadow-primary/20">
-                  <span className="material-symbols-outlined text-white text-2xl">admin_panel_settings</span>
-                </div>
-                <div className="flex flex-col">
-                  <h1 className="text-base font-bold">Gym Admin</h1>
-                  <p className="text-slate-500 dark:text-slate-400 text-xs">Management Console</p>
-                </div>
-              </div>
-              <nav className="flex flex-col gap-1">
-                <Link className="flex items-center gap-3 px-4 py-3 rounded-xl text-slate-600 dark:text-slate-400 hover:bg-white dark:hover:bg-slate-800 transition-all" to="/admin">
-                  <span className="material-symbols-outlined">dashboard</span>
-                  <span className="text-sm font-semibold">Dashboard</span>
-                </Link>
-                <Link className="flex items-center gap-3 px-4 py-3 rounded-xl bg-primary/10 text-primary border border-primary/20" to="/admin/plans">
-                  <span className="material-symbols-outlined">card_membership</span>
-                  <span className="text-sm font-bold">Membership Plans</span>
-                </Link>
-                <Link className="flex items-center gap-3 px-4 py-3 rounded-xl text-slate-600 dark:text-slate-400 hover:bg-white dark:hover:bg-slate-800 transition-all" to="/admin/members">
-                  <span className="material-symbols-outlined">group</span>
-                  <span className="text-sm font-semibold">Members</span>
-                </Link>
-                <Link className="flex items-center gap-3 px-4 py-3 rounded-xl text-slate-600 dark:text-slate-400 hover:bg-white dark:hover:bg-slate-800 transition-all" to="#">
-                  <span className="material-symbols-outlined">payments</span>
-                  <span className="text-sm font-semibold">Revenue</span>
-                </Link>
-                <Link className="flex items-center gap-3 px-4 py-3 rounded-xl text-slate-600 dark:text-slate-400 hover:bg-white dark:hover:bg-slate-800 transition-all" to="/admin/analytics">
-                  <span className="material-symbols-outlined">monitoring</span>
-                  <span className="text-sm font-semibold">Reports</span>
-                </Link>
-              </nav>
-              <div className="mt-auto p-4 rounded-2xl bg-gradient-to-br from-primary to-blue-600 text-white shadow-xl shadow-primary/20">
-                <p className="text-xs font-medium opacity-80 mb-1">Current Billing</p>
-                <p className="text-lg font-bold mb-3">৳1,24,000.00 <span className="text-xs font-normal opacity-70">this month</span></p>
-                <button className="w-full py-2 bg-white/20 backdrop-blur-md rounded-lg text-xs font-bold hover:bg-white/30 transition-all">View Invoice</button>
-              </div>
-            </aside>
-
-            {/* Page Content */}
-            <div className="flex-1">
-              <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-8">
-                <div>
-                  <h2 className="text-3xl font-black tracking-tight mb-1">Membership Plans</h2>
-                  <p className="text-slate-500 dark:text-slate-400">Configure and manage your gym's subscription tiers</p>
-                </div>
-                <button className="flex items-center gap-2 bg-primary hover:bg-primary/90 text-white px-5 py-2.5 rounded-xl font-bold shadow-lg shadow-primary/30 transition-all transform hover:-translate-y-0.5 active:translate-y-0">
-                  <span className="material-symbols-outlined text-xl">add</span>
-                  Create New Plan
-                </button>
-              </div>
-
-              {/* Plans Grid */}
-              <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
-                {/* Basic Plan */}
-                <div className="flex flex-col bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 p-6 shadow-sm hover:shadow-xl transition-all duration-300">
-                  <div className="flex justify-between items-start mb-6">
-                    <div>
-                      <h3 className="text-lg font-bold text-slate-900 dark:text-slate-100">Basic</h3>
-                      <p className="text-xs text-slate-500 uppercase tracking-widest font-bold">Standard Access</p>
-                    </div>
-                    <span className="bg-slate-100 dark:bg-slate-800 p-2 rounded-lg">
-                      <span className="material-symbols-outlined text-slate-600 dark:text-slate-400">fitness_center</span>
-                    </span>
-                  </div>
-                  <div className="mb-6">
-                    <div className="flex items-baseline gap-1"><span className="text-4xl font-black">৳1,500</span><span className="text-slate-500 font-medium">/month</span></div>
-                    <p className="text-xs text-slate-400 mt-1">Billed monthly</p>
-                  </div>
-                  <button className="w-full bg-primary text-white py-3 rounded-xl font-bold mb-8 hover:bg-primary/90 transition-all flex items-center justify-center gap-2 shadow-md shadow-primary/20">
-                    <span className="material-symbols-outlined text-lg">edit</span>
-                    Edit Plan
-                  </button>
-                  <div className="space-y-4 flex-1">
-                    <p className="text-xs font-bold text-slate-400 uppercase tracking-widest">Included Features</p>
-                    <div className="flex items-start gap-3">
-                      <span className="material-symbols-outlined text-emerald-500 text-xl">check_circle</span>
-                      <span className="text-sm font-medium">Access to gym floor 24/7</span>
-                    </div>
-                    <div className="flex items-start gap-3">
-                      <span className="material-symbols-outlined text-emerald-500 text-xl">check_circle</span>
-                      <span className="text-sm font-medium">Locker room access</span>
-                    </div>
-                    <div className="flex items-start gap-3 text-slate-400">
-                      <span className="material-symbols-outlined text-slate-300 dark:text-slate-700 text-xl">cancel</span>
-                      <span className="text-sm font-medium">Standard app features</span>
-                    </div>
-                  </div>
-                </div>
-
-                {/* Pro Plan (Featured) */}
-                <div className="relative flex flex-col bg-white dark:bg-slate-900 rounded-2xl border-2 border-primary p-6 shadow-2xl shadow-primary/10 transition-all duration-300 transform scale-105 z-10">
-                  <div className="absolute -top-4 left-1/2 -translate-x-1/2 bg-primary text-white text-[10px] font-black uppercase tracking-[0.2em] px-4 py-1.5 rounded-full shadow-lg">
+      {/* Plans Grid */}
+      {loading ? (
+        <div className="flex justify-center items-center h-64">
+          <div className="size-10 border-4 border-primary-default border-t-transparent rounded-full animate-spin" />
+        </div>
+      ) : plans.length === 0 ? (
+        <div className="flex flex-col items-center justify-center py-16 text-center">
+          <span className="material-symbols-outlined text-6xl text-slate-300 mb-4">card_membership</span>
+          <h3 className="text-xl font-bold mb-2 text-neutral-text dark:text-white">No Plans Yet</h3>
+          <p className="text-slate-500 mb-6">Create your first membership plan to get started.</p>
+          <button onClick={openCreateModal} className="flex items-center gap-2 bg-primary-default text-white px-6 py-3 rounded-xl font-bold">
+            <span className="material-symbols-outlined">add</span> Create Plan
+          </button>
+        </div>
+      ) : (
+        <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
+          {plans.map((plan, index) => {
+            const colorSet = planColors[index % planColors.length];
+            // BUG-22 FIXED: "Most Popular" badge is now based on `is_popular` DB field, not hardcoded index
+            const isPopular = plan.is_popular === true;
+            return (
+              <div key={plan.id} className={`relative flex flex-col ${colorSet.bg} rounded-2xl border ${colorSet.border} p-6 ${colorSet.shadow} transition-all duration-300`}>
+                {isPopular && (
+                  <div className="absolute -top-3.5 left-1/2 -translate-x-1/2 bg-primary-default text-white text-[10px] font-black uppercase tracking-[0.2em] px-4 py-1.5 rounded-full shadow-lg">
                     Most Popular
                   </div>
-                  <div className="flex justify-between items-start mb-6 pt-2">
-                    <div>
-                      <h3 className="text-lg font-bold text-slate-900 dark:text-slate-100">Pro</h3>
-                      <p className="text-xs text-primary uppercase tracking-widest font-bold">Premium Performance</p>
-                    </div>
-                    <span className="bg-primary/10 p-2 rounded-lg">
-                      <span className="material-symbols-outlined text-primary">bolt</span>
-                    </span>
+                )}
+                <div className="flex justify-between items-start mb-6">
+                  <div>
+                    <h3 className={`text-lg font-bold ${colorSet.text}`}>{plan.name}</h3>
+                    <p className={`text-xs ${colorSet.sub} uppercase tracking-widest font-bold`}>{plan.duration_days} {plan.duration_type?.toLowerCase()}</p>
                   </div>
-                  <div className="mb-6">
-                    <div className="flex items-baseline gap-1"><span className="text-4xl font-black">৳3,000</span><span className="text-slate-500 font-medium">/month</span></div>
-                    <p className="text-xs text-slate-400 mt-1">Billed monthly</p>
-                  </div>
-                  <button className="w-full bg-primary text-white py-3 rounded-xl font-bold mb-8 hover:bg-primary/90 transition-all flex items-center justify-center gap-2 shadow-lg shadow-primary/30">
-                    <span className="material-symbols-outlined text-lg">edit</span>
-                    Edit Plan
-                  </button>
-                  <div className="space-y-4 flex-1">
-                    <p className="text-xs font-bold text-primary uppercase tracking-widest">Included Features</p>
-                    <div className="flex items-start gap-3">
-                      <span className="material-symbols-outlined text-emerald-500 text-xl">check_circle</span>
-                      <span className="text-sm font-medium">All Basic features included</span>
-                    </div>
-                    <div className="flex items-start gap-3">
-                      <span className="material-symbols-outlined text-emerald-500 text-xl">check_circle</span>
-                      <span className="text-sm font-medium">Unlimited group classes</span>
-                    </div>
-                    <div className="flex items-start gap-3">
-                      <span className="material-symbols-outlined text-emerald-500 text-xl">check_circle</span>
-                      <span className="text-sm font-medium">1 Personal training session /mo</span>
-                    </div>
-                    <div className="flex items-start gap-3">
-                      <span className="material-symbols-outlined text-emerald-500 text-xl">check_circle</span>
-                      <span className="text-sm font-medium">Guest passes (2 per month)</span>
-                    </div>
-                  </div>
+                  <span className="bg-slate-100 dark:bg-slate-800 p-2 rounded-lg">
+                    <span className="material-symbols-outlined text-primary-default">card_membership</span>
+                  </span>
                 </div>
-
-                {/* VIP Plan */}
-                <div className="flex flex-col bg-slate-900 dark:bg-slate-900 rounded-2xl border border-slate-800 p-6 shadow-sm hover:shadow-xl transition-all duration-300 group">
-                  <div className="flex justify-between items-start mb-6">
-                    <div>
-                      <h3 className="text-lg font-bold text-white">VIP</h3>
-                      <p className="text-xs text-primary uppercase tracking-widest font-bold">Elite Luxury</p>
-                    </div>
-                    <span className="bg-slate-800 p-2 rounded-lg group-hover:bg-primary/20 transition-colors">
-                      <span className="material-symbols-outlined text-primary">workspace_premium</span>
-                    </span>
+                <div className="mb-6">
+                  <div className="flex items-baseline gap-1">
+                    <span className={`text-4xl font-black ${colorSet.text}`}>৳{plan.price?.toLocaleString()}</span>
+                    <span className="text-slate-500 font-medium">/{plan.duration_days}d</span>
                   </div>
-                  <div className="mb-6">
-                    <div className="flex items-baseline gap-1"><span className="text-4xl font-black">৳5,000</span><span className="text-slate-400 font-medium">/month</span></div>
-                    <p className="text-xs text-slate-500 mt-1">Billed monthly</p>
-                  </div>
-                  <button className="w-full bg-primary text-white py-3 rounded-xl font-bold mb-8 hover:bg-primary/90 transition-all flex items-center justify-center gap-2 shadow-md shadow-primary/20">
-                    <span className="material-symbols-outlined text-lg">edit</span>
-                    Edit Plan
-                  </button>
-                  <div className="space-y-4 flex-1">
-                    <p className="text-xs font-bold text-slate-500 uppercase tracking-widest">Included Features</p>
-                    <div className="flex items-start gap-3">
-                      <span className="material-symbols-outlined text-emerald-500 text-xl">check_circle</span>
-                      <span className="text-sm font-medium text-slate-300">All Pro features included</span>
-                    </div>
-                    <div className="flex items-start gap-3">
-                      <span className="material-symbols-outlined text-emerald-500 text-xl">check_circle</span>
-                      <span className="text-sm font-medium text-slate-300">Pool &amp; Sauna access</span>
-                    </div>
-                    <div className="flex items-start gap-3">
-                      <span className="material-symbols-outlined text-emerald-500 text-xl">check_circle</span>
-                      <span className="text-sm font-medium text-slate-300">Unlimited guest passes</span>
-                    </div>
-                    <div className="flex items-start gap-3 text-slate-300">
-                      <span className="material-symbols-outlined text-emerald-500 text-xl">check_circle</span>
-                      <span className="text-sm font-medium">Nutrition &amp; Recovery coaching</span>
-                    </div>
-                  </div>
+                  {plan.description && <p className="text-xs text-slate-400 mt-2">{plan.description}</p>}
                 </div>
-
-                {/* Add New Plan Card */}
-                <div className="flex flex-col items-center justify-center bg-slate-100/50 dark:bg-slate-800/30 rounded-2xl border-2 border-dashed border-slate-300 dark:border-slate-700 p-8 min-h-[400px] hover:bg-slate-100 dark:hover:bg-slate-800/50 transition-all cursor-pointer group">
-                  <div className="w-16 h-16 rounded-full bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 flex items-center justify-center mb-4 group-hover:scale-110 transition-transform shadow-sm">
-                    <span className="material-symbols-outlined text-primary text-3xl font-bold">add</span>
-                  </div>
-                  <h3 className="text-lg font-bold mb-2">Create Custom Plan</h3>
-                  <p className="text-sm text-slate-500 text-center max-w-[200px]">Define your own rules, features, and pricing for a new membership tier.</p>
+                <div className="flex gap-2 mt-auto">
+                  <button
+                    onClick={() => openEditModal(plan)}
+                    className="flex-1 bg-primary-default text-white py-3 rounded-xl font-bold hover:brightness-110 transition-all flex items-center justify-center gap-2 shadow-md shadow-primary-default/20"
+                  >
+                    <span className="material-symbols-outlined text-lg">edit</span> Edit
+                  </button>
+                  <button
+                    onClick={() => handleDelete(plan)}
+                    className="w-12 bg-red-500/10 text-red-500 py-3 rounded-xl font-bold hover:bg-red-500/20 transition-all flex items-center justify-center"
+                    aria-label={`Delete ${plan.name}`}
+                  >
+                    <span className="material-symbols-outlined text-lg">delete</span>
+                  </button>
                 </div>
               </div>
+            );
+          })}
 
-              {/* Additional Settings Section */}
-              <div className="mt-12 p-6 bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800">
-                <div className="flex items-center gap-3 mb-6">
-                  <span className="material-symbols-outlined text-primary">info</span>
-                  <h3 className="text-lg font-bold">Subscription Policies</h3>
+          {/* Add New Plan Card */}
+          <div
+            onClick={openCreateModal}
+            className="flex flex-col items-center justify-center bg-slate-50 dark:bg-slate-800/30 rounded-2xl border-2 border-dashed border-slate-300 dark:border-slate-700 p-8 min-h-[300px] hover:bg-slate-100 dark:hover:bg-slate-800/50 transition-all cursor-pointer group"
+          >
+            <div className="size-16 rounded-full bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 flex items-center justify-center mb-4 group-hover:scale-110 transition-transform shadow-sm">
+              <span className="material-symbols-outlined text-primary-default text-3xl font-bold">add</span>
+            </div>
+            <h3 className="text-lg font-bold mb-2 text-neutral-text dark:text-white">Create Custom Plan</h3>
+            <p className="text-sm text-slate-500 text-center max-w-[200px]">Define your own rules, features, and pricing.</p>
+          </div>
+        </div>
+      )}
+
+      {/* Create / Edit Modal — BUG-17 backdrop fix */}
+      {showModal && (
+        <div
+          className="fixed inset-0 z-[100] flex items-center justify-center bg-black/60 backdrop-blur-sm p-4"
+          onClick={handleCloseModal}
+        >
+          <div
+            className="bg-white dark:bg-slate-900 rounded-2xl w-full max-w-md shadow-2xl border border-slate-200 dark:border-slate-800 overflow-hidden flex flex-col max-h-[90vh]"
+            onClick={e => e.stopPropagation()}
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="plan-modal-title"
+          >
+            <div className="flex items-center justify-between px-6 py-4 border-b border-slate-100 dark:border-slate-800">
+              <h3 id="plan-modal-title" className="text-lg font-bold text-neutral-text dark:text-white">{editingPlan ? 'Edit Plan' : 'Create New Plan'}</h3>
+              <button onClick={handleCloseModal} className="p-2 text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-lg transition-colors" aria-label="Close modal">
+                <span className="material-symbols-outlined">close</span>
+              </button>
+            </div>
+
+            <form onSubmit={handleSubmit} className="p-6 space-y-4 overflow-y-auto">
+              {/* BUG-23 FIXED: htmlFor on labels */}
+              <div className="space-y-1.5">
+                <label htmlFor="plan-name" className="text-sm font-bold text-slate-700 dark:text-slate-300">Plan Name</label>
+                <input id="plan-name" required value={formData.name} onChange={(e) => setFormData({ ...formData, name: e.target.value })} type="text" placeholder="e.g. Premium Gold"
+                  className="w-full bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl h-11 px-4 text-sm focus:ring-2 focus:ring-primary-default/20 focus:border-primary-default outline-none transition-all" />
+              </div>
+              <div className="grid grid-cols-2 gap-4">
+                <div className="space-y-1.5">
+                  <label htmlFor="plan-price" className="text-sm font-bold text-slate-700 dark:text-slate-300">Price (৳)</label>
+                  <input id="plan-price" required value={formData.price} onChange={(e) => setFormData({ ...formData, price: e.target.value })} type="number" min="0" step="0.01" placeholder="5000"
+                    className="w-full bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl h-11 px-4 text-sm focus:ring-2 focus:ring-primary-default/20 focus:border-primary-default outline-none transition-all" />
                 </div>
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-                  <div className="p-4 rounded-xl bg-background-light dark:bg-background-dark">
-                    <p className="text-xs font-bold text-slate-400 uppercase tracking-widest mb-2">Annual Discount</p>
-                    <p className="text-sm font-semibold">Enabled (20% OFF)</p>
-                  </div>
-                  <div className="p-4 rounded-xl bg-background-light dark:bg-background-dark">
-                    <p className="text-xs font-bold text-slate-400 uppercase tracking-widest mb-2">Setup Fee</p>
-                    <p className="text-sm font-semibold">$49.00 / one-time</p>
-                  </div>
-                  <div className="p-4 rounded-xl bg-background-light dark:bg-background-dark">
-                    <p className="text-xs font-bold text-slate-400 uppercase tracking-widest mb-2">Cancellation</p>
-                    <p className="text-sm font-semibold">30-day notice</p>
-                  </div>
-                  <div className="p-4 rounded-xl bg-background-light dark:bg-background-dark">
-                    <p className="text-xs font-bold text-slate-400 uppercase tracking-widest mb-2">Currency</p>
-                    <p className="text-sm font-semibold">USD ($)</p>
-                  </div>
+                <div className="space-y-1.5">
+                  <label htmlFor="plan-duration" className="text-sm font-bold text-slate-700 dark:text-slate-300">Duration (days)</label>
+                  <input id="plan-duration" required value={formData.duration_days} onChange={(e) => setFormData({ ...formData, duration_days: e.target.value })} type="number" min="1" placeholder="30"
+                    className="w-full bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl h-11 px-4 text-sm focus:ring-2 focus:ring-primary-default/20 focus:border-primary-default outline-none transition-all" />
                 </div>
               </div>
-            </div>
+              <div className="space-y-1.5">
+                <label htmlFor="plan-description" className="text-sm font-bold text-slate-700 dark:text-slate-300">Description (optional)</label>
+                <textarea id="plan-description" value={formData.description} onChange={(e) => setFormData({ ...formData, description: e.target.value })} placeholder="What's included in this plan?"
+                  className="w-full bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl p-4 text-sm focus:ring-2 focus:ring-primary-default/20 focus:border-primary-default outline-none transition-all min-h-[80px] resize-none" />
+              </div>
+              {/* BUG-22 FIXED: "Most Popular" is now a user-controlled toggle */}
+              <label className="flex items-center gap-3 cursor-pointer p-3 rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700">
+                <input
+                  type="checkbox"
+                  checked={formData.is_popular}
+                  onChange={(e) => setFormData({ ...formData, is_popular: e.target.checked })}
+                  className="size-4 rounded accent-primary-default"
+                />
+                <div>
+                  <p className="text-sm font-bold text-slate-700 dark:text-slate-300">Mark as "Most Popular"</p>
+                  <p className="text-xs text-slate-400">Displays a badge on this plan card</p>
+                </div>
+              </label>
+              <div className="pt-4 flex gap-3">
+                <button type="button" onClick={handleCloseModal} className="flex-1 h-11 rounded-xl font-bold text-slate-600 dark:text-slate-300 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 transition-colors">Cancel</button>
+                <button disabled={isSubmitting} type="submit" className="flex-1 h-11 rounded-xl font-bold text-white bg-primary-default hover:brightness-110 transition-all shadow-lg shadow-primary-default/20 disabled:opacity-50 flex items-center justify-center">
+                  {isSubmitting ? <div className="size-5 border-2 border-white/30 border-t-white rounded-full animate-spin" /> : editingPlan ? 'Update Plan' : 'Create Plan'}
+                </button>
+              </div>
+            </form>
           </div>
-        </main>
+        </div>
+      )}
 
-        {/* Footer */}
-        <footer className="border-t border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 px-10 py-6 mt-12">
-          <div className="flex flex-col md:flex-row justify-between items-center gap-4">
-            <p className="text-slate-500 text-sm">© 2024 LiftLegend Gym Management Systems. All rights reserved.</p>
-            <div className="flex gap-6">
-              <a className="text-slate-500 hover:text-primary text-sm font-medium" href="#">Privacy Policy</a>
-              <a className="text-slate-500 hover:text-primary text-sm font-medium" href="#">Terms of Service</a>
-              <a className="text-slate-500 hover:text-primary text-sm font-medium" href="#">Support</a>
+      {/* Styled Confirm Modal — BUG-20 FIXED */}
+      {confirmModal.isOpen && (
+        <div
+          className="fixed inset-0 z-[200] flex items-center justify-center bg-black/60 backdrop-blur-sm p-4"
+          onClick={() => setConfirmModal(prev => ({ ...prev, isOpen: false }))}
+        >
+          <div
+            className="bg-white dark:bg-slate-900 rounded-2xl w-full max-w-sm shadow-2xl border border-slate-200 dark:border-slate-800 p-6"
+            onClick={e => e.stopPropagation()}
+            role="dialog"
+            aria-modal="true"
+          >
+            <div className="size-12 rounded-full bg-red-100 dark:bg-red-900/30 flex items-center justify-center mx-auto mb-4">
+              <span className="material-symbols-outlined text-red-600 text-2xl">delete_forever</span>
+            </div>
+            <h3 className="text-lg font-bold text-center text-neutral-text dark:text-white mb-2">{confirmModal.title}</h3>
+            <p className="text-sm text-slate-500 text-center mb-6">{confirmModal.message}</p>
+            <div className="flex gap-3">
+              <button onClick={() => setConfirmModal(prev => ({ ...prev, isOpen: false }))} className="flex-1 h-11 rounded-xl font-bold text-slate-600 dark:text-slate-300 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 transition-colors">Cancel</button>
+              <button onClick={confirmModal.onConfirm} className="flex-1 h-11 rounded-xl font-bold text-white bg-red-500 hover:bg-red-600 transition-colors">Delete</button>
             </div>
           </div>
-        </footer>
-      </div>
+        </div>
+      )}
     </div>
   );
 }

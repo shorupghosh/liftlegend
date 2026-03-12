@@ -1,19 +1,40 @@
 @import "tailwindcss";
 
 @theme {
-  --color-primary: #4aafed;
-  --color-energetic-orange: #ff8c00;
-  --color-background-light: #f6f7f8;
-  --color-background-dark: #111b21;
-  --color-charcoal: #1a242d;
-  --color-sidebar-dark: #1a1d1f;
-  --color-chart-dark: #1e293b;
-  --color-accent-orange: #f97316;
+  /* Brand Colors */
+  --color-primary-default: #4CAFED;
+  --color-primary-light: #85CBF9;
+  --color-primary-dark: #1E88E5;
+  --color-primary-text: #FFFFFF;
+
+  --color-secondary-default: #2E2E2E;
+  --color-secondary-light: #5A5A5A;
+  --color-secondary-dark: #1B1B1B;
+  --color-secondary-text: #FFFFFF;
+
+  --color-accent-default: #FF8C42;
+  --color-accent-light: #FFA25C;
+  --color-accent-dark: #E57C2A;
+  --color-accent-text: #FFFFFF;
+
+  --color-neutral-default: #F3F4F6;
+  --color-neutral-light: #FFFFFF;
+  --color-neutral-dark: #E5E7EB;
+  --color-neutral-text: #2E2E2E;
+
+  /* Typography */
   --font-display: "Inter", sans-serif;
+  --font-body: "Roboto", sans-serif;
 }
 
 body {
-  font-family: 'Inter', sans-serif;
+  font-family: var(--font-body);
+  color: var(--color-neutral-text);
+  background-color: var(--color-neutral-default);
+}
+
+h1, h2, h3, h4, h5, h6 {
+  font-family: var(--font-display);
 }
 
 .material-symbols-outlined {
@@ -27,9 +48,27 @@ body {
 
 .scan-line {
   height: 2px;
-  background: #4aafed;
-  box-shadow: 0 0 15px #4aafed;
+  background: var(--color-primary-default);
+  box-shadow: 0 0 15px var(--color-primary-default);
   position: absolute;
   width: 100%;
   top: 50%;
+}
+
+/* Toast animation */
+@keyframes slide-up {
+  from { transform: translateY(20px); opacity: 0; }
+  to { transform: translateY(0); opacity: 1; }
+}
+
+.animate-slide-up {
+  animation: slide-up 0.3s ease-out;
+}
+
+/* Dark mode */
+@media (prefers-color-scheme: dark) {
+  body {
+    background-color: #0f172a;
+    color: #f1f5f9;
+  }
 }

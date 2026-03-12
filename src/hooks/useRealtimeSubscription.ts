@@ -1,0 +1,70 @@
+import { useEffect } from 'react';
+import { supabase } from '../lib/supabase';
+import type { RealtimePostgresChangesPayload } from '@supabase/supabase-js';
+
+type TableName = 'members' | 'plans' | 'attendance' | 'membership_history' | 'notifications' | 'user_roles' | 'gyms';
+
+interface UseRealtimeOptions {
+    table: TableName;
+    gymId: string | null;
+    onInsert?: (payload: RealtimePostgresChangesPayload<any>) => void;
+    onUpdate?: (payload: RealtimePostgresChangesPayload<any>) => void;
+    onDelete?: (payload: RealtimePostgresChangesPayload<any>) => void;
+    onChange?: () => void; // Simple refetch callback
+    enabled?: boolean;
+}
+
+/**
+ * Subscribes to Supabase Realtime changes on a table filtered by gym_id.
+ * Automatically unsubscribes on cleanup.
+ */
+export function useRealtimeSubscription({
+    table,
+    gymId,
+    onInsert,
+    onUpdate,
+    onDelete,
+    onChange,
+    enabled = true,
+}: UseRealtimeOptions) {
+    useEffect(() => {
+        if (!gymId || !enabled) return;
+
+        const channelName = `${table}-${gymId}`;
+
+        const channel = supabase
+            .channel(channelName)
+            .on(
+                'postgres_changes',
+                {
+                    event: '*',
+                    schema: 'public',
+                    table: table,
+                    filter: table === 'gyms' ? `id=eq.${gymId}` : `gym_id=eq.${gymId}`,
+                },
+                (payload: RealtimePostgresChangesPayload<any>) => {
+                    console.log(`[Realtime] ${table}:`, payload.eventType, payload);
+
+                    if (payload.eventType === 'INSERT' && onInsert) {
+                        onInsert(payload);
+                    } else if (payload.eventType === 'UPDATE' && onUpdate) {
+                        onUpdate(payload);
+                    } else if (payload.eventType === 'DELETE' && onDelete) {
+                        onDelete(payload);
+                    }
+
+                    // Always call onChange for simple refetch pattern
+                    if (onChange) {
+                        onChange();
+                    }
+                }
+            )
+            .subscribe((status) => {
+                console.log(`[Realtime] Channel "${channelName}" status:`, status);
+            });
+
+        return () => {
+            supabase.removeChannel(channel);
+        };
+    }, [table, gymId, enabled]);
+}
