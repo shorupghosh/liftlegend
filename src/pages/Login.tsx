@@ -1,39 +1,41 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate, Link, useSearchParams } from 'react-router-dom';
+import { Lock, Mail, Eye, EyeOff } from 'lucide-react';
 import { supabase } from '../lib/supabase';
 import { useAuth } from '../contexts/AuthContext';
-import { Lock, Mail, Eye, EyeOff } from 'lucide-react';
+import { APP_NAME, APP_SUITE_NAME } from '../lib/branding';
 
-export const Login: React.FC = () => {
-    const { user, userRole, gymStatus, loading: authLoading } = useAuth();
+const Login: React.FC = () => {
+    const { user, userRole, gymStatus, loading: authLoading, onboardingCompleted } = useAuth();
     const [searchParams] = useSearchParams();
     const [isSignUp, setIsSignUp] = useState(searchParams.get('signup') === 'true');
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
+    const [confirmPassword, setConfirmPassword] = useState('');
     const [gymName, setGymName] = useState('');
     const [gymAddress, setGymAddress] = useState('');
     const [memberCapacity, setMemberCapacity] = useState('0-100');
     const [showPassword, setShowPassword] = useState(false);
+    const [showConfirmPassword, setShowConfirmPassword] = useState(false);
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState<string | null>(null);
     const [successMessage, setSuccessMessage] = useState<string | null>(null);
     const navigate = useNavigate();
 
-    // BUG-02 FIXED: Redirect if authenticated (but NOT if gym is locked)
     useEffect(() => {
-        if (!authLoading && user && userRole && gymStatus !== 'LOCKED') {
+        if (!authLoading && user && userRole && !['LOCKED', 'SUSPENDED', 'PAST_DUE', 'EXPIRED', 'DELETED'].includes(gymStatus || '')) {
             if (userRole === 'SUPER_ADMIN') {
                 navigate('/super-admin');
             } else {
-                navigate('/admin');
+                navigate(onboardingCompleted ? '/admin' : '/setup');
             }
         }
-    }, [user, userRole, gymStatus, authLoading, navigate]);
+    }, [user, userRole, gymStatus, authLoading, navigate, onboardingCompleted]);
 
     if (authLoading) {
         return (
             <div className="min-h-screen bg-slate-50 flex items-center justify-center">
-                <div className="size-10 border-4 border-[#1978e5] border-t-transparent rounded-full animate-spin"></div>
+                <div className="size-10 border-4 border-[#1978e5] border-t-transparent rounded-full animate-spin" />
             </div>
         );
     }
@@ -50,26 +52,31 @@ export const Login: React.FC = () => {
                 setLoading(false);
                 return;
             }
-            if (!gymName) {
+            if (password !== confirmPassword) {
+                setError('Passwords do not match.');
+                setLoading(false);
+                return;
+            }
+            if (!gymName.trim()) {
                 setError('Gym Name is required.');
                 setLoading(false);
                 return;
             }
 
-            const { error } = await supabase.auth.signUp({
-                email,
+            const { error: signUpError } = await supabase.auth.signUp({
+                email: email.trim(),
                 password,
                 options: {
                     data: {
-                        gym_name: gymName,
-                        address: gymAddress,
+                        gym_name: gymName.trim(),
+                        address: gymAddress.trim(),
                         capacity: memberCapacity,
-                    }
-                }
+                    },
+                },
             });
 
-            if (error) {
-                setError(error.message);
+            if (signUpError) {
+                setError(signUpError.message || 'Unable to create your account right now.');
                 setLoading(false);
                 return;
             }
@@ -77,29 +84,52 @@ export const Login: React.FC = () => {
             setSuccessMessage('Account created! Check your email to confirm, then sign in.');
             setIsSignUp(false);
             setLoading(false);
+            return;
+        }
+
+        const { data, error: signInError } = await supabase.auth.signInWithPassword({
+            email: email.trim(),
+            password,
+        });
+
+        if (signInError) {
+            let userMsg = signInError.message;
+            if (signInError.message === 'Invalid login credentials') {
+                userMsg = 'Invalid email or password.';
+            } else if (signInError.message.toLowerCase().includes('confirm') || signInError.message.toLowerCase().includes('verified')) {
+                userMsg = 'Please verify your email address before signing in. Check your inbox for a confirmation link.';
+            }
+            setError(userMsg);
+            setLoading(false);
+            return;
+        }
+
+        if (!data.user) {
+            setError('Unable to sign in right now. Please try again.');
+            setLoading(false);
+            return;
+        }
+
+        const { data: roleData } = await supabase
+            .from('user_roles')
+            .select('role')
+            .eq('user_id', data.user.id)
+            .limit(1)
+            .maybeSingle();
+
+        // If user is authenticated but has no role record yet, they might be a new user 
+        // who hasn't completed setup or the setup trigger failed.
+        if (!roleData) {
+            setError('Account found, but you do not have permission to access the dashboard yet. Please contact support.');
+            setLoading(false);
+            return;
+        }
+
+        if (roleData?.role === 'SUPER_ADMIN') {
+            navigate('/super-admin');
         } else {
-            const { data, error } = await supabase.auth.signInWithPassword({ email, password });
-
-            if (error) {
-                setError(error.message);
-                setLoading(false);
-                return;
-            }
-
-            // Fetch role immediately to redirect correctly
-            if (data.user) {
-                const { data: roleData } = await supabase
-                    .from('user_roles')
-                    .select('role')
-                    .eq('user_id', data.user.id)
-                    .single();
-
-                if (roleData?.role === 'SUPER_ADMIN') {
-                    navigate('/super-admin');
-                } else {
-                    navigate('/admin');
-                }
-            }
+            // Wait for useEffect to handle the redirect so we have onboardingCompleted context
+            // Alternatively, we let the auth state propagate naturally.
         }
     };
 
@@ -109,14 +139,19 @@ export const Login: React.FC = () => {
                 <div className="p-8">
                     <div className="flex flex-col items-center justify-center mb-8">
                         <div className="mb-6">
-                            <img src="/main-logo.png" alt="LiftLegend Logo" className="h-12 object-contain" />
+                            <img src="/logo.svg" alt={APP_NAME} className="h-9 w-auto" />
                         </div>
                         <h2 className="text-2xl font-display font-bold text-slate-900 dark:text-white">
                             {isSignUp ? 'Create an Account' : 'Welcome Back'}
                         </h2>
-                        <p className="text-slate-500 dark:text-slate-400 text-sm mt-1">
-                            {isSignUp ? 'Sign up to LiftLegend Dashboard' : 'Sign in to LiftLegend Dashboard'}
+                        <p className="text-slate-500 dark:text-slate-400 text-sm mt-1 text-center">
+                            {isSignUp ? 'Start your 30-day free trial. Setup in 2 minutes.' : `Sign in to ${APP_NAME} Dashboard`}
                         </p>
+                        {isSignUp && (
+                            <div className="mt-4 inline-flex items-center px-3 py-1 rounded-full bg-blue-50 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300 text-sm font-medium border border-blue-200 dark:border-blue-800">
+                                You'll start on Advanced Plan (Trial)
+                            </div>
+                        )}
                     </div>
 
                     <form onSubmit={handleSubmit} className="space-y-5">
@@ -180,6 +215,7 @@ export const Login: React.FC = () => {
                                     id="login-email"
                                     type="email"
                                     required
+                                    autoComplete={isSignUp ? "new-password" : "email"}
                                     value={email}
                                     onChange={(e) => setEmail(e.target.value)}
                                     className="w-full pl-10 pr-4 py-3 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-slate-900 dark:text-white rounded-xl focus:ring-2 focus:ring-primary-default/20 focus:border-primary-default outline-none transition-all"
@@ -197,10 +233,11 @@ export const Login: React.FC = () => {
                                     type={showPassword ? 'text' : 'password'}
                                     required
                                     minLength={6}
+                                    autoComplete={isSignUp ? "new-password" : "current-password"}
                                     value={password}
                                     onChange={(e) => setPassword(e.target.value)}
                                     className="w-full pl-10 pr-12 py-3 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-slate-900 dark:text-white rounded-xl focus:ring-2 focus:ring-primary-default/20 focus:border-primary-default outline-none transition-all"
-                                    placeholder="••••••••"
+                                    placeholder="********"
                                 />
                                 <button
                                     type="button"
@@ -213,7 +250,34 @@ export const Login: React.FC = () => {
                             </div>
                         </div>
 
-                        {/* Forgot Password — only show on sign-in mode */}
+                        {isSignUp && (
+                            <div className="space-y-2">
+                                <label htmlFor="login-confirm-password" className="text-sm font-medium text-slate-700 dark:text-slate-300">Confirm Password</label>
+                                <div className="relative">
+                                    <Lock className="absolute left-3 top-1/2 -translate-y-1/2 size-5 text-slate-400" />
+                                    <input
+                                        id="login-confirm-password"
+                                        type={showConfirmPassword ? 'text' : 'password'}
+                                        required
+                                        minLength={6}
+                                        autoComplete="new-password"
+                                        value={confirmPassword}
+                                        onChange={(e) => setConfirmPassword(e.target.value)}
+                                        className="w-full pl-10 pr-12 py-3 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-slate-900 dark:text-white rounded-xl focus:ring-2 focus:ring-primary-default/20 focus:border-primary-default outline-none transition-all"
+                                        placeholder="********"
+                                    />
+                                    <button
+                                        type="button"
+                                        onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                                        className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 dark:text-slate-500 hover:text-slate-600 dark:hover:text-slate-300 transition-colors"
+                                        aria-label={showConfirmPassword ? 'Hide password' : 'Show password'}
+                                    >
+                                        {showConfirmPassword ? <EyeOff className="size-5" /> : <Eye className="size-5" />}
+                                    </button>
+                                </div>
+                            </div>
+                        )}
+
                         {!isSignUp && (
                             <div className="flex justify-end">
                                 <Link
@@ -231,9 +295,25 @@ export const Login: React.FC = () => {
                             className="w-full py-3 px-4 bg-primary-default hover:bg-primary-dark text-white font-bold rounded-xl transition-colors shadow-lg shadow-primary-default/20 flex items-center justify-center disabled:opacity-70"
                         >
                             {loading ? (
-                                <div className="size-5 border-2 border-white/30 border-t-white rounded-full animate-spin"></div>
+                                <div className="size-5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
                             ) : (isSignUp ? 'Create Account' : 'Sign In')}
                         </button>
+                        
+                        {isSignUp && (
+                            <div className="mt-4 flex flex-col items-center gap-1 text-sm text-slate-500 dark:text-slate-400">
+                                <div className="flex items-center gap-3">
+                                    <span className="flex items-center gap-1.5">
+                                        <svg className="w-4 h-4 text-green-500" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" /></svg>
+                                        No credit card required
+                                    </span>
+                                    <span className="text-slate-300 dark:text-slate-700">•</span>
+                                    <span className="flex items-center gap-1.5">
+                                        <svg className="w-4 h-4 text-green-500" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" /></svg>
+                                        Cancel anytime
+                                    </span>
+                                </div>
+                            </div>
+                        )}
                     </form>
 
                     <div className="mt-6 text-center">
@@ -251,7 +331,7 @@ export const Login: React.FC = () => {
                     </div>
 
                     <div className="mt-6 text-center text-sm text-slate-500 dark:text-slate-400">
-                        LiftLegend OS © 2026
+                        {APP_SUITE_NAME} (c) 2026
                     </div>
                 </div>
             </div>

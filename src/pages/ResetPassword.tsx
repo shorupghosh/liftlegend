@@ -1,7 +1,8 @@
 import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
-import { supabase } from '../lib/supabase';
 import { Mail, ArrowLeft, CheckCircle } from 'lucide-react';
+import { supabase } from '../lib/supabase';
+import { APP_SUITE_NAME } from '../lib/branding';
 
 export default function ResetPassword() {
     const [email, setEmail] = useState('');
@@ -14,13 +15,16 @@ export default function ResetPassword() {
         setLoading(true);
         setError(null);
         try {
-            const { error } = await supabase.auth.resetPasswordForEmail(email, {
+            const { error: resetError } = await supabase.auth.resetPasswordForEmail(email.trim(), {
                 redirectTo: `${window.location.origin}/login`,
             });
-            if (error) throw error;
+            if (resetError && import.meta.env.DEV) {
+                console.error('Password reset request error:', resetError.message);
+            }
+            // Always show success state to avoid exposing whether an email exists.
             setSent(true);
-        } catch (err: any) {
-            setError(err.message || 'Failed to send reset email.');
+        } catch {
+            setSent(true);
         } finally {
             setLoading(false);
         }
@@ -38,7 +42,7 @@ export default function ResetPassword() {
                             Reset Password
                         </h2>
                         <p className="text-neutral-text/60 text-sm mt-1 text-center">
-                            Enter your email and we'll send you a link to reset your password.
+                            Enter your email and we will send you a link to reset your password.
                         </p>
                     </div>
 
@@ -49,7 +53,7 @@ export default function ResetPassword() {
                             </div>
                             <h3 className="text-lg font-bold text-neutral-text">Check your email</h3>
                             <p className="text-neutral-text/60 text-sm">
-                                We've sent a password reset link to <strong>{email}</strong>.
+                                If this email is registered, a password reset link has been sent to <strong>{email}</strong>.
                             </p>
                             <Link
                                 to="/login"
@@ -107,7 +111,7 @@ export default function ResetPassword() {
                     )}
 
                     <div className="mt-6 text-center text-sm text-neutral-text/60">
-                        LiftLegend OS © 2026
+                        {APP_SUITE_NAME} (c) 2026
                     </div>
                 </div>
             </div>

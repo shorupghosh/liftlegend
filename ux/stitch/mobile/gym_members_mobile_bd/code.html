@@ -1,0 +1,222 @@
+<!DOCTYPE html>
+
+<html lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Gym Member Management</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    colors: {
+                        "primary": "#1978e5",
+                        "background-light": "#f6f7f8",
+                        "background-dark": "#111821",
+                    },
+                    fontFamily: {
+                        "display": ["Inter"]
+                    },
+                    borderRadius: {"DEFAULT": "1rem", "lg": "2rem", "xl": "3rem", "full": "9999px"},
+                },
+            },
+        }
+    </script>
+<style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+  </head>
+<body class="bg-background-light dark:bg-background-dark font-display text-slate-900 dark:text-slate-100">
+<div class="relative flex min-h-screen w-full flex-col overflow-x-hidden">
+<!-- Header -->
+<div class="sticky top-0 z-10 flex items-center bg-background-light/80 dark:bg-background-dark/80 backdrop-blur-md p-4 justify-between border-b border-slate-200 dark:border-slate-800">
+<div class="flex size-10 items-center justify-center rounded-full hover:bg-slate-200 dark:hover:bg-slate-700 cursor-pointer">
+<span class="material-symbols-outlined">arrow_back</span>
+</div>
+<h2 class="text-lg font-bold leading-tight tracking-tight flex-1 text-center">Gym Members</h2>
+<div class="flex w-10 items-center justify-end">
+<div class="flex size-10 items-center justify-center rounded-full hover:bg-slate-200 dark:hover:bg-slate-700 cursor-pointer text-primary">
+<span class="material-symbols-outlined">person_add</span>
+</div>
+</div>
+</div>
+<!-- Search Section -->
+<div class="px-4 py-4 sticky top-[73px] z-10 bg-background-light dark:bg-background-dark">
+<label class="flex flex-col w-full group">
+<div class="flex w-full items-stretch rounded-xl h-14 bg-white dark:bg-slate-800 shadow-sm border border-slate-200 dark:border-slate-700 focus-within:border-primary focus-within:ring-1 focus-within:ring-primary transition-all">
+<div class="flex items-center justify-center pl-4 text-slate-400">
+<span class="material-symbols-outlined">search</span>
+</div>
+<input class="w-full border-none bg-transparent focus:ring-0 text-base font-normal placeholder:text-slate-400" placeholder="Search by name, ID or mobile..." value=""/>
+</div>
+</label>
+</div>
+<!-- Filters Scrollable -->
+<div class="flex gap-3 px-4 pb-4 overflow-x-auto no-scrollbar">
+<button class="flex h-10 shrink-0 items-center justify-center gap-x-2 rounded-full bg-primary text-white px-5 text-sm font-semibold shadow-md shadow-primary/20">
+                All Members
+            </button>
+<button class="flex h-10 shrink-0 items-center justify-center gap-x-2 rounded-full bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 px-5 text-sm font-medium">
+                Active
+            </button>
+<button class="flex h-10 shrink-0 items-center justify-center gap-x-2 rounded-full bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 px-5 text-sm font-medium">
+                Expired
+            </button>
+<button class="flex h-10 shrink-0 items-center justify-center gap-x-2 rounded-full bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 px-5 text-sm font-medium text-amber-600">
+                Due
+            </button>
+</div>
+<!-- Members Card List -->
+<div class="flex flex-col gap-4 p-4 pb-24">
+<!-- Member Card 1 -->
+<div class="flex flex-col gap-4 rounded-xl bg-white dark:bg-slate-800 p-4 shadow-sm border border-slate-100 dark:border-slate-700">
+<div class="flex justify-between items-start">
+<div class="flex gap-3">
+<div class="size-14 rounded-full bg-slate-100 dark:bg-slate-700 overflow-hidden border-2 border-primary/20">
+<img class="w-full h-full object-cover" data-alt="Portrait of a muscular gym member" src="https://lh3.googleusercontent.com/aida-public/AB6AXuDLDJuQd2EFsIXvvX_xlmBBhVJ60Lf6i7aJFv89ZoYAcMmmTvZQnwBRXmyXE5eOEXu0IAnrAKbP7tWy-h-f3-My_r_FvuHK4oX15qSUnMlQrVr8ISU9sUzesi1x6xeLXP-qHlQqYI0QVCln40Qdy6EMnGWy-uSvtk_vaXZv4rlzzTOsfLlpjXS_crvU8fz97FDRlDtkLu9E1fW5FqX6EzzCw-Kw7DxtknHCdXlAEFWtcZaiO3QdN4RCqzcXLxFlUxibTRkQziONpuLO"/>
+</div>
+<div class="flex flex-col">
+<h3 class="font-bold text-slate-900 dark:text-slate-100">Rahat Islam</h3>
+<p class="text-xs text-slate-500 dark:text-slate-400">ID: #8829 • Joined 12 Jan 24</p>
+<span class="mt-1 w-fit px-2 py-0.5 rounded-full text-[10px] font-bold bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400 uppercase">Active</span>
+</div>
+</div>
+<div class="text-right">
+<p class="text-sm font-bold text-primary">৳ 2,500</p>
+<p class="text-[10px] text-slate-400">Premium Plan</p>
+</div>
+</div>
+<div class="grid grid-cols-2 gap-4 py-2 border-t border-slate-50 dark:border-slate-700/50">
+<div class="flex flex-col">
+<p class="text-[10px] text-slate-400 uppercase tracking-wider">Mobile</p>
+<p class="text-sm font-medium">+880 1712-345678</p>
+</div>
+<div class="flex flex-col">
+<p class="text-[10px] text-slate-400 uppercase tracking-wider">Next Payment</p>
+<p class="text-sm font-medium">15 Aug 2024</p>
+</div>
+</div>
+<div class="flex gap-2 pt-2 border-t border-slate-50 dark:border-slate-700/50">
+<button class="flex-1 flex items-center justify-center gap-2 rounded-full h-10 bg-primary/10 text-primary text-sm font-semibold transition-colors active:bg-primary active:text-white">
+<span class="material-symbols-outlined text-sm">edit</span> Edit
+                    </button>
+<button class="flex-1 flex items-center justify-center gap-2 rounded-full h-10 bg-primary text-white text-sm font-semibold shadow-sm active:bg-primary/90">
+<span class="material-symbols-outlined text-sm">payments</span> Pay
+                    </button>
+</div>
+</div>
+<!-- Member Card 2 -->
+<div class="flex flex-col gap-4 rounded-xl bg-white dark:bg-slate-800 p-4 shadow-sm border border-slate-100 dark:border-slate-700">
+<div class="flex justify-between items-start">
+<div class="flex gap-3">
+<div class="size-14 rounded-full bg-slate-100 dark:bg-slate-700 overflow-hidden border-2 border-primary/20">
+<img class="w-full h-full object-cover" data-alt="Athletic woman posing in gym" src="https://lh3.googleusercontent.com/aida-public/AB6AXuBRdrQuY2nk70N_2v4MyaEvIu1mXiKmH8VfltJF8oX3mupPaotiVcnKwf_L-6MJII5oq03gkOfSxwY0snYEFIKQfRapjNUWMHPyqUCiUuBaJeCOo6OENzepCG9oKYU7oVvCyusqjfXGzpIw5Qxs1P3E2qdSt37EWIxsXJJAbmN8nUVeohZtGQaejWdb-Qz9HTm-Ka8UkxlhzSvyhxQwduRwariJP06LufA7NESpd6m_S9webZk2s7007vCo2dsUPSQABb6tGwRq-7yp"/>
+</div>
+<div class="flex flex-col">
+<h3 class="font-bold text-slate-900 dark:text-slate-100">Nusrat Jahan</h3>
+<p class="text-xs text-slate-500 dark:text-slate-400">ID: #9102 • Joined 05 Feb 24</p>
+<span class="mt-1 w-fit px-2 py-0.5 rounded-full text-[10px] font-bold bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400 uppercase">Payment Due</span>
+</div>
+</div>
+<div class="text-right">
+<p class="text-sm font-bold text-red-500">৳ 1,200</p>
+<p class="text-[10px] text-slate-400">Basic Plan</p>
+</div>
+</div>
+<div class="grid grid-cols-2 gap-4 py-2 border-t border-slate-50 dark:border-slate-700/50">
+<div class="flex flex-col">
+<p class="text-[10px] text-slate-400 uppercase tracking-wider">Mobile</p>
+<p class="text-sm font-medium">+880 1823-445566</p>
+</div>
+<div class="flex flex-col">
+<p class="text-[10px] text-slate-400 uppercase tracking-wider">Due Since</p>
+<p class="text-sm font-medium text-amber-600 font-bold">01 Aug 2024</p>
+</div>
+</div>
+<div class="flex gap-2 pt-2 border-t border-slate-50 dark:border-slate-700/50">
+<button class="flex-1 flex items-center justify-center gap-2 rounded-full h-10 bg-primary/10 text-primary text-sm font-semibold">
+<span class="material-symbols-outlined text-sm">mail</span> Remind
+                    </button>
+<button class="flex-1 flex items-center justify-center gap-2 rounded-full h-10 bg-primary text-white text-sm font-semibold shadow-sm">
+<span class="material-symbols-outlined text-sm">payments</span> Collect
+                    </button>
+</div>
+</div>
+<!-- Member Card 3 -->
+<div class="flex flex-col gap-4 rounded-xl bg-white dark:bg-slate-800 p-4 shadow-sm border border-slate-100 dark:border-slate-700 opacity-75">
+<div class="flex justify-between items-start">
+<div class="flex gap-3">
+<div class="size-14 rounded-full bg-slate-100 dark:bg-slate-700 overflow-hidden border-2 border-slate-200 dark:border-slate-600 grayscale">
+<img class="w-full h-full object-cover" data-alt="Senior gym member workout" src="https://lh3.googleusercontent.com/aida-public/AB6AXuBcwh3uJLbITMNqjEJbCNMBORgs6okCXUbadcefoLBs4ENQYbdTnTIw7UPBFoCXivnUv0gLkHM6uC8Rfq0ibZ1ixAR4Ac5J2sydcZ_POpT9tkGjCkRLfSzgAHvsRMikJs7ayW2eno3zcYkKhVb9xtGdJ0jAX0fMlw5Son8YwEpa1VSV9B4gnLfTzsuc2Ky8i6028fmFCQQ-Y7LVl5Obk4wIuspGV-qXjbKTpRqORfhfFS4UNCX2uO1tJmT8JI4PdjGrs0VT-qiEXpej"/>
+</div>
+<div class="flex flex-col">
+<h3 class="font-bold text-slate-900 dark:text-slate-100">Tanvir Ahmed</h3>
+<p class="text-xs text-slate-500 dark:text-slate-400">ID: #7743 • Joined 20 Oct 23</p>
+<span class="mt-1 w-fit px-2 py-0.5 rounded-full text-[10px] font-bold bg-slate-100 text-slate-600 dark:bg-slate-700 dark:text-slate-400 uppercase">Expired</span>
+</div>
+</div>
+<div class="text-right">
+<p class="text-sm font-bold text-slate-400">৳ 0</p>
+<p class="text-[10px] text-slate-400">Standard Plan</p>
+</div>
+</div>
+<div class="grid grid-cols-2 gap-4 py-2 border-t border-slate-50 dark:border-slate-700/50">
+<div class="flex flex-col">
+<p class="text-[10px] text-slate-400 uppercase tracking-wider">Mobile</p>
+<p class="text-sm font-medium">+880 1677-889900</p>
+</div>
+<div class="flex flex-col">
+<p class="text-[10px] text-slate-400 uppercase tracking-wider">Expired On</p>
+<p class="text-sm font-medium">10 Jul 2024</p>
+</div>
+</div>
+<div class="flex gap-2 pt-2 border-t border-slate-50 dark:border-slate-700/50">
+<button class="flex-1 flex items-center justify-center gap-2 rounded-full h-10 bg-slate-100 dark:bg-slate-700 text-slate-600 dark:text-slate-300 text-sm font-semibold">
+<span class="material-symbols-outlined text-sm">visibility</span> Profile
+                    </button>
+<button class="flex-1 flex items-center justify-center gap-2 rounded-full h-10 bg-primary/20 text-primary text-sm font-semibold">
+<span class="material-symbols-outlined text-sm">autorenew</span> Renew
+                    </button>
+</div>
+</div>
+</div>
+<!-- Bottom Navigation Bar -->
+<div class="fixed bottom-0 left-0 right-0 z-20 flex gap-2 border-t border-slate-200 dark:border-slate-800 bg-white/95 dark:bg-slate-900/95 backdrop-blur-md px-4 pb-6 pt-2">
+<a class="flex flex-1 flex-col items-center justify-center gap-1 text-slate-500 dark:text-slate-400" href="#">
+<span class="material-symbols-outlined">home</span>
+<p class="text-[10px] font-medium">Home</p>
+</a>
+<a class="flex flex-1 flex-col items-center justify-center gap-1 text-primary" href="#">
+<span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 1">group</span>
+<p class="text-[10px] font-bold">Members</p>
+</a>
+<a class="flex flex-1 flex-col items-center justify-center gap-1 text-slate-500 dark:text-slate-400" href="#">
+<span class="material-symbols-outlined">receipt_long</span>
+<p class="text-[10px] font-medium">Payments</p>
+</a>
+<a class="flex flex-1 flex-col items-center justify-center gap-1 text-slate-500 dark:text-slate-400" href="#">
+<span class="material-symbols-outlined">analytics</span>
+<p class="text-[10px] font-medium">Reports</p>
+</a>
+<a class="flex flex-1 flex-col items-center justify-center gap-1 text-slate-500 dark:text-slate-400" href="#">
+<span class="material-symbols-outlined">settings</span>
+<p class="text-[10px] font-medium">Settings</p>
+</a>
+</div>
+</div>
+<style>
+        .no-scrollbar::-webkit-scrollbar {
+            display: none;
+        }
+        .no-scrollbar {
+            -ms-overflow-style: none;
+            scrollbar-width: none;
+        }
+    </style>
+</body></html>

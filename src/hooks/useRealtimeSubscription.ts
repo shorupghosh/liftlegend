@@ -1,6 +1,7 @@
 import { useEffect } from 'react';
 import { supabase } from '../lib/supabase';
 import type { RealtimePostgresChangesPayload } from '@supabase/supabase-js';
+import { isDemoModeActive } from '../lib/demoUtils';
 
 type TableName = 'members' | 'plans' | 'attendance' | 'membership_history' | 'notifications' | 'user_roles' | 'gyms';
 
@@ -28,7 +29,7 @@ export function useRealtimeSubscription({
     enabled = true,
 }: UseRealtimeOptions) {
     useEffect(() => {
-        if (!gymId || !enabled) return;
+        if (!gymId || !enabled || isDemoModeActive()) return;
 
         const channelName = `${table}-${gymId}`;
 
@@ -43,7 +44,9 @@ export function useRealtimeSubscription({
                     filter: table === 'gyms' ? `id=eq.${gymId}` : `gym_id=eq.${gymId}`,
                 },
                 (payload: RealtimePostgresChangesPayload<any>) => {
-                    console.log(`[Realtime] ${table}:`, payload.eventType, payload);
+                    if (import.meta.env.DEV) {
+                        console.log(`[Realtime] ${table}:`, payload.eventType, payload);
+                    }
 
                     if (payload.eventType === 'INSERT' && onInsert) {
                         onInsert(payload);
@@ -60,11 +63,13 @@ export function useRealtimeSubscription({
                 }
             )
             .subscribe((status) => {
-                console.log(`[Realtime] Channel "${channelName}" status:`, status);
+                if (import.meta.env.DEV) {
+                    console.log(`[Realtime] Channel "${channelName}" status:`, status);
+                }
             });
 
         return () => {
             supabase.removeChannel(channel);
         };
-    }, [table, gymId, enabled]);
+    }, [table, gymId, enabled, onInsert, onUpdate, onDelete, onChange]);
 }

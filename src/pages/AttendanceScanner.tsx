@@ -5,9 +5,16 @@ import { useRealtimeSubscription } from '../hooks/useRealtimeSubscription';
 import { useToast } from '../components/ToastProvider';
 import { Html5QrcodeScanner } from 'html5-qrcode';
 import { Member, Attendance } from '../types';
+import { parseQrValue } from '../lib/qrCode';
+import { getDaysLeft } from '../lib/memberExpiry';
+import { EmptyState } from '../components/ui/EmptyState';
+import { useDemoData } from '../contexts/DemoDataContext';
+import { useDemoMode } from '../hooks/useDemoMode';
 
 export default function AttendanceScanner() {
   const { gymId } = useAuth();
+  const { isDemoMode } = useDemoMode();
+  const { state: demoState, addAttendance } = useDemoData();
   const { showToast } = useToast();
   const [members, setMembers] = useState<Partial<Member>[]>([]);
   const [recentCheckins, setRecentCheckins] = useState<Partial<Attendance>[]>([]);
@@ -23,11 +30,24 @@ export default function AttendanceScanner() {
     if (!gymId) return;
     setLoading(true);
     try {
+      if (isDemoMode) {
+        const today = new Date().toISOString().split('T')[0];
+        setMembers(demoState.members);
+        setRecentCheckins(
+          demoState.attendance
+            .filter((entry) => entry.check_in_time.startsWith(today))
+            .sort((a, b) => b.check_in_time.localeCompare(a.check_in_time))
+            .slice(0, 20)
+        );
+        setTodayCount(demoState.attendance.filter((entry) => entry.check_in_time.startsWith(today)).length);
+        return;
+      }
+
       const today = new Date();
       today.setHours(0, 0, 0, 0);
 
       const [membersRes, checkinsRes, countRes] = await Promise.all([
-        supabase.from('members').select('id, full_name, email, phone, status, plans(name)').eq('gym_id', gymId).order('full_name'),
+        supabase.from('members').select('id, full_name, email, phone, status, expiry_date, qr_code_value, plans(name)').eq('gym_id', gymId).order('full_name'),
         supabase.from('attendance').select('*, members(full_name, email, status, plans(name))').eq('gym_id', gymId).gte('check_in_time', today.toISOString()).order('check_in_time', { ascending: false }).limit(20),
         supabase.from('attendance').select('id', { count: 'exact', head: true }).eq('gym_id', gymId).gte('check_in_time', today.toISOString()),
       ]);
@@ -44,7 +64,7 @@ export default function AttendanceScanner() {
     } finally {
       setLoading(false);
     }
-  }, [gymId, showToast]);
+  }, [demoState.attendance, demoState.members, gymId, isDemoMode, showToast]);
 
   useEffect(() => {
     fetchData();
@@ -52,7 +72,7 @@ export default function AttendanceScanner() {
 
   useRealtimeSubscription({ table: 'attendance', gymId, onChange: fetchData });
 
-  // Close modals on Escape key — BUG UX fix
+  // Close modals on Escape key
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
       if (e.key === 'Escape') {
@@ -69,31 +89,19 @@ export default function AttendanceScanner() {
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, [showManualModal, showQrModal]);
 
-  // Handle QR scanning
+  // Handle QR scanning — uses qr_code_value lookup
   useEffect(() => {
-    if (!showQrModal || members.length === 0) return;
+    if (!showQrModal || !gymId || isDemoMode) return;
 
-    // Slight delay to ensure the DOM element exists before initializing
     const timer = setTimeout(() => {
       const scanner = new Html5QrcodeScanner("qr-reader", { fps: 10, qrbox: { width: 250, height: 250 } }, false);
 
       scanner.render((decodedText) => {
         scanner.clear();
         setShowQrModal(false);
-        const foundMember = members.find(m => m.id === decodedText || m.email === decodedText);
-
-        if (foundMember) {
-          handleCheckIn(foundMember, 'QR_CODE');
-        } else {
-          setNotification({
-            type: 'error',
-            message: 'Scan Failed',
-            detail: 'QR Code did not match any active member records in this gym.',
-          });
-          setTimeout(() => setNotification(null), 5000);
-        }
-      }, (errorMessage) => {
-        // Ignore scan failures as they happen continuously
+        handleQrScan(decodedText);
+      }, (_errorMessage) => {
+        // Ignore continuous scan failures
       });
 
       return () => {
@@ -102,12 +110,89 @@ export default function AttendanceScanner() {
     }, 100);
 
     return () => clearTimeout(timer);
-  }, [showQrModal, members]);
+  }, [showQrModal, gymId, isDemoMode]);
+
+  /**
+   * Handle a scanned QR code:
+   * 1. Parse the QR value
+   * 2. Look up member by qr_code_value in the database
+   * 3. Validate membership status + expiry
+   * 4. Create attendance record
+   */
+  const handleQrScan = async (decodedText: string) => {
+    if (!gymId) return;
+
+    if (isDemoMode) {
+      const demoMember = demoState.members.find((member) => member.status === 'ACTIVE');
+      if (!demoMember) {
+        showToast('No active demo members available.', 'error');
+        return;
+      }
+      handleCheckIn(demoMember, 'QR_CODE');
+      return;
+    }
+
+    const parsed = parseQrValue(decodedText);
+
+    if (!parsed) {
+      setNotification({
+        type: 'error',
+        message: 'Invalid QR Code',
+        detail: 'This QR code is not recognized. Please use a valid member QR code.',
+      });
+      setTimeout(() => setNotification(null), 5000);
+      return;
+    }
+
+    // Validate gym match (if gym is encoded in QR)
+    if (parsed.gymId && parsed.gymId !== gymId) {
+      setNotification({
+        type: 'error',
+        message: 'Invalid QR Code',
+        detail: 'This QR code belongs to a different gym.',
+      });
+      setTimeout(() => setNotification(null), 5000);
+      return;
+    }
+
+    // Look up member by qr_code_value
+    const { data: foundMember, error } = await supabase
+      .from('members')
+      .select('id, full_name, status, expiry_date, plans(name)')
+      .eq('gym_id', gymId)
+      .eq('qr_code_value', decodedText)
+      .single();
+
+    if (error || !foundMember) {
+      // Fallback: try by member ID directly (legacy support)
+      const { data: fallbackMember } = await supabase
+        .from('members')
+        .select('id, full_name, status, expiry_date, plans(name)')
+        .eq('gym_id', gymId)
+        .eq('id', parsed.memberId)
+        .single();
+
+      if (!fallbackMember) {
+        setNotification({
+          type: 'error',
+          message: 'Invalid QR Code',
+          detail: 'QR code did not match any member records in this gym.',
+        });
+        setTimeout(() => setNotification(null), 5000);
+        return;
+      }
+
+      handleCheckIn(fallbackMember, 'QR_CODE');
+      return;
+    }
+
+    handleCheckIn(foundMember, 'QR_CODE');
+  };
 
   const handleCheckIn = async (member: any, method: 'MANUAL' | 'QR_CODE' = 'MANUAL') => {
     if (!gymId) return;
 
-    // BUG-08 FIXED: Block inactive members
+    // Block inactive members
     if (member.status !== 'ACTIVE') {
       setNotification({
         type: 'error',
@@ -121,17 +206,54 @@ export default function AttendanceScanner() {
       return;
     }
 
-    // BUG-09 FIXED: Prevent duplicate check-ins on the same day
+    // Check membership expiry
+    const daysLeft = getDaysLeft(member.expiry_date);
+    if (daysLeft !== null && daysLeft < 0) {
+      setNotification({
+        type: 'error',
+        message: 'Membership Expired',
+        detail: `${member.full_name}'s membership has expired. Please renew to check in.`,
+      });
+      setShowManualModal(false);
+      setShowQrModal(false);
+      setSearchTerm('');
+      setTimeout(() => setNotification(null), 6000);
+      return;
+    }
+
+    // Prevent duplicate check-ins on the same day
     const today = new Date();
     today.setHours(0, 0, 0, 0);
-    const { count: existingCheckin } = await supabase
-      .from('attendance')
-      .select('id', { count: 'exact', head: true })
-      .eq('gym_id', gymId)
-      .eq('member_id', member.id)
-      .gte('check_in_time', today.toISOString());
+    if (isDemoMode) {
+      const alreadyCheckedIn = demoState.attendance.some(
+        (entry) => entry.member_id === member.id && entry.check_in_time >= today.toISOString()
+      );
+      if (alreadyCheckedIn) {
+        setNotification({
+          type: 'error',
+          message: 'Already Checked In Today',
+          detail: `${member.full_name} has already been checked in today.`,
+        });
+        setShowManualModal(false);
+        setShowQrModal(false);
+        setSearchTerm('');
+        setTimeout(() => setNotification(null), 5000);
+        return;
+      }
+    }
 
-    if ((existingCheckin || 0) > 0) {
+    let existingCheckin = 0;
+    if (!isDemoMode) {
+      const { count } = await supabase
+        .from('attendance')
+        .select('id', { count: 'exact', head: true })
+        .eq('gym_id', gymId)
+        .eq('member_id', member.id)
+        .gte('check_in_time', today.toISOString());
+      existingCheckin = count || 0;
+    }
+
+    if (existingCheckin > 0) {
       setNotification({
         type: 'error',
         message: 'Already Checked In Today',
@@ -146,6 +268,21 @@ export default function AttendanceScanner() {
 
     setCheckingIn(true);
     try {
+      if (isDemoMode) {
+        addAttendance(member.id, method);
+        const checkInTime = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+        setNotification({
+          type: 'success',
+          message: 'Access Granted',
+          detail: `${member.full_name} checked in at ${checkInTime}. This is demo mode, so changes are not saved.`,
+        });
+        setShowManualModal(false);
+        setShowQrModal(false);
+        setSearchTerm('');
+        setTimeout(() => setNotification(null), 5000);
+        return;
+      }
+
       const { error } = await supabase.from('attendance').insert([{
         gym_id: gymId,
         member_id: member.id,
@@ -154,10 +291,12 @@ export default function AttendanceScanner() {
 
       if (error) throw error;
 
+      const checkInTime = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+
       setNotification({
         type: 'success',
         message: 'Access Granted ✓',
-        detail: `${member.full_name} — ${member.plans?.name || 'No Plan'} checked in successfully`,
+        detail: `${member.full_name} — ${member.plans?.name || 'No Plan'} • Checked in at ${checkInTime} via ${method === 'QR_CODE' ? 'QR Scan' : 'Manual'}`,
       });
 
       setShowManualModal(false);
@@ -186,7 +325,7 @@ export default function AttendanceScanner() {
   };
 
   const filteredMembers = members.filter(m =>
-    m.full_name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    m.full_name!.toLowerCase().includes(searchTerm.toLowerCase()) ||
     (m.email && m.email.toLowerCase().includes(searchTerm.toLowerCase()))
   );
 
@@ -270,10 +409,15 @@ export default function AttendanceScanner() {
           <div className="flex justify-center items-center h-40">
             <div className="size-8 border-4 border-primary-default border-t-transparent rounded-full animate-spin" />
           </div>
-        ) : recentCheckins.length === 0 ? (
-          <div className="p-12 text-center">
-            <span className="material-symbols-outlined text-5xl text-slate-300 dark:text-slate-600 mb-2">event_busy</span>
-            <p className="text-slate-500 font-medium">No check-ins today yet</p>
+      ) : recentCheckins.length === 0 ? (
+          <div className="p-6">
+            <EmptyState
+              icon="qr_code_scanner"
+              title="No attendance yet"
+              description="Start check-ins to see today's front-desk activity here."
+              actionLabel="Start check-ins"
+              onAction={() => setShowManualModal(true)}
+            />
           </div>
         ) : (
           <div className="divide-y divide-slate-100 dark:divide-slate-800">
@@ -292,9 +436,9 @@ export default function AttendanceScanner() {
                   <p className="text-xs text-slate-500">{checkin.members?.plans?.name || 'No Plan'}</p>
                 </div>
                 <div className="text-right">
-                  <p className="text-xs font-medium text-slate-400">{formatTime(checkin.check_in_time)}</p>
-                  <span className={`text-[10px] font-bold uppercase ${checkin.members?.status === 'ACTIVE' ? 'text-emerald-600' : 'text-rose-600'}`}>
-                    {checkin.method || 'MANUAL'}
+                  <p className="text-xs font-medium text-slate-400">{formatTime(checkin.check_in_time!)}</p>
+                  <span className={`text-[10px] font-bold uppercase ${checkin.method === 'QR_CODE' ? 'text-blue-600' : checkin.members?.status === 'ACTIVE' ? 'text-emerald-600' : 'text-rose-600'}`}>
+                    {checkin.method === 'QR_CODE' ? '📷 QR' : checkin.method || 'MANUAL'}
                   </span>
                 </div>
               </div>
@@ -303,7 +447,7 @@ export default function AttendanceScanner() {
         )}
       </div>
 
-      {/* Manual Check-In Modal — BUG-17 backdrop fix + Escape key */}
+      {/* Manual Check-In Modal */}
       {showManualModal && (
         <div
           className="fixed inset-0 z-[100] flex items-center justify-center bg-black/60 backdrop-blur-sm p-4"
@@ -339,7 +483,13 @@ export default function AttendanceScanner() {
             </div>
             <div className="flex-1 overflow-y-auto divide-y divide-slate-100 dark:divide-slate-800">
               {filteredMembers.length === 0 ? (
-                <div className="p-8 text-center text-slate-500">No members found</div>
+                <div className="p-4">
+                  <EmptyState
+                    icon="search_off"
+                    title="No members found"
+                    description="Try a different name or email to continue the check-in."
+                  />
+                </div>
               ) : (
                 filteredMembers.map((member) => (
                   <button
@@ -349,7 +499,7 @@ export default function AttendanceScanner() {
                     className="w-full p-4 flex items-center gap-3 hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors text-left disabled:opacity-50"
                   >
                     <div className="size-10 rounded-full bg-primary-default/10 flex items-center justify-center text-primary-default font-bold">
-                      {member.full_name.charAt(0)}
+                      {member.full_name!.charAt(0)}
                     </div>
                     <div className="flex-1">
                       <p className="text-sm font-bold text-neutral-text dark:text-white">{member.full_name}</p>
@@ -376,7 +526,7 @@ export default function AttendanceScanner() {
         </div>
       )}
 
-      {/* QR Scanner Modal — BUG-126 FIXED */}
+      {/* QR Scanner Modal */}
       {showQrModal && (
         <div
           className="fixed inset-0 z-[100] flex items-center justify-center bg-black/80 backdrop-blur-sm p-4"
@@ -404,7 +554,20 @@ export default function AttendanceScanner() {
             </div>
 
             <div className="bg-black relative aspect-[4/3] w-full flex items-center justify-center overflow-hidden">
-              <div id="qr-reader" className="w-full h-full border-none [&_video]:object-cover" />
+              {isDemoMode ? (
+                <div className="flex flex-col items-center gap-4 px-6 text-center text-white">
+                  <span className="material-symbols-outlined text-6xl text-white/70">qr_code_scanner</span>
+                  <p className="text-sm font-semibold">Simulate a member QR scan in demo mode.</p>
+                  <button
+                    onClick={() => handleQrScan('DEMO_SCAN')}
+                    className="rounded-xl bg-white px-4 py-2 text-sm font-bold text-slate-900 transition-transform hover:scale-[1.02]"
+                  >
+                    Simulate Scan
+                  </button>
+                </div>
+              ) : (
+                <div id="qr-reader" className="w-full h-full border-none [&_video]:object-cover" />
+              )}
             </div>
 
             <div className="p-4 bg-slate-50 dark:bg-slate-800/50 text-center">

@@ -2,9 +2,20 @@ import React, { useEffect, useState, useCallback, useRef } from 'react';
 import { Link } from 'react-router-dom';
 import { supabase } from '../lib/supabase';
 import { useAuth } from '../contexts/AuthContext';
+import { usePlan } from '../contexts/PlanContext';
 import { useRealtimeSubscription } from '../hooks/useRealtimeSubscription';
 import { useToast } from '../components/ToastProvider';
 import { Member, Plan } from '../types';
+import { formatBdt } from '../lib/currency';
+import { ConfirmModal } from '../components/ui/ConfirmModal';
+import { MemberModal } from '../components/members/MemberModal';
+import { MembersTable } from '../components/members/MembersTable';
+import { AlertBadge } from '../components/ui/AlertBadge';
+import { EmptyState } from '../components/ui/EmptyState';
+import { getMemberExpiryAlert, calculateExpiryDate, getDaysLeft } from '../lib/memberExpiry';
+import { useDemoData } from '../contexts/DemoDataContext';
+import { useDemoMode } from '../hooks/useDemoMode';
+import UsageLimitBanner, { UsageLimitGuard } from '../components/plan/UsageLimitBanner';
 
 const PAGE_SIZE = 50;
 
@@ -17,7 +28,10 @@ interface ConfirmModal {
 
 export default function MembersManagement() {
   const { gymId } = useAuth();
+  const { isDemoMode } = useDemoMode();
+  const { state: demoState, addMember, updateMember, deleteMember } = useDemoData();
   const { showToast } = useToast();
+  const { isLimitReached, refreshUsage } = usePlan();
   const [members, setMembers] = useState<Member[]>([]);
   const [plans, setPlans] = useState<Partial<Plan>[]>([]);
   const [loading, setLoading] = useState(true);
@@ -25,6 +39,7 @@ export default function MembersManagement() {
   const [editingMember, setEditingMember] = useState<Member | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
+  const [filterStatus, setFilterStatus] = useState('All Members');
   const [page, setPage] = useState(1);
   const [totalCount, setTotalCount] = useState(0);
   const [confirmModal, setConfirmModal] = useState<ConfirmModal>({ isOpen: false, title: '', message: '', onConfirm: () => { } });
@@ -39,22 +54,29 @@ export default function MembersManagement() {
   });
 
   const fetchMembers = useCallback(async () => {
-    if (!gymId) return;
+    if (!gymId && !isDemoMode) return;
     setLoading(true);
     try {
+      if (isDemoMode) {
+        setMembers(demoState.members);
+        setTotalCount(demoState.members.length);
+        setPlans(demoState.plans);
+        setLoading(false);
+        return;
+      }
       const from = (page - 1) * PAGE_SIZE;
       const to = from + PAGE_SIZE - 1;
 
       const [membersRes, plansRes] = await Promise.all([
         supabase
           .from('members')
-          .select('*, plans(name, price)', { count: 'exact' })
+          .select('*, plans(name, price, duration_days)', { count: 'exact' })
           .eq('gym_id', gymId)
           .order('created_at', { ascending: false })
           .range(from, to),
         supabase
           .from('plans')
-          .select('id, name, price')
+          .select('id, name, price, duration_days')
           .eq('gym_id', gymId)
       ]);
 
@@ -70,7 +92,7 @@ export default function MembersManagement() {
     } finally {
       setLoading(false);
     }
-  }, [gymId, page, showToast]);
+  }, [demoState.members, demoState.plans, gymId, isDemoMode, page, showToast]);
 
   useEffect(() => {
     fetchMembers();
@@ -106,7 +128,6 @@ export default function MembersManagement() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!gymId) return;
 
     if (formData.full_name.trim().length < 2) {
       showToast('Name must be at least 2 characters.', 'error');
@@ -115,20 +136,65 @@ export default function MembersManagement() {
 
     setIsSubmitting(true);
     try {
+      if (isDemoMode) {
+        if (editingMember) {
+          updateMember(editingMember.id, {
+            full_name: formData.full_name.trim(),
+            email: formData.email || undefined,
+            phone: formData.phone || undefined,
+            plan_id: formData.plan_id || undefined,
+          });
+          showToast('Member updated. This is demo mode. Changes are not saved.', 'info');
+        } else {
+          addMember({
+            full_name: formData.full_name.trim(),
+            email: formData.email || undefined,
+            phone: formData.phone || undefined,
+            plan_id: formData.plan_id || undefined,
+          });
+          showToast('Member added. This is demo mode. Changes are not saved.', 'info');
+        }
+        handleCloseModal();
+        return;
+      }
+
+      if (!gymId) return;
+
       if (editingMember) {
+        // Recalculate expiry if plan changed
+        const updatePayload: any = {
+          full_name: formData.full_name.trim(),
+          email: formData.email || null,
+          phone: formData.phone || null,
+          plan_id: formData.plan_id || null,
+        };
+
+        if (formData.plan_id && formData.plan_id !== editingMember.plan_id) {
+          const newPlan = plans.find(p => p.id === formData.plan_id);
+          if (newPlan?.duration_days) {
+            const today = new Date().toISOString().split('T')[0];
+            updatePayload.expiry_date = calculateExpiryDate(today, newPlan.duration_days);
+          }
+        }
+
         const { error } = await supabase
           .from('members')
-          .update({
-            full_name: formData.full_name.trim(),
-            email: formData.email || null,
-            phone: formData.phone || null,
-            plan_id: formData.plan_id || null,
-          })
-          .eq('id', editingMember.id);
+          .update(updatePayload)
+          .eq('id', editingMember.id)
+          .eq('gym_id', gymId);
 
         if (error) throw error;
         showToast('Member updated successfully!', 'success');
       } else {
+        // Calculate expiry_date from plan duration
+        const selectedPlan = formData.plan_id
+          ? plans.find(p => p.id === formData.plan_id)
+          : null;
+        const today = new Date().toISOString().split('T')[0];
+        const expiryDate = selectedPlan?.duration_days
+          ? calculateExpiryDate(today, selectedPlan.duration_days)
+          : null;
+
         const { error } = await supabase
           .from('members')
           .insert([{
@@ -137,15 +203,19 @@ export default function MembersManagement() {
             email: formData.email || null,
             phone: formData.phone || null,
             plan_id: formData.plan_id || null,
+            join_date: today,
+            expiry_date: expiryDate,
             status: 'ACTIVE'
           }]);
 
         if (error) throw error;
+
         showToast('Member added successfully!', 'success');
       }
 
       handleCloseModal();
       fetchMembers();
+      refreshUsage(); // Refresh usage data after member add/edit
     } catch (error: any) {
       console.error('Error saving member:', error);
       showToast(error.message || 'Failed to save member.', 'error');
@@ -160,9 +230,15 @@ export default function MembersManagement() {
       title: 'Delete Member',
       message: `Are you sure you want to delete "${member.full_name}"? This action cannot be undone.`,
       onConfirm: async () => {
+        if (isDemoMode) {
+          deleteMember(member.id);
+          showToast('Member removed. This is demo mode. Changes are not saved.', 'info');
+          setConfirmModal(prev => ({ ...prev, isOpen: false }));
+          return;
+        }
         setConfirmModal(prev => ({ ...prev, isOpen: false }));
         try {
-          const { error } = await supabase.from('members').delete().eq('id', member.id);
+          const { error } = await supabase.from('members').delete().eq('id', member.id).eq('gym_id', gymId);
           if (error) throw error;
           showToast('Member deleted.', 'success');
           fetchMembers();
@@ -175,13 +251,17 @@ export default function MembersManagement() {
 
   // ─── CSV EXPORT ───────────────────────────────────────────
   const handleExportCSV = async () => {
+    if (isDemoMode) {
+      showToast('This is demo mode. Changes are not saved.', 'info');
+      return;
+    }
     if (!gymId) return;
     setIsExporting(true);
     try {
       // Fetch ALL members (not just current page)
       const { data, error } = await supabase
         .from('members')
-        .select('full_name, email, phone, status, created_at, plans(name)')
+        .select('full_name, email, phone, status, created_at, expiry_date, plans(name)')
         .eq('gym_id', gymId)
         .order('created_at', { ascending: false });
 
@@ -191,15 +271,20 @@ export default function MembersManagement() {
         return;
       }
 
-      const headers = ['Full Name', 'Email', 'Phone', 'Plan', 'Status', 'Joined Date'];
-      const rows = data.map((m: any) => [
-        `"${(m.full_name || '').replace(/"/g, '""')}"`,
-        `"${(m.email || '').replace(/"/g, '""')}"`,
-        `"${(m.phone || '').replace(/"/g, '""')}"`,
-        `"${(m.plans?.name || 'No Plan').replace(/"/g, '""')}"`,
-        m.status || 'ACTIVE',
-        new Date(m.created_at).toLocaleDateString(),
-      ]);
+      const headers = ['Full Name', 'Email', 'Phone', 'Plan', 'Status', 'Joined Date', 'Expiry Date', 'Alert'];
+      const rows = data.map((m: any) => {
+        const alert = getMemberExpiryAlert(m.expiry_date);
+        return [
+          `"${(m.full_name || '').replace(/"/g, '""')}"`,
+          `"${(m.email || '').replace(/"/g, '""')}"`,
+          `"${(m.phone || '').replace(/"/g, '""')}"`,
+          `"${(m.plans?.name || 'No Plan').replace(/"/g, '""')}"`,
+          m.status || 'ACTIVE',
+          new Date(m.created_at).toLocaleDateString(),
+          m.expiry_date ? new Date(m.expiry_date).toLocaleDateString() : '',
+          alert.label,
+        ];
+      });
 
       const csvContent = [headers.join(','), ...rows.map(r => r.join(','))].join('\n');
       const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
@@ -221,6 +306,11 @@ export default function MembersManagement() {
   // ─── CSV IMPORT ───────────────────────────────────────────
   const handleImportCSV = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
+    if (isDemoMode) {
+      showToast('This is demo mode. Changes are not saved.', 'info');
+      if (csvInputRef.current) csvInputRef.current.value = '';
+      return;
+    }
     if (!file || !gymId) return;
 
     setIsImporting(true);
@@ -326,332 +416,241 @@ export default function MembersManagement() {
     return result;
   };
 
-  const filteredMembers = members.filter(m =>
-    m.full_name?.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    m.email?.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    m.phone?.includes(searchQuery)
-  );
+  const filteredMembers = members.filter(m => {
+    // 1. Search filter
+    const query = searchQuery.toLowerCase();
+    const searchMatch = !query || 
+      m.full_name?.toLowerCase().includes(query) ||
+      m.email?.toLowerCase().includes(query) ||
+      m.phone?.includes(query);
+
+    if (!searchMatch) return false;
+
+    // 2. Status filter
+    if (filterStatus === 'All Members') return true;
+
+    const daysLeft = getDaysLeft(m.expiry_date);
+    const hasExpiry = daysLeft !== null;
+
+    switch (filterStatus) {
+      case 'Active':
+        return !hasExpiry || daysLeft >= 0;
+      case 'Expired':
+        return hasExpiry && daysLeft < 0;
+      case 'Expiring Soon':
+        return hasExpiry && daysLeft >= 3 && daysLeft <= 7;
+      case 'Payment Due':
+        return ((m as Member & { due_amount?: number }).due_amount || 0) > 0;
+      default:
+        return true;
+    }
+  });
 
   const totalPages = Math.ceil(totalCount / PAGE_SIZE);
 
   return (
-    <div className="p-6 lg:p-8 space-y-6">
+    <div className="p-4 sm:p-6 lg:p-8 space-y-4 sm:space-y-6">
+      {/* Usage Limit Banner */}
+      <UsageLimitBanner resource="members" className="mb-2" />
+
       {/* Page Header */}
-      <div className="flex flex-wrap items-center justify-between gap-4">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 sm:gap-4">
         <div>
-          <h1 className="text-2xl lg:text-3xl font-display font-extrabold text-neutral-text dark:text-white tracking-tight">
+          <h1 className="text-xl sm:text-2xl lg:text-3xl font-display font-extrabold text-neutral-text dark:text-white tracking-tight">
             Members
           </h1>
-          <p className="text-slate-500 dark:text-slate-400 text-sm mt-1">
-            Directory of all registered gym members and their subscription status.
+          <p className="text-slate-500 dark:text-slate-400 text-xs sm:text-sm mt-1">
+            {totalCount} registered members
           </p>
         </div>
-        <div className="flex items-center gap-2 flex-wrap">
-          {/* CSV Download */}
+        <div className="flex items-center gap-2">
+          {/* CSV Download — icon-only on mobile */}
           <button
             onClick={handleExportCSV}
             disabled={isExporting}
-            className="flex items-center gap-2 rounded-xl h-11 px-4 bg-emerald-600 text-white text-sm font-bold shadow-lg shadow-emerald-600/20 hover:brightness-110 active:scale-95 transition-all disabled:opacity-50"
+            className="flex items-center justify-center gap-2 rounded-xl h-11 px-3 sm:px-4 bg-emerald-600 text-white text-sm font-bold shadow-lg shadow-emerald-600/20 hover:brightness-110 active:scale-95 transition-all disabled:opacity-50"
+            title="Download CSV"
           >
             <span className="material-symbols-outlined text-lg">download</span>
-            {isExporting ? 'Exporting...' : 'Download CSV'}
+            <span className="hidden sm:inline">{isExporting ? 'Exporting...' : 'CSV'}</span>
           </button>
 
-          {/* CSV Upload */}
-          <input
-            ref={csvInputRef}
-            type="file"
-            accept=".csv"
-            className="hidden"
-            onChange={handleImportCSV}
-          />
+          {/* CSV Upload — icon-only on mobile */}
+          <input ref={csvInputRef} type="file" accept=".csv" className="hidden" onChange={handleImportCSV} />
           <button
             onClick={() => csvInputRef.current?.click()}
             disabled={isImporting}
-            className="flex items-center gap-2 rounded-xl h-11 px-4 bg-blue-600 text-white text-sm font-bold shadow-lg shadow-blue-600/20 hover:brightness-110 active:scale-95 transition-all disabled:opacity-50"
+            className="flex items-center justify-center gap-2 rounded-xl h-11 px-3 sm:px-4 bg-blue-600 text-white text-sm font-bold shadow-lg shadow-blue-600/20 hover:brightness-110 active:scale-95 transition-all disabled:opacity-50"
+            title="Upload CSV"
           >
             <span className="material-symbols-outlined text-lg">upload</span>
-            {isImporting ? 'Importing...' : 'Upload CSV'}
+            <span className="hidden sm:inline">{isImporting ? 'Importing...' : 'Upload'}</span>
           </button>
 
-          {/* Add Member */}
-          <button
-            onClick={openAddModal}
-            className="flex items-center gap-2 rounded-xl h-11 px-5 bg-accent-default text-white text-sm font-bold shadow-lg shadow-orange-500/20 hover:brightness-110 active:scale-95 transition-all"
-          >
-            <span className="material-symbols-outlined text-lg">person_add</span>
-            Add Member
-          </button>
+          {/* Add Member — gated by usage limit */}
+          <UsageLimitGuard resource="members">
+            <button
+              onClick={openAddModal}
+              className="flex items-center gap-2 rounded-xl h-11 px-4 sm:px-5 bg-accent-default text-white text-sm font-bold shadow-lg shadow-orange-500/20 hover:brightness-110 active:scale-95 transition-all"
+            >
+              <span className="material-symbols-outlined text-lg">person_add</span>
+              <span className="hidden xs:inline">Add</span>
+            </button>
+          </UsageLimitGuard>
         </div>
       </div>
 
-      {/* Search Bar */}
+      {/* Search Bar & Filters */}
       <div className="flex flex-col sm:flex-row gap-3">
+        {/* Search Input */}
         <div className="relative flex-1">
           <span className="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-xl">search</span>
           <input
             id="member-search"
             value={searchQuery}
             onChange={(e) => { setSearchQuery(e.target.value); setPage(1); }}
-            className="w-full bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl h-11 pl-10 pr-4 text-sm focus:ring-2 focus:ring-primary-default/20 focus:border-primary-default outline-none transition-all"
+            className="w-full bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl h-11 pl-10 pr-4 text-sm focus:ring-2 focus:ring-primary-default/20 focus:border-primary-default outline-none transition-all text-neutral-text dark:text-white placeholder:text-slate-400"
             placeholder="Search by name, email or phone..."
             aria-label="Search members"
           />
         </div>
+        
+        {/* Filter Dropdown */}
+        <div className="shrink-0 relative">
+          <span className="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-lg pointer-events-none">filter_list</span>
+          <select
+            value={filterStatus}
+            onChange={(e) => { setFilterStatus(e.target.value); setPage(1); }}
+            className="w-full sm:w-48 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl h-11 pl-10 pr-10 text-sm focus:ring-2 focus:ring-primary-default/20 focus:border-primary-default outline-none transition-all appearance-none cursor-pointer text-neutral-text dark:text-white"
+            style={{ 
+              backgroundImage: 'url("data:image/svg+xml,%3Csvg xmlns=\'http://www.w3.org/2000/svg\' fill=\'none\' viewBox=\'0 0 24 24\' stroke=\'%2364748b\'%3E%3Cpath stroke-linecap=\'round\' stroke-linejoin=\'round\' stroke-width=\'2\' d=\'M19 9l-7 7-7-7\'%3E%3C/path%3E%3C/svg%3E")', 
+              backgroundPosition: 'right 12px center', 
+              backgroundRepeat: 'no-repeat', 
+              backgroundSize: '16px' 
+            }}
+          >
+            <option value="All Members">All Members</option>
+            <option value="Active">Active</option>
+            <option value="Expired">Expired</option>
+            <option value="Expiring Soon">Expiring Soon</option>
+            <option value="Payment Due">Payment Due</option>
+          </select>
+        </div>
       </div>
 
-      {/* Table */}
-      <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl overflow-hidden shadow-sm">
-        <div className="overflow-x-auto">
-          <table className="w-full text-left border-collapse">
-            <thead>
-              <tr className="bg-slate-50 dark:bg-slate-800/50 border-b border-slate-200 dark:border-slate-800">
-                <th className="px-5 py-3.5 text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400">Member</th>
-                <th className="px-5 py-3.5 text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400">Plan</th>
-                <th className="px-5 py-3.5 text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400 hidden md:table-cell">Joined</th>
-                <th className="px-5 py-3.5 text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400">Status</th>
-                <th className="px-5 py-3.5 text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400">Actions</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-slate-100 dark:divide-slate-800">
-              {loading ? (
-                <tr>
-                  <td colSpan={5} className="py-12 text-center">
-                    <div className="flex justify-center"><div className="size-8 border-4 border-primary-default border-t-transparent rounded-full animate-spin" /></div>
-                  </td>
-                </tr>
-              ) : filteredMembers.length === 0 ? (
-                <tr>
-                  <td colSpan={5} className="py-12 text-center text-slate-500">
-                    {searchQuery ? 'No members match your search.' : 'No members found. Add your first member!'}
-                  </td>
-                </tr>
-              ) : (
-                filteredMembers.map((member) => (
-                  <tr key={member.id} className="hover:bg-slate-50/80 dark:hover:bg-slate-800/30 transition-colors">
-                    <td className="px-5 py-4">
-                      <div className="flex items-center gap-3">
-                        <div className="size-9 rounded-full bg-primary-default/10 flex items-center justify-center text-primary-default font-bold text-sm">
-                          {member.full_name?.charAt(0) || '?'}
-                        </div>
-                        <div>
-                          <Link to={`/admin/members/${member.id}`} className="font-semibold text-sm text-primary-default hover:underline block">{member.full_name}</Link>
-                          <span className="text-xs text-slate-500">{member.email || member.phone || '—'}</span>
-                        </div>
-                      </div>
-                    </td>
-                    <td className="px-5 py-4">
-                      {member.plans ? (
-                        <span className="inline-flex items-center rounded-lg bg-slate-100 dark:bg-slate-800 px-2.5 py-1 text-xs font-medium text-slate-700 dark:text-slate-300">
-                          {member.plans.name}
-                        </span>
-                      ) : (
-                        <span className="text-xs text-slate-400">No Plan</span>
-                      )}
-                    </td>
-                    <td className="px-5 py-4 text-sm text-slate-500 hidden md:table-cell">
-                      {new Date(member.created_at).toLocaleDateString()}
-                    </td>
-                    <td className="px-5 py-4">
-                      {member.status === 'ACTIVE' ? (
-                        <span className="inline-flex items-center gap-1.5 rounded-full bg-emerald-50 dark:bg-emerald-900/20 px-2.5 py-1 text-xs font-semibold text-emerald-700 dark:text-emerald-400">
-                          <span className="size-1.5 rounded-full bg-emerald-500" />Active
-                        </span>
-                      ) : (
-                        <span className="inline-flex items-center gap-1.5 rounded-full bg-red-50 dark:bg-red-900/20 px-2.5 py-1 text-xs font-semibold text-red-700 dark:text-red-400">
-                          <span className="size-1.5 rounded-full bg-red-500" />{member.status}
-                        </span>
-                      )}
-                    </td>
-                    <td className="px-5 py-4">
-                      <div className="flex gap-1">
-                        <button
-                          onClick={() => openEditModal(member)}
-                          className="p-1.5 text-slate-400 hover:text-primary-default hover:bg-primary-default/10 rounded-lg transition-colors"
-                          title="Edit member"
-                          aria-label={`Edit ${member.full_name}`}
-                        >
-                          <span className="material-symbols-outlined text-lg">edit</span>
-                        </button>
-                        <button
-                          onClick={() => handleDelete(member)}
-                          className="p-1.5 text-slate-400 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-950/50 rounded-lg transition-colors"
-                          title="Delete member"
-                          aria-label={`Delete ${member.full_name}`}
-                        >
-                          <span className="material-symbols-outlined text-lg">delete</span>
-                        </button>
-                      </div>
-                    </td>
-                  </tr>
-                ))
-              )}
-            </tbody>
-          </table>
-        </div>
-        {/* Footer — Pagination */}
-        <div className="flex items-center justify-between px-5 py-3 bg-slate-50 dark:bg-slate-800/50 border-t border-slate-200 dark:border-slate-800">
-          <span className="text-sm text-slate-500">
-            {searchQuery ? `${filteredMembers.length} results` : `${totalCount} total members`}
-          </span>
+      {/* ═══ Mobile Card Layout (< 640px) ═══ */}
+      <div className="sm:hidden space-y-3">
+        {loading ? (
+          Array.from({ length: 4 }).map((_, i) => (
+            <div key={i} className="bg-white dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-800 p-4">
+              <div className="flex items-center gap-3">
+                <div className="skeleton w-10 h-10 rounded-full shrink-0" />
+                <div className="flex-1">
+                  <div className="skeleton w-32 h-3.5 mb-2" />
+                  <div className="skeleton w-24 h-2.5" />
+                </div>
+                <div className="skeleton w-16 h-6 rounded-full" />
+              </div>
+            </div>
+          ))
+        ) : filteredMembers.length === 0 ? (
+          <EmptyState
+            icon={searchQuery ? 'search_off' : 'group'}
+            title={searchQuery ? 'No members match this search' : 'No members yet'}
+            description={searchQuery ? 'Try a different name, email, or phone number.' : 'Add your first member to start tracking plans, renewals, and attendance.'}
+            actionLabel={searchQuery ? undefined : 'Add your first member'}
+            onAction={searchQuery ? undefined : openAddModal}
+          />
+        ) : (
+          filteredMembers.map((member) => {
+            const alert = getMemberExpiryAlert(member.expiry_date);
+            return (
+            <div key={member.id} className="bg-white dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-800 p-4 active:bg-slate-50 dark:active:bg-slate-800/50 transition-colors">
+              <div className="flex items-center gap-3">
+                <Link to={`/admin/members/${member.id}`} className="size-11 rounded-full bg-primary-default/10 flex items-center justify-center text-primary-default font-bold text-sm shrink-0">
+                  {member.full_name?.charAt(0) || '?'}
+                </Link>
+                <Link to={`/admin/members/${member.id}`} className="flex-1 min-w-0">
+                  <p className="font-semibold text-sm text-neutral-text dark:text-white truncate">{member.full_name}</p>
+                  <p className="text-xs text-slate-500 truncate">{member.email || member.phone || '—'}</p>
+                </Link>
+                {member.status === 'ACTIVE' ? (
+                  <span className="inline-flex items-center gap-1 rounded-full bg-emerald-50 dark:bg-emerald-900/20 px-2 py-0.5 text-[10px] font-semibold text-emerald-700 dark:text-emerald-400 shrink-0">
+                    <span className="size-1.5 rounded-full bg-emerald-500" />Active
+                  </span>
+                ) : (
+                  <span className="inline-flex items-center gap-1 rounded-full bg-red-50 dark:bg-red-900/20 px-2 py-0.5 text-[10px] font-semibold text-red-700 dark:text-red-400 shrink-0">
+                    <span className="size-1.5 rounded-full bg-red-500" />{member.status}
+                  </span>
+                )}
+              </div>
+              <div className="flex items-center justify-between mt-3 pt-3 border-t border-slate-100 dark:border-slate-800">
+                <div className="flex items-center gap-2">
+                  {member.plans ? (
+                    <span className="inline-flex items-center rounded-lg bg-slate-100 dark:bg-slate-800 px-2 py-0.5 text-[11px] font-medium text-slate-600 dark:text-slate-300">
+                      {member.plans.name}
+                    </span>
+                  ) : (
+                    <span className="text-[11px] text-slate-400">No Plan</span>
+                  )}
+                  <AlertBadge variant={alert.variant}>{alert.label}</AlertBadge>
+                </div>
+                <div className="flex gap-1">
+                  <button onClick={() => openEditModal(member)} className="size-10 flex items-center justify-center text-slate-400 hover:text-primary-default hover:bg-primary-default/10 rounded-lg transition-colors" aria-label={`Edit ${member.full_name}`}>
+                    <span className="material-symbols-outlined text-lg">edit</span>
+                  </button>
+                  <button onClick={() => handleDelete(member)} className="size-10 flex items-center justify-center text-slate-400 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-950/50 rounded-lg transition-colors" aria-label={`Delete ${member.full_name}`}>
+                    <span className="material-symbols-outlined text-lg">delete</span>
+                  </button>
+                </div>
+              </div>
+            </div>
+            );
+          })
+        )}
+        {/* Mobile Pagination */}
+        <div className="flex items-center justify-between py-2">
+          <span className="text-xs text-slate-500">{searchQuery ? `${filteredMembers.length} results` : `${totalCount} total`}</span>
           {totalPages > 1 && (
             <div className="flex items-center gap-2">
-              <button
-                onClick={() => setPage(p => Math.max(1, p - 1))}
-                disabled={page === 1}
-                className="px-3 py-1.5 text-xs font-bold bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-lg disabled:opacity-40 hover:bg-slate-50 transition-colors"
-              >
-                ← Prev
-              </button>
-              <span className="text-xs text-slate-500 font-medium">Page {page} of {totalPages}</span>
-              <button
-                onClick={() => setPage(p => Math.min(totalPages, p + 1))}
-                disabled={page === totalPages}
-                className="px-3 py-1.5 text-xs font-bold bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-lg disabled:opacity-40 hover:bg-slate-50 transition-colors"
-              >
-                Next →
-              </button>
+              <button onClick={() => setPage(p => Math.max(1, p - 1))} disabled={page === 1} className="size-10 flex items-center justify-center bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-lg disabled:opacity-40 text-sm font-bold">←</button>
+              <span className="text-xs text-slate-500 font-medium">{page}/{totalPages}</span>
+              <button onClick={() => setPage(p => Math.min(totalPages, p + 1))} disabled={page === totalPages} className="size-10 flex items-center justify-center bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-lg disabled:opacity-40 text-sm font-bold">→</button>
             </div>
           )}
         </div>
       </div>
 
-      {/* Add / Edit Member Modal */}
-      {showAddModal && (
-        <div
-          className="fixed inset-0 z-[100] flex items-center justify-center bg-black/60 backdrop-blur-sm p-4"
-          onClick={handleCloseModal}
-        >
-          <div
-            className="bg-white dark:bg-slate-900 rounded-2xl w-full max-w-md shadow-2xl border border-slate-200 dark:border-slate-800 overflow-hidden flex flex-col max-h-[90vh]"
-            onClick={e => e.stopPropagation()}
-            role="dialog"
-            aria-modal="true"
-            aria-labelledby="member-modal-title"
-          >
-            <div className="flex items-center justify-between px-6 py-4 border-b border-slate-100 dark:border-slate-800">
-              <h3 id="member-modal-title" className="text-lg font-bold text-neutral-text dark:text-white">
-                {editingMember ? 'Edit Member' : 'Add New Member'}
-              </h3>
-              <button
-                onClick={handleCloseModal}
-                className="p-2 text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-lg transition-colors"
-                aria-label="Close modal"
-              >
-                <span className="material-symbols-outlined">close</span>
-              </button>
-            </div>
+      <MembersTable
+        loading={loading}
+        members={filteredMembers}
+        searchQuery={searchQuery}
+        onEdit={openEditModal}
+        onDelete={handleDelete}
+        page={page}
+        totalPages={totalPages}
+        totalCount={totalCount}
+        setPage={setPage}
+      />
 
-            <form onSubmit={handleSubmit} className="p-6 space-y-4 overflow-y-auto">
-              <div className="space-y-1.5">
-                <label htmlFor="member-name" className="text-sm font-bold text-slate-700 dark:text-slate-300">Full Name *</label>
-                <input
-                  id="member-name"
-                  required
-                  minLength={2}
-                  value={formData.full_name}
-                  onChange={(e) => setFormData({ ...formData, full_name: e.target.value })}
-                  type="text"
-                  placeholder="Enter full name"
-                  className="w-full bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl h-11 px-4 text-sm focus:ring-2 focus:ring-primary-default/20 focus:border-primary-default outline-none transition-all"
-                />
-              </div>
-              <div className="space-y-1.5">
-                <label htmlFor="member-email" className="text-sm font-bold text-slate-700 dark:text-slate-300">Email Address</label>
-                <input
-                  id="member-email"
-                  value={formData.email}
-                  onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-                  type="email"
-                  placeholder="Optional"
-                  className="w-full bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl h-11 px-4 text-sm focus:ring-2 focus:ring-primary-default/20 focus:border-primary-default outline-none transition-all"
-                />
-              </div>
-              <div className="space-y-1.5">
-                <label htmlFor="member-phone" className="text-sm font-bold text-slate-700 dark:text-slate-300">Phone</label>
-                <input
-                  id="member-phone"
-                  value={formData.phone}
-                  onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
-                  type="tel"
-                  pattern="^[+\-0-9\s]*$"
-                  title="Phone number can only contain numbers, spaces, plus, and minus signs"
-                  placeholder="Optional"
-                  className="w-full bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl h-11 px-4 text-sm focus:ring-2 focus:ring-primary-default/20 focus:border-primary-default outline-none transition-all"
-                />
-              </div>
-              <div className="space-y-1.5">
-                <label htmlFor="member-plan" className="text-sm font-bold text-slate-700 dark:text-slate-300">Select Plan</label>
-                <select
-                  id="member-plan"
-                  value={formData.plan_id}
-                  onChange={(e) => setFormData({ ...formData, plan_id: e.target.value })}
-                  className="w-full appearance-none bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl h-11 px-4 text-sm focus:ring-2 focus:ring-primary-default/20 focus:border-primary-default outline-none transition-all"
-                >
-                  <option value="">No Plan</option>
-                  {plans.map(plan => (
-                    <option key={plan.id} value={plan.id}>{plan.name} (৳{plan.price})</option>
-                  ))}
-                </select>
-              </div>
+      <MemberModal
+        isOpen={showAddModal}
+        isEditing={!!editingMember}
+        formData={formData}
+        setFormData={setFormData}
+        plans={plans}
+        isSubmitting={isSubmitting}
+        onSubmit={handleSubmit}
+        onClose={handleCloseModal}
+      />
 
-              <div className="pt-4 flex gap-3">
-                <button
-                  type="button"
-                  onClick={handleCloseModal}
-                  className="flex-1 h-11 rounded-xl font-bold text-slate-600 dark:text-slate-300 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 transition-colors"
-                >
-                  Cancel
-                </button>
-                <button
-                  disabled={isSubmitting}
-                  type="submit"
-                  className="flex-1 h-11 rounded-xl font-bold text-white bg-primary-default hover:brightness-110 transition-all shadow-lg shadow-primary-default/20 disabled:opacity-50 flex items-center justify-center"
-                >
-                  {isSubmitting ? (
-                    <div className="size-5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
-                  ) : editingMember ? 'Update Member' : 'Create Member'}
-                </button>
-              </div>
-            </form>
-          </div>
-        </div>
-      )}
-
-      {/* Styled Confirm Modal */}
-      {confirmModal.isOpen && (
-        <div
-          className="fixed inset-0 z-[200] flex items-center justify-center bg-black/60 backdrop-blur-sm p-4"
-          onClick={() => setConfirmModal(prev => ({ ...prev, isOpen: false }))}
-        >
-          <div
-            className="bg-white dark:bg-slate-900 rounded-2xl w-full max-w-sm shadow-2xl border border-slate-200 dark:border-slate-800 p-6"
-            onClick={e => e.stopPropagation()}
-            role="dialog"
-            aria-modal="true"
-          >
-            <div className="size-12 rounded-full bg-red-100 dark:bg-red-900/30 flex items-center justify-center mx-auto mb-4">
-              <span className="material-symbols-outlined text-red-600 text-2xl">delete_forever</span>
-            </div>
-            <h3 className="text-lg font-bold text-center text-neutral-text dark:text-white mb-2">{confirmModal.title}</h3>
-            <p className="text-sm text-slate-500 text-center mb-6">{confirmModal.message}</p>
-            <div className="flex gap-3">
-              <button
-                onClick={() => setConfirmModal(prev => ({ ...prev, isOpen: false }))}
-                className="flex-1 h-11 rounded-xl font-bold text-slate-600 dark:text-slate-300 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 transition-colors"
-              >
-                Cancel
-              </button>
-              <button
-                onClick={confirmModal.onConfirm}
-                className="flex-1 h-11 rounded-xl font-bold text-white bg-red-500 hover:bg-red-600 transition-colors"
-              >
-                Delete
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
+      <ConfirmModal
+        isOpen={confirmModal.isOpen}
+        title={confirmModal.title}
+        message={confirmModal.message}
+        onConfirm={confirmModal.onConfirm}
+        onCancel={() => setConfirmModal(prev => ({ ...prev, isOpen: false }))}
+      />
     </div>
   );
 }

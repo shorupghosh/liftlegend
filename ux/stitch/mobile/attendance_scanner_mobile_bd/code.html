@@ -1,0 +1,159 @@
+<!DOCTYPE html>
+
+<html class="light" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Attendance Scanner</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    colors: {
+                        "primary": "#1978e5",
+                        "background-light": "#f6f7f8",
+                        "background-dark": "#111821",
+                    },
+                    fontFamily: {
+                        "display": ["Inter"]
+                    },
+                    borderRadius: {"DEFAULT": "1rem", "lg": "2rem", "xl": "3rem", "full": "9999px"},
+                },
+            },
+        }
+    </script>
+<style>
+        .scanner-frame {
+            border: 2px solid rgba(25, 120, 229, 0.5);
+            box-shadow: 0 0 0 1000px rgba(0, 0, 0, 0.4);
+        }
+        .scanner-line {
+            height: 2px;
+            background: linear-gradient(90deg, transparent, #1978e5, transparent);
+            top: 50%;
+        }
+    </style>
+<style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+  </head>
+<body class="bg-background-light dark:bg-background-dark font-display text-slate-900 dark:text-slate-100 min-h-screen flex flex-col">
+<!-- Header Navigation -->
+<header class="sticky top-0 z-50 bg-white/80 dark:bg-background-dark/80 backdrop-blur-md border-b border-slate-200 dark:border-slate-800">
+<div class="flex items-center justify-between px-4 py-3">
+<button class="p-2 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-full flex items-center justify-center">
+<span class="material-symbols-outlined">menu</span>
+</button>
+<h1 class="text-lg font-bold tracking-tight">Attendance Scanner</h1>
+<button class="p-2 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-full flex items-center justify-center">
+<span class="material-symbols-outlined">account_circle</span>
+</button>
+</div>
+</header>
+<main class="flex-1 flex flex-col overflow-y-auto pb-24">
+<!-- Status Bar/Instructions -->
+<div class="px-4 py-4 text-center">
+<p class="text-sm font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider">Scan QR Code</p>
+<p class="text-xs text-slate-400 dark:text-slate-500 mt-1">Align the code within the frame to record attendance</p>
+</div>
+<!-- Large Camera Preview Area -->
+<div class="relative flex-1 min-h-[400px] mx-4 rounded-lg overflow-hidden bg-slate-900 shadow-2xl">
+<!-- Simulated Camera Feed -->
+<div class="absolute inset-0 w-full h-full bg-cover bg-center opacity-80" data-alt="Office hallway view for camera background" style="background-image: url('https://lh3.googleusercontent.com/aida-public/AB6AXuCoLJbarxsWCzoMsZFCSGUxIatHux1fBFGhdSXLlPtEmKdpkGHSMAVG1-lOz8cweweSE17SIER8wOJgiZdMOBP5hUR1-1u5MFVGB6BOBtP3bWczeYloozvP5FHSzCTl3ssYyaYADwsl4tfOFhQMg8-Ost6lvlxfCGFJS10mW_jZlAgrSMnmSSE_l00I-sEXoqUfZijgeeqP0YQrICitnXdBqO3PkGlfYOouUgnihZPfwYHtTFZeYeHwAkppiItuShhkHNgkBKjP_KHV')"></div>
+<!-- Scanner Overlay -->
+<div class="absolute inset-0 flex items-center justify-center pointer-events-none">
+<div class="w-64 h-64 scanner-frame rounded-lg relative overflow-hidden">
+<div class="scanner-line absolute w-full"></div>
+<!-- Corners -->
+<div class="absolute top-0 left-0 w-8 h-8 border-t-4 border-l-4 border-primary rounded-tl-sm"></div>
+<div class="absolute top-0 right-0 w-8 h-8 border-t-4 border-r-4 border-primary rounded-tr-sm"></div>
+<div class="absolute bottom-0 left-0 w-8 h-8 border-b-4 border-l-4 border-primary rounded-bl-sm"></div>
+<div class="absolute bottom-0 right-0 w-8 h-8 border-b-4 border-r-4 border-primary rounded-br-sm"></div>
+</div>
+</div>
+<!-- Floating Controls -->
+<div class="absolute bottom-6 left-0 right-0 flex justify-center items-center gap-6 px-4">
+<button class="flex shrink-0 items-center justify-center rounded-full size-12 bg-black/50 text-white backdrop-blur-md hover:bg-primary/80 transition-colors">
+<span class="material-symbols-outlined">image</span>
+</button>
+<button class="flex shrink-0 items-center justify-center rounded-full size-20 bg-primary text-white shadow-lg border-4 border-white/20">
+<span class="material-symbols-outlined !text-4xl">photo_camera</span>
+</button>
+<button class="flex shrink-0 items-center justify-center rounded-full size-12 bg-black/50 text-white backdrop-blur-md hover:bg-primary/80 transition-colors">
+<span class="material-symbols-outlined">flashlight_on</span>
+</button>
+</div>
+</div>
+<!-- Recent Scans Section -->
+<section class="mt-8 px-4">
+<div class="flex items-center justify-between mb-4">
+<h3 class="text-lg font-bold">Recent Scans</h3>
+<button class="text-sm font-semibold text-primary">View All</button>
+</div>
+<div class="flex flex-col gap-3">
+<!-- Scan Item -->
+<div class="flex items-center gap-4 p-4 bg-white dark:bg-slate-800 rounded-xl shadow-sm border border-slate-100 dark:border-slate-700">
+<div class="size-12 rounded-full bg-primary/10 flex items-center justify-center text-primary">
+<span class="material-symbols-outlined">check_circle</span>
+</div>
+<div class="flex-1">
+<h4 class="font-bold text-sm">John Doe</h4>
+<p class="text-xs text-slate-500 dark:text-slate-400">Marketing Department • 09:15 AM</p>
+</div>
+<div class="text-right">
+<span class="text-[10px] font-bold px-2 py-1 rounded-full bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400 uppercase">Success</span>
+</div>
+</div>
+<!-- Scan Item -->
+<div class="flex items-center gap-4 p-4 bg-white dark:bg-slate-800 rounded-xl shadow-sm border border-slate-100 dark:border-slate-700">
+<div class="size-12 rounded-full bg-primary/10 flex items-center justify-center text-primary">
+<span class="material-symbols-outlined">check_circle</span>
+</div>
+<div class="flex-1">
+<h4 class="font-bold text-sm">Sarah Williams</h4>
+<p class="text-xs text-slate-500 dark:text-slate-400">Engineering • 09:12 AM</p>
+</div>
+<div class="text-right">
+<span class="text-[10px] font-bold px-2 py-1 rounded-full bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400 uppercase">Success</span>
+</div>
+</div>
+<!-- Scan Item -->
+<div class="flex items-center gap-4 p-4 bg-white dark:bg-slate-800 rounded-xl shadow-sm border border-slate-100 dark:border-slate-700">
+<div class="size-12 rounded-full bg-red-100 dark:bg-red-900/20 flex items-center justify-center text-red-500">
+<span class="material-symbols-outlined">error</span>
+</div>
+<div class="flex-1">
+<h4 class="font-bold text-sm">Unknown ID</h4>
+<p class="text-xs text-slate-500 dark:text-slate-400">Access Denied • 09:08 AM</p>
+</div>
+<div class="text-right">
+<span class="text-[10px] font-bold px-2 py-1 rounded-full bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400 uppercase">Failed</span>
+</div>
+</div>
+</div>
+</section>
+</main>
+<!-- Bottom Navigation Bar -->
+<nav class="fixed bottom-0 left-0 right-0 bg-white dark:bg-background-dark border-t border-slate-200 dark:border-slate-800 px-4 pb-6 pt-2 z-50">
+<div class="flex justify-around items-center">
+<a class="flex flex-col items-center gap-1 text-primary" href="#">
+<span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 1">qr_code_scanner</span>
+<p class="text-xs font-semibold">Scanner</p>
+</a>
+<a class="flex flex-col items-center gap-1 text-slate-400 dark:text-slate-500 hover:text-primary transition-colors" href="#">
+<span class="material-symbols-outlined">history</span>
+<p class="text-xs font-semibold">History</p>
+</a>
+<a class="flex flex-col items-center gap-1 text-slate-400 dark:text-slate-500 hover:text-primary transition-colors" href="#">
+<span class="material-symbols-outlined">settings</span>
+<p class="text-xs font-semibold">Settings</p>
+</a>
+</div>
+</nav>
+</body></html>

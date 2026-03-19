@@ -1,6 +1,14 @@
 import React, { useState, useEffect } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { useAuth } from '../../contexts/AuthContext';
+import { usePlan } from '../../contexts/PlanContext';
+import { APP_NAME } from '../../lib/branding';
+import { AdminSidebar } from './AdminSidebar';
+import { AdminHeader } from './AdminHeader';
+import { useDemoMode } from '../../hooks/useDemoMode';
+import { DemoBanner } from '../demo/DemoBanner';
+import { getTenantNavVisibility } from '../../lib/staffPermissions';
+import { PlanFeature } from '../../lib/planConfig';
 
 const tenantNavItems = [
     { label: 'Dashboard', icon: 'dashboard', path: '/admin' },
@@ -24,17 +32,57 @@ const superAdminNavItems = [
     { label: 'Audit Logs', icon: 'history', path: '/super-admin/audit' },
 ];
 
+// Bottom nav shows 4 primary items + "More"
+const tenantBottomNav = [
+    { label: 'Home', icon: 'dashboard', path: '/admin' },
+    { label: 'Members', icon: 'group', path: '/admin/members' },
+    { label: 'Scan', icon: 'qr_code_scanner', path: '/admin/attendance' },
+    { label: 'Payments', icon: 'payments', path: '/admin/payments' },
+];
+
+const superAdminBottomNav = [
+    { label: 'Home', icon: 'dashboard', path: '/super-admin' },
+    { label: 'Revenue', icon: 'trending_up', path: '/super-admin/revenue' },
+    { label: 'Subs', icon: 'card_membership', path: '/super-admin/subscriptions' },
+    { label: 'System', icon: 'monitor_heart', path: '/super-admin/system' },
+];
+
 interface AdminLayoutProps {
     children: React.ReactNode;
 }
 
 export default function AdminLayout({ children }: AdminLayoutProps) {
-    const { userRole, signOut, user } = useAuth();
+    const { userRole, signOut, user, subscriptionTier, isImpersonating, impersonatedGymName, stopImpersonation } = useAuth();
+    const { isDemoMode } = useDemoMode();
     const location = useLocation();
     const [sidebarOpen, setSidebarOpen] = useState(false);
+    const [moreMenuOpen, setMoreMenuOpen] = useState(false);
 
     const isSuperAdmin = userRole === 'SUPER_ADMIN';
-    const navItems = isSuperAdmin ? superAdminNavItems : tenantNavItems;
+    const isBasicTier = subscriptionTier === 'BASIC' || !subscriptionTier;
+    const visibleLabels = getTenantNavVisibility(userRole);
+
+    const filteredTenantNav = tenantNavItems.filter(item => {
+        if (isSuperAdmin) return true;
+        if (!visibleLabels.includes(item.label)) return false;
+        // Show ALL items — locked ones get a lock icon instead of being hidden
+        return true;
+    });
+
+    const navItems = isSuperAdmin && !isDemoMode ? superAdminNavItems : filteredTenantNav;
+    const filteredBottomNav = tenantBottomNav.filter(item => {
+        if (item.label === 'Home') return true;
+        if (item.label === 'Members') return visibleLabels.includes('Members');
+        if (item.label === 'Scan') return visibleLabels.includes('Attendance');
+        if (item.label === 'Payments') return visibleLabels.includes('Payments');
+        return true;
+    });
+    const bottomNavItems = isSuperAdmin && !isDemoMode ? superAdminBottomNav : filteredBottomNav;
+
+    // Items that only show in "More" menu on mobile
+    const moreItems = navItems.filter(
+        item => !bottomNavItems.some(bn => bn.path === item.path)
+    );
 
     // BUG-26 FIXED: Dynamic page title
     useEffect(() => {
@@ -44,8 +92,13 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
                 : location.pathname === item.path
         );
         const pageTitle = currentItem ? currentItem.label : 'Dashboard';
-        document.title = `${pageTitle} | LiftLegend`;
+        document.title = `${pageTitle} | ${APP_NAME}`;
     }, [location.pathname, navItems]);
+
+    // Close more menu on route change
+    useEffect(() => {
+        setMoreMenuOpen(false);
+    }, [location.pathname]);
 
     const isActive = (path: string) => {
         if (path === '/admin' || path === '/super-admin') {
@@ -55,132 +108,135 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
     };
 
     return (
-        <div className="flex h-screen bg-slate-100 dark:bg-slate-950 overflow-hidden">
-            {/* Mobile overlay */}
-            {sidebarOpen && (
-                <div
-                    className="fixed inset-0 bg-black/40 backdrop-blur-sm z-40 lg:hidden"
-                    onClick={() => setSidebarOpen(false)}
-                />
-            )}
-
-            {/* Sidebar */}
-            <aside
-                className={`
-          fixed lg:static inset-y-0 left-0 z-50
-          w-[260px] bg-white dark:bg-slate-900 border-r border-slate-200 dark:border-slate-800
-          flex flex-col
-          transform transition-transform duration-300 ease-out
-          ${sidebarOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'}
-        `}
-            >
-                {/* Logo area */}
-                <div className="h-16 flex items-center px-4 border-b border-slate-200 dark:border-slate-800 shrink-0">
+        <div className="flex flex-col h-screen bg-slate-100 dark:bg-slate-950 overflow-hidden">
+            {isDemoMode && <DemoBanner />}
+            {isImpersonating && !isDemoMode && (
+                <div className="relative z-[100] flex flex-wrap items-center justify-between gap-3 border-b border-blue-200 bg-blue-50 px-4 py-2 text-xs font-semibold text-blue-800 dark:border-blue-900/30 dark:bg-blue-950/30 dark:text-blue-200">
                     <div className="flex items-center gap-2">
-                        <img src="/main-logo.png" alt="Logo" className="h-8 object-contain" />
-                        <span className="text-[10px] font-bold text-primary-default uppercase tracking-widest bg-primary-default/10 px-2 py-0.5 rounded-full">
-                            {isSuperAdmin ? 'PLATFORM' : 'GYM OS'}
-                        </span>
+                        <span className="material-symbols-outlined text-base">admin_panel_settings</span>
+                        <span>You are viewing {impersonatedGymName || 'this gym'} as Super Admin.</span>
                     </div>
-                    {/* Close button on mobile */}
                     <button
-                        onClick={() => setSidebarOpen(false)}
-                        className="ml-auto size-8 flex items-center justify-center text-slate-400 hover:text-slate-600 lg:hidden rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800"
+                        type="button"
+                        onClick={stopImpersonation}
+                        className="rounded-lg bg-blue-600 px-3 py-1 font-bold text-white transition-colors hover:bg-blue-700"
                     >
-                        <span className="material-symbols-outlined text-xl">close</span>
+                        Exit Impersonation
                     </button>
                 </div>
+            )}
+            <div className="flex flex-1 overflow-hidden">
+            <AdminSidebar 
+                sidebarOpen={sidebarOpen} 
+                setSidebarOpen={setSidebarOpen} 
+                isSuperAdmin={isSuperAdmin} 
+                navItems={navItems} 
+                isActive={isActive} 
+                user={user} 
+                userRole={userRole} 
+                signOut={signOut} 
+            />
 
-                {/* Nav */}
-                <nav className="flex-1 overflow-y-auto py-4 px-3 space-y-1">
-                    {navItems.map((item) => {
+            {/* Main content area */}
+            <div className="flex-1 flex flex-col min-w-0">
+                <AdminHeader 
+                    setSidebarOpen={setSidebarOpen} 
+                    navItems={navItems} 
+                    isActive={isActive} 
+                    isSuperAdmin={isSuperAdmin} 
+                    signOut={signOut} 
+                />
+
+                {/* Page content — add bottom padding on mobile for bottom nav */}
+                <main className="flex-1 overflow-y-auto pb-20 sm:pb-0">
+                    {children}
+                </main>
+            </div>
+
+            {/* ═══ Mobile Bottom Navigation ═══ */}
+            <nav className="fixed bottom-0 left-0 right-0 w-full max-w-full z-[60] sm:hidden bg-white dark:bg-slate-900 border-t border-slate-200 dark:border-slate-800 safe-area-bottom">
+                <div className="grid h-16 w-full" style={{ gridTemplateColumns: `repeat(${bottomNavItems.length + 1}, minmax(0, 1fr))` }}>
+                    {bottomNavItems.map((item) => {
                         const active = isActive(item.path);
                         return (
                             <Link
                                 key={item.path}
                                 to={item.path}
-                                onClick={() => setSidebarOpen(false)}
-                                className={`
-                  flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition-all duration-200 group
-                  ${active
-                                        ? 'bg-primary-default/10 text-primary-default font-semibold shadow-sm'
-                                        : 'text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800/50 hover:text-neutral-text dark:hover:text-white'
-                                    }
-                `}
+                                className={`flex flex-col items-center justify-center gap-1 transition-colors relative touch-manipulation w-full h-full min-h-[64px] ${
+                                    active
+                                        ? 'text-primary-default'
+                                        : 'text-slate-400 dark:text-slate-500'
+                                }`}
                             >
                                 <span
-                                    className={`material-symbols-outlined text-xl transition-colors ${active ? 'text-primary-default' : 'text-slate-400 dark:text-slate-500 group-hover:text-primary-default/70'
-                                        }`}
-                                    style={active ? { fontVariationSettings: "'FILL' 1, 'wght' 500" } : {}}
+                                    className="material-symbols-outlined text-2xl"
+                                    style={active ? { fontVariationSettings: "'FILL' 1, 'wght' 600" } : {}}
                                 >
                                     {item.icon}
                                 </span>
-                                {item.label}
+                                <span className={`text-[10px] font-bold tracking-tight ${active ? 'text-primary-default' : ''}`}>
+                                    {item.label}
+                                </span>
                                 {active && (
-                                    <div className="ml-auto size-1.5 bg-primary-default rounded-full" />
+                                    <div className="absolute top-0 left-1/2 -translate-x-1/2 w-10 h-0.5 bg-primary-default rounded-full pointer-events-none" />
                                 )}
                             </Link>
                         );
                     })}
-                </nav>
-
-                {/* User area */}
-                <div className="border-t border-slate-200 dark:border-slate-800 p-4 shrink-0">
-                    <div className="flex items-center gap-3">
-                        <div className="size-9 rounded-full bg-gradient-to-br from-primary-default to-accent-default flex items-center justify-center text-white text-sm font-bold shadow-md">
-                            {user?.email?.[0]?.toUpperCase() || 'U'}
-                        </div>
-                        <div className="flex-1 min-w-0">
-                            <p className="text-sm font-semibold text-neutral-text dark:text-white truncate">
-                                {user?.email || 'User'}
-                            </p>
-                            <p className="text-[10px] font-semibold text-slate-400 uppercase tracking-wider">
-                                {userRole || 'Member'}
-                            </p>
-                        </div>
-                        <button
-                            onClick={signOut}
-                            className="size-8 rounded-lg flex items-center justify-center text-slate-400 hover:bg-red-50 hover:text-red-500 dark:hover:bg-red-950/50 transition-colors"
-                            title="Sign Out"
-                        >
-                            <span className="material-symbols-outlined text-xl">logout</span>
-                        </button>
-                    </div>
-                </div>
-            </aside>
-
-            {/* Main content area */}
-            <div className="flex-1 flex flex-col min-w-0">
-                {/* Top bar */}
-                <header className="h-16 bg-white dark:bg-slate-900 border-b border-slate-200 dark:border-slate-800 flex items-center px-4 lg:px-8 gap-4 shrink-0 sticky top-0 z-30">
+                    {/* More button */}
                     <button
-                        onClick={() => setSidebarOpen(true)}
-                        className="lg:hidden size-10 rounded-xl flex items-center justify-center text-slate-500 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors"
+                        onClick={() => setMoreMenuOpen(!moreMenuOpen)}
+                        className={`flex flex-col items-center justify-center gap-1 transition-colors relative ${
+                            moreMenuOpen ? 'text-primary-default' : 'text-slate-400 dark:text-slate-500'
+                        }`}
                     >
-                        <span className="material-symbols-outlined">menu</span>
+                        <span className="material-symbols-outlined text-2xl">
+                            {moreMenuOpen ? 'close' : 'more_horiz'}
+                        </span>
+                        <span className="text-[10px] font-bold tracking-tight">More</span>
                     </button>
-                    <div className="hidden sm:flex flex-1 max-w-md">
-                        <div className="flex w-full items-center rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 px-3 py-2">
-                            <span className="material-symbols-outlined text-slate-400 text-lg mr-2">search</span>
-                            <input
-                                className="flex-1 bg-transparent border-none focus:ring-0 text-sm placeholder:text-slate-400 outline-none text-neutral-text dark:text-white"
-                                placeholder="Search anything..."
-                            />
-                        </div>
-                    </div>
-                    <div className="flex-1 sm:hidden" />
-                    <div className="flex items-center gap-2">
-                        <Link to={isSuperAdmin ? '/super-admin/support' : '/admin/notifications'} className="size-10 rounded-xl flex items-center justify-center text-slate-500 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors relative">
-                            <span className="material-symbols-outlined">notifications</span>
-                            <span className="absolute top-2 right-2 size-2 bg-accent-default rounded-full" />
-                        </Link>
-                    </div>
-                </header>
+                </div>
 
-                {/* Page content */}
-                <main className="flex-1 overflow-y-auto">
-                    {children}
-                </main>
+                {/* More menu overlay */}
+                {moreMenuOpen && (
+                    <>
+                        <div className="fixed inset-0 z-[-1]" onClick={() => setMoreMenuOpen(false)} />
+                        <div className="absolute bottom-full left-0 right-0 bg-white dark:bg-slate-900 border-t border-slate-200 dark:border-slate-800 shadow-2xl shadow-black/20 rounded-t-2xl p-3 grid grid-cols-4 gap-1 animate-slide-up">
+                            {moreItems.map((item) => {
+                                const active = isActive(item.path);
+                                return (
+                                    <Link
+                                        key={item.path}
+                                        to={item.path}
+                                        onClick={() => setMoreMenuOpen(false)}
+                                        className={`flex flex-col items-center justify-center gap-1.5 p-3 rounded-xl min-h-[72px] transition-colors ${
+                                            active
+                                                ? 'bg-primary-default/10 text-primary-default'
+                                                : 'text-slate-500 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800'
+                                        }`}
+                                    >
+                                        <span
+                                            className="material-symbols-outlined text-xl"
+                                            style={active ? { fontVariationSettings: "'FILL' 1, 'wght' 500" } : {}}
+                                        >
+                                            {item.icon}
+                                        </span>
+                                        <span className="text-[11px] font-semibold text-center leading-tight">{item.label}</span>
+                                    </Link>
+                                );
+                            })}
+                            {/* Sign out in More menu */}
+                            <button
+                                onClick={() => { setMoreMenuOpen(false); signOut(); }}
+                                className="flex flex-col items-center justify-center gap-1.5 p-3 rounded-xl min-h-[72px] text-red-500 hover:bg-red-50 dark:hover:bg-red-950/30 transition-colors"
+                            >
+                                <span className="material-symbols-outlined text-xl">logout</span>
+                                <span className="text-[11px] font-semibold">Sign Out</span>
+                            </button>
+                        </div>
+                    </>
+                )}
+            </nav>
             </div>
         </div>
     );

@@ -21,8 +21,12 @@ export interface Member {
     status: string;
     notes?: string;
     plan_id?: string;
+    join_date?: string;
+    expiry_date?: string;
+    qr_code_value?: string;
+    qr_generated_at?: string;
     created_at: string;
-    plans?: Pick<Plan, 'name' | 'price'>;
+    plans?: Pick<Plan, 'name' | 'price' | 'duration_days'>;
 }
 
 export interface Plan {

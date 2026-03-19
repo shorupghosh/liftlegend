@@ -1,77 +1,63 @@
-import React, { useEffect, useState } from 'react';
-import { supabase } from '../lib/supabase';
+import React, { useEffect, useMemo, useState } from 'react';
+import { Link, useNavigate } from 'react-router-dom';
+import { ConfirmModal } from '../components/ui/ConfirmModal';
+import { EmptyState } from '../components/ui/EmptyState';
+import { PageLoader } from '../components/ui/PageLoader';
+import { GymActionMenu } from '../components/super-admin/GymActionMenu';
+import { GymStatusBadge } from '../components/super-admin/GymStatusBadge';
+import {
+  applyTenantFilters,
+  fetchTenantSummaries,
+  softDeleteGym,
+  startImpersonation,
+  updateGymLifecycleStatus,
+} from '../lib/superAdmin';
+import type { GymLifecycleStatus, TenantFilter, TenantSort, TenantSummary } from '../types/superAdmin';
 
-interface GymData {
-  id: string;
-  name: string;
-  contact_phone: string | null;
-  subscription_tier: string | null;
-  status: string;
-  created_at: string;
-  memberCount: number;
-  ownerEmail: string | null;
-}
+type ConfirmState = {
+  isOpen: boolean;
+  title: string;
+  message: string;
+  confirmLabel?: string;
+  onConfirm: () => Promise<void> | void;
+};
+
+const initialConfirm: ConfirmState = {
+  isOpen: false,
+  title: '',
+  message: '',
+  confirmLabel: 'Confirm',
+  onConfirm: () => undefined,
+};
 
 export default function SuperAdminDashboard() {
-  const [gyms, setGyms] = useState<GymData[]>([]);
+  const navigate = useNavigate();
   const [loading, setLoading] = useState(true);
-  const [togglingId, setTogglingId] = useState<string | null>(null);
-  const [metrics, setMetrics] = useState({ totalGyms: 0, activeGyms: 0, totalMembers: 0, totalPlans: 0 });
+  const [busyGymId, setBusyGymId] = useState<string | null>(null);
+  const [search, setSearch] = useState('');
+  const [filter, setFilter] = useState<TenantFilter>('ALL');
+  const [sort, setSort] = useState<TenantSort>('newest');
+  const [gyms, setGyms] = useState<TenantSummary[]>([]);
+  const [overview, setOverview] = useState({
+    totalGyms: 0,
+    activeGyms: 0,
+    trialGyms: 0,
+    suspendedGyms: 0,
+    activeSubscriptions: 0,
+    mrr: 0,
+    totalMembers: 0,
+    churnedGyms: 0,
+  });
+  const [alerts, setAlerts] = useState<Array<{ id: string; title: string; description: string; severity: 'info' | 'warning' | 'critical'; gymId?: string }>>([]);
+  const [confirmState, setConfirmState] = useState<ConfirmState>(initialConfirm);
 
-  useEffect(() => {
-    fetchData();
-  }, []);
-
-  const fetchData = async () => {
+  const loadData = async () => {
     setLoading(true);
     try {
-      // Fetch gyms, global member count, plan count in parallel
-      const [gymsRes, plansRes] = await Promise.all([
-        supabase.from('gyms').select('id, name, contact_phone, subscription_tier, status, created_at').order('created_at', { ascending: false }),
-        supabase.from('plans').select('id', { count: 'exact', head: true }),
-      ]);
-
-      if (gymsRes.error) throw gymsRes.error;
-      const gymsList = gymsRes.data || [];
-
-      // Fetch member counts per gym + owner emails per gym in parallel
-      const [memberCountsRes, ownerRolesRes] = await Promise.all([
-        supabase.from('members').select('gym_id'),
-        supabase.from('user_roles').select('gym_id, display_name, user_id').in('role', ['OWNER']),
-      ]);
-
-      // Build member count map
-      const memberCountMap: Record<string, number> = {};
-      (memberCountsRes.data || []).forEach((m: any) => {
-        memberCountMap[m.gym_id] = (memberCountMap[m.gym_id] || 0) + 1;
-      });
-
-      // Build owner email map (first owner per gym)
-      const ownerEmailMap: Record<string, string> = {};
-      (ownerRolesRes.data || []).forEach((r: any) => {
-        if (!ownerEmailMap[r.gym_id]) {
-          ownerEmailMap[r.gym_id] = r.display_name || r.user_id?.substring(0, 12) || 'N/A';
-        }
-      });
-
-      // Also try to get emails from auth if display_name is a user_id
-      // For now, use display_name which is auto-populated with email
-
-      const totalMembers = Object.values(memberCountMap).reduce((a, b) => a + b, 0);
-
-      const enrichedGyms: GymData[] = gymsList.map((gym: any) => ({
-        ...gym,
-        memberCount: memberCountMap[gym.id] || 0,
-        ownerEmail: ownerEmailMap[gym.id] || null,
-      }));
-
-      setGyms(enrichedGyms);
-      setMetrics({
-        totalGyms: gymsList.length,
-        activeGyms: gymsList.filter((g: any) => g.status === 'ACTIVE').length,
-        totalMembers,
-        totalPlans: plansRes.count || 0,
-      });
+      const payload = await fetchTenantSummaries();
+      setGyms(payload.gyms);
+      setOverview(payload.overview);
+      setAlerts(payload.alerts.slice(0, 8));
     } catch (error) {
       console.error('Error fetching super admin data:', error);
     } finally {
@@ -79,178 +65,291 @@ export default function SuperAdminDashboard() {
     }
   };
 
-  // Optimistic instant toggle — updates UI first, then syncs to DB
-  const handleToggleStatus = async (gymId: string, currentStatus: string) => {
-    const newStatus = currentStatus === 'LOCKED' ? 'ACTIVE' : 'LOCKED';
-    if (!confirm(`Are you sure you want to ${newStatus === 'LOCKED' ? 'lock' : 'unlock'} this gym?`)) return;
+  useEffect(() => {
+    loadData();
+  }, []);
 
-    // Optimistic UI update — instant feedback
-    setTogglingId(gymId);
-    setGyms(prev => prev.map(g => g.id === gymId ? { ...g, status: newStatus } : g));
-    setMetrics(prev => ({
-      ...prev,
-      activeGyms: prev.activeGyms + (newStatus === 'ACTIVE' ? 1 : -1),
-    }));
+  const filteredGyms = useMemo(() => applyTenantFilters(gyms, search, filter, sort), [gyms, search, filter, sort]);
 
+  const withBusy = async (gymId: string, action: () => Promise<void>) => {
+    setBusyGymId(gymId);
     try {
-      const { error } = await supabase.from('gyms').update({ status: newStatus }).eq('id', gymId);
-      if (error) throw error;
-    } catch (error) {
-      console.error('Error updating gym status:', error);
-      // Revert on failure
-      setGyms(prev => prev.map(g => g.id === gymId ? { ...g, status: currentStatus } : g));
-      setMetrics(prev => ({
-        ...prev,
-        activeGyms: prev.activeGyms + (newStatus === 'ACTIVE' ? -1 : 1),
-      }));
-      alert('Failed to update gym status.');
+      await action();
+      await loadData();
     } finally {
-      setTogglingId(null);
+      setBusyGymId(null);
     }
   };
 
-  const statusBadge = (status: string) => {
-    const map: Record<string, string> = {
-      ACTIVE: 'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400',
-      TRIAL: 'bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400',
-      PAST_DUE: 'bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400',
-      LOCKED: 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400',
-    };
-    return map[status] || 'bg-slate-100 text-slate-600';
+  const openStatusConfirm = (gym: TenantSummary, nextStatus: GymLifecycleStatus) => {
+    const labelMap: Record<GymLifecycleStatus, string> = {
+      ACTIVE: 'Activate Gym',
+      TRIAL: 'Set Trial',
+      SUSPENDED: 'Suspend Gym',
+      EXPIRED: 'Expire Gym',
+      DELETED: 'Delete Gym',
+      LOCKED: 'Suspend Gym',
+      PAST_DUE: 'Expire Gym',
+    } as Record<GymLifecycleStatus, string>;
+
+    setConfirmState({
+      isOpen: true,
+      title: labelMap[nextStatus] || 'Update Gym',
+      message:
+        nextStatus === 'SUSPENDED'
+          ? `Suspend ${gym.name}? Suspended gyms will no longer access the app normally.`
+          : `Activate ${gym.name}? This gym will be able to use the app normally again.`,
+      confirmLabel: nextStatus === 'SUSPENDED' ? 'Suspend' : 'Activate',
+      onConfirm: async () => {
+        setConfirmState(initialConfirm);
+        await withBusy(gym.id, async () => {
+          await updateGymLifecycleStatus(gym, nextStatus);
+        });
+      },
+    });
   };
 
+  const openDeleteConfirm = (gym: TenantSummary) => {
+    setConfirmState({
+      isOpen: true,
+      title: 'Delete Gym',
+      message: `Soft delete ${gym.name}? This requires confirmation and should only be used for tenant removal.`,
+      confirmLabel: 'Delete Gym',
+      onConfirm: async () => {
+        setConfirmState(initialConfirm);
+        await withBusy(gym.id, async () => {
+          await softDeleteGym(gym);
+        });
+      },
+    });
+  };
+
+  const statCards = [
+    { label: 'Total Gyms', value: overview.totalGyms, icon: 'apartment', accent: 'text-primary-default', helper: 'All tenants on the platform' },
+    { label: 'Active Gyms', value: overview.activeGyms, icon: 'check_circle', accent: 'text-emerald-500', helper: 'Currently active subscriptions' },
+    { label: 'MRR', value: `৳${overview.mrr.toLocaleString()}`, icon: 'payments', accent: 'text-blue-500', helper: 'Last 30 days recurring revenue' },
+    { label: 'Trial Gyms', value: overview.trialGyms, icon: 'rocket_launch', accent: 'text-amber-500', helper: 'Trial accounts in progress' },
+    { label: 'Suspended', value: overview.suspendedGyms, icon: 'pause_circle', accent: 'text-red-500', helper: 'Require support follow-up' },
+    { label: 'Total Members', value: overview.totalMembers, icon: 'group', accent: 'text-slate-700 dark:text-slate-200', helper: 'Members across all tenants' },
+  ];
+
   return (
-    <div className="p-6 lg:p-8 space-y-8">
-      {/* Title */}
+    <div className="space-y-8 p-6 lg:p-8">
       <div>
-        <h1 className="text-2xl lg:text-3xl font-display font-extrabold text-neutral-text dark:text-white tracking-tight">Platform Overview</h1>
-        <p className="text-slate-500 dark:text-slate-400 text-sm mt-1">Real-time performance across all gym tenants.</p>
+        <h1 className="text-2xl lg:text-3xl font-display font-extrabold text-neutral-text dark:text-white tracking-tight">Platform Control Center</h1>
+        <p className="text-slate-500 dark:text-slate-400 text-sm mt-1">Monitor, support, and control all gym tenants from one operational dashboard.</p>
       </div>
 
-      {/* Stats Grid */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
-        <div className="bg-white dark:bg-slate-900 p-6 rounded-xl border border-slate-200 dark:border-slate-800 shadow-sm">
-          <div className="flex justify-between items-start">
-            <div>
-              <p className="text-slate-500 text-sm font-medium">Total Gyms</p>
-              <h3 className="text-3xl font-black text-neutral-text dark:text-white mt-1">{loading ? '—' : metrics.totalGyms}</h3>
+      <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 xl:grid-cols-6">
+        {statCards.map((card) => (
+          <div key={card.label} className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm dark:border-slate-800 dark:bg-slate-900">
+            <div className="flex items-start justify-between">
+              <div>
+                <p className="text-xs font-bold uppercase tracking-wider text-slate-400">{card.label}</p>
+                <p className={`mt-2 text-2xl font-black ${card.accent}`}>{loading ? '—' : card.value}</p>
+              </div>
+              <span className={`material-symbols-outlined text-2xl ${card.accent}`}>{card.icon}</span>
             </div>
-            <div className="p-3 bg-primary-default/10 text-primary-default rounded-xl"><span className="material-symbols-outlined">apartment</span></div>
+            <p className="mt-3 text-xs text-slate-500">{card.helper}</p>
           </div>
-        </div>
-        <div className="bg-white dark:bg-slate-900 p-6 rounded-xl border border-slate-200 dark:border-slate-800 shadow-sm">
-          <div className="flex justify-between items-start">
-            <div>
-              <p className="text-slate-500 text-sm font-medium">Active Gyms</p>
-              <h3 className="text-3xl font-black text-emerald-600 mt-1">{loading ? '—' : metrics.activeGyms}</h3>
-            </div>
-            <div className="p-3 bg-emerald-100 dark:bg-emerald-900/30 text-emerald-600 rounded-xl"><span className="material-symbols-outlined">check_circle</span></div>
-          </div>
-        </div>
-        <div className="bg-white dark:bg-slate-900 p-6 rounded-xl border border-slate-200 dark:border-slate-800 shadow-sm">
-          <div className="flex justify-between items-start">
-            <div>
-              <p className="text-slate-500 text-sm font-medium">Total Members</p>
-              <h3 className="text-3xl font-black text-neutral-text dark:text-white mt-1">{loading ? '—' : metrics.totalMembers}</h3>
-            </div>
-            <div className="p-3 bg-blue-100 dark:bg-blue-900/30 text-blue-600 rounded-xl"><span className="material-symbols-outlined">group</span></div>
-          </div>
-        </div>
-        <div className="bg-white dark:bg-slate-900 p-6 rounded-xl border border-slate-200 dark:border-slate-800 shadow-sm">
-          <div className="flex justify-between items-start">
-            <div>
-              <p className="text-slate-500 text-sm font-medium">Total Plans</p>
-              <h3 className="text-3xl font-black text-neutral-text dark:text-white mt-1">{loading ? '—' : metrics.totalPlans}</h3>
-            </div>
-            <div className="p-3 bg-amber-100 dark:bg-amber-900/30 text-amber-600 rounded-xl"><span className="material-symbols-outlined">card_membership</span></div>
-          </div>
-        </div>
+        ))}
       </div>
 
-      {/* Gyms Table */}
-      <div className="bg-white dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-800 shadow-sm overflow-hidden">
-        <div className="p-5 border-b border-slate-200 dark:border-slate-800 flex items-center justify-between">
-          <h4 className="text-lg font-bold text-neutral-text dark:text-white">All Gym Tenants</h4>
-        </div>
-        <div className="overflow-x-auto">
-          <table className="w-full text-left">
-            <thead className="bg-slate-50 dark:bg-slate-800/50 border-b border-slate-200 dark:border-slate-800">
-              <tr>
-                <th className="px-5 py-3.5 text-xs font-bold text-slate-500 uppercase tracking-wider">Gym Name</th>
-                <th className="px-5 py-3.5 text-xs font-bold text-slate-500 uppercase tracking-wider hidden lg:table-cell">Owner Email</th>
-                <th className="px-5 py-3.5 text-xs font-bold text-slate-500 uppercase tracking-wider">Members</th>
-                <th className="px-5 py-3.5 text-xs font-bold text-slate-500 uppercase tracking-wider hidden md:table-cell">Subscription</th>
-                <th className="px-5 py-3.5 text-xs font-bold text-slate-500 uppercase tracking-wider">Status</th>
-                <th className="px-5 py-3.5 text-xs font-bold text-slate-500 uppercase tracking-wider hidden md:table-cell">Created</th>
-                <th className="px-5 py-3.5 text-xs font-bold text-slate-500 uppercase tracking-wider text-right">Actions</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-slate-100 dark:divide-slate-800">
-              {loading ? (
-                <tr><td colSpan={7} className="py-12 text-center">
-                  <div className="flex justify-center"><div className="size-8 border-4 border-primary-default border-t-transparent rounded-full animate-spin" /></div>
-                </td></tr>
-              ) : gyms.length === 0 ? (
-                <tr><td colSpan={7} className="py-12 text-center text-slate-500">No gyms registered yet.</td></tr>
-              ) : (
-                gyms.map((gym) => (
-                  <tr key={gym.id} className="hover:bg-slate-50/50 dark:hover:bg-slate-800/30 transition-colors">
-                    <td className="px-5 py-4">
-                      <div className="flex items-center gap-3">
-                        <div className="size-10 rounded-lg bg-primary-default/10 flex items-center justify-center text-primary-default font-bold text-lg">
-                          {gym.name?.charAt(0) || 'G'}
-                        </div>
-                        <div>
-                          <span className="font-semibold text-sm text-neutral-text dark:text-white">{gym.name}</span>
-                          <p className="text-xs text-slate-400">{gym.contact_phone || gym.id.substring(0, 12) + '...'}</p>
-                        </div>
-                      </div>
-                    </td>
-                    <td className="px-5 py-4 hidden lg:table-cell">
-                      <span className="text-sm text-slate-600 dark:text-slate-400">{gym.ownerEmail || '—'}</span>
-                    </td>
-                    <td className="px-5 py-4">
-                      <div className="flex items-center gap-1.5">
-                        <span className="material-symbols-outlined text-slate-400 text-base">group</span>
-                        <span className="text-sm font-semibold text-neutral-text dark:text-white">{gym.memberCount}</span>
-                      </div>
-                    </td>
-                    <td className="px-5 py-4 hidden md:table-cell">
-                      <span className="text-sm font-medium text-slate-600 dark:text-slate-400">{gym.subscription_tier || 'N/A'}</span>
-                    </td>
-                    <td className="px-5 py-4">
-                      <span className={`px-2.5 py-1 text-xs font-bold rounded-full ${statusBadge(gym.status)}`}>{gym.status}</span>
-                    </td>
-                    <td className="px-5 py-4 text-sm text-slate-500 hidden md:table-cell">
-                      {new Date(gym.created_at).toLocaleDateString()}
-                    </td>
-                    <td className="px-5 py-4 text-right">
-                      <button
-                        onClick={() => handleToggleStatus(gym.id, gym.status)}
-                        disabled={togglingId === gym.id}
-                        className={`px-3 py-1.5 text-xs font-bold rounded-lg transition-all inline-flex items-center gap-1.5 disabled:opacity-60 ${gym.status === 'LOCKED'
-                          ? 'bg-emerald-100 text-emerald-700 hover:bg-emerald-200 dark:bg-emerald-900/30 dark:text-emerald-400'
-                          : 'bg-red-100 text-red-700 hover:bg-red-200 dark:bg-red-900/30 dark:text-red-400'
-                          }`}
-                      >
-                        {togglingId === gym.id ? (
-                          <div className="size-3.5 border-2 border-current border-t-transparent rounded-full animate-spin" />
-                        ) : (
-                          <span className="material-symbols-outlined text-sm">{gym.status === 'LOCKED' ? 'lock_open' : 'lock'}</span>
-                        )}
-                        {gym.status === 'LOCKED' ? 'Unlock' : 'Lock'}
-                      </button>
-                    </td>
+      <div className="grid gap-6 xl:grid-cols-[1.5fr,1fr]">
+        <div className="rounded-2xl border border-slate-200 bg-white shadow-sm dark:border-slate-800 dark:bg-slate-900">
+          <div className="border-b border-slate-200 px-5 py-4 dark:border-slate-800">
+            <h2 className="text-lg font-bold text-neutral-text dark:text-white">Tenant Directory</h2>
+            <p className="text-xs text-slate-500">Search, filter, and control every gym tenant.</p>
+          </div>
+
+          <div className="flex flex-col gap-3 p-5 lg:flex-row lg:items-center">
+            <div className="relative flex-1">
+              <span className="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-slate-400">search</span>
+              <input
+                value={search}
+                onChange={(event) => setSearch(event.target.value)}
+                placeholder="Search gym name or owner email..."
+                className="h-11 w-full rounded-xl border border-slate-200 bg-white pl-10 pr-4 text-sm outline-none transition-all focus:border-primary-default focus:ring-2 focus:ring-primary-default/20 dark:border-slate-700 dark:bg-slate-900"
+              />
+            </div>
+            <select
+              value={filter}
+              onChange={(event) => setFilter(event.target.value as TenantFilter)}
+              className="h-11 rounded-xl border border-slate-200 bg-white px-4 text-sm font-semibold outline-none transition-all focus:border-primary-default focus:ring-2 focus:ring-primary-default/20 dark:border-slate-700 dark:bg-slate-900"
+            >
+              <option value="ALL">All</option>
+              <option value="TRIAL">Trial</option>
+              <option value="ACTIVE">Active</option>
+              <option value="SUSPENDED">Suspended</option>
+              <option value="EXPIRED">Expired</option>
+              <option value="LIMIT_REACHED">Limit Reached</option>
+            </select>
+            <select
+              value={sort}
+              onChange={(event) => setSort(event.target.value as TenantSort)}
+              className="h-11 rounded-xl border border-slate-200 bg-white px-4 text-sm font-semibold outline-none transition-all focus:border-primary-default focus:ring-2 focus:ring-primary-default/20 dark:border-slate-700 dark:bg-slate-900"
+            >
+              <option value="newest">Newest</option>
+              <option value="most_members">Most Members</option>
+              <option value="highest_revenue">Highest Revenue</option>
+              <option value="recent_activity">Recent Activity</option>
+            </select>
+          </div>
+
+          {loading ? (
+            <div className="p-5"><PageLoader label="Loading tenant controls..." /></div>
+          ) : filteredGyms.length === 0 ? (
+            <div className="p-5">
+              <EmptyState
+                icon="apartment"
+                title="No gyms match this view"
+                description="Try a different search or filter to find the tenant you need."
+              />
+            </div>
+          ) : (
+            <div className="overflow-x-auto">
+              <table className="w-full text-left">
+                <thead className="border-y border-slate-200 bg-slate-50 dark:border-slate-800 dark:bg-slate-800/40">
+                  <tr>
+                    <th className="px-5 py-3 text-xs font-bold uppercase tracking-wider text-slate-500">Gym</th>
+                    <th className="px-5 py-3 text-xs font-bold uppercase tracking-wider text-slate-500 hidden xl:table-cell">Owner</th>
+                    <th className="px-5 py-3 text-xs font-bold uppercase tracking-wider text-slate-500">Usage</th>
+                    <th className="px-5 py-3 text-xs font-bold uppercase tracking-wider text-slate-500 hidden lg:table-cell">Revenue</th>
+                    <th className="px-5 py-3 text-xs font-bold uppercase tracking-wider text-slate-500">Plan</th>
+                    <th className="px-5 py-3 text-xs font-bold uppercase tracking-wider text-slate-500">Status</th>
+                    <th className="px-5 py-3 text-xs font-bold uppercase tracking-wider text-slate-500 hidden md:table-cell">Last Activity</th>
+                    <th className="px-5 py-3 text-right text-xs font-bold uppercase tracking-wider text-slate-500">Actions</th>
                   </tr>
+                </thead>
+                <tbody className="divide-y divide-slate-100 dark:divide-slate-800">
+                  {filteredGyms.map((gym) => (
+                    <tr key={gym.id} className="hover:bg-slate-50/70 dark:hover:bg-slate-800/30">
+                      <td className="px-5 py-4">
+                        <div className="flex items-center gap-3">
+                          <div className="flex size-10 items-center justify-center rounded-xl bg-primary-default/10 font-bold text-primary-default">
+                            {gym.name.charAt(0)}
+                          </div>
+                          <div>
+                            <Link to={`/super-admin/gyms/${gym.id}`} className="text-sm font-bold text-neutral-text hover:text-primary-default dark:text-white">
+                              {gym.name}
+                            </Link>
+                            <p className="text-xs text-slate-500">{new Date(gym.createdAt).toLocaleDateString()}</p>
+                          </div>
+                        </div>
+                      </td>
+                      <td className="px-5 py-4 hidden xl:table-cell">
+                        <p className="text-sm font-medium text-neutral-text dark:text-white">{gym.ownerEmail || 'Unknown'}</p>
+                        <p className="text-xs text-slate-500">{gym.contactPhone || 'No phone'}</p>
+                      </td>
+                      <td className="px-5 py-4">
+                        <p className="text-sm font-semibold text-neutral-text dark:text-white">{gym.usage.memberCount} members • {gym.usage.staffCount} staff</p>
+                        {gym.usage.limitWarnings.length > 0 ? (
+                          <p className="text-xs font-bold text-amber-600 dark:text-amber-300">{gym.usage.limitWarnings.join(' • ')}</p>
+                        ) : (
+                          <p className="text-xs text-slate-500">{gym.usage.checkinsThisWeek} check-ins this week</p>
+                        )}
+                      </td>
+                      <td className="px-5 py-4 hidden lg:table-cell">
+                        <p className="text-sm font-bold text-emerald-600 dark:text-emerald-400">৳{gym.usage.revenueMonth.toLocaleString()}</p>
+                        <p className="text-xs text-slate-500">MRR snapshot</p>
+                      </td>
+                      <td className="px-5 py-4">
+                        <p className="text-sm font-semibold text-neutral-text dark:text-white">{gym.subscriptionTier || 'BASIC'}</p>
+                        <p className="text-xs text-slate-500">{gym.trialEndsAt ? `Trial ends ${new Date(gym.trialEndsAt).toLocaleDateString()}` : 'Subscription active'}</p>
+                      </td>
+                      <td className="px-5 py-4">
+                        <GymStatusBadge status={gym.status} />
+                      </td>
+                      <td className="px-5 py-4 hidden md:table-cell text-sm text-slate-500">
+                        {gym.usage.lastActivityAt ? new Date(gym.usage.lastActivityAt).toLocaleDateString() : 'No recent activity'}
+                      </td>
+                      <td className="px-5 py-4 text-right">
+                        <GymActionMenu
+                          isBusy={busyGymId === gym.id}
+                          canActivate={gym.status !== 'ACTIVE'}
+                          canSuspend={gym.status !== 'SUSPENDED' && gym.status !== 'DELETED'}
+                          onView={() => navigate(`/super-admin/gyms/${gym.id}`)}
+                          onImpersonate={() => withBusy(gym.id, async () => {
+                            await startImpersonation(gym);
+                            window.location.href = '/admin';
+                          })}
+                          onSuspend={() => openStatusConfirm(gym, 'SUSPENDED')}
+                          onActivate={() => openStatusConfirm(gym, 'ACTIVE')}
+                          onDelete={() => openDeleteConfirm(gym)}
+                        />
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          )}
+        </div>
+
+        <div className="space-y-6">
+          <div className="rounded-2xl border border-slate-200 bg-white shadow-sm dark:border-slate-800 dark:bg-slate-900">
+            <div className="border-b border-slate-200 px-5 py-4 dark:border-slate-800">
+              <h2 className="text-lg font-bold text-neutral-text dark:text-white">Action Center</h2>
+              <p className="text-xs text-slate-500">Platform-wide alerts that need attention.</p>
+            </div>
+            <div className="space-y-3 p-5">
+              {alerts.length === 0 ? (
+                <p className="text-sm text-slate-500">No urgent platform alerts right now.</p>
+              ) : (
+                alerts.map((alert) => (
+                  <button
+                    key={alert.id}
+                    onClick={() => alert.gymId && navigate(`/super-admin/gyms/${alert.gymId}`)}
+                    className={`w-full rounded-2xl border p-4 text-left transition-colors ${
+                      alert.severity === 'critical'
+                        ? 'border-red-200 bg-red-50 dark:border-red-900/30 dark:bg-red-950/20'
+                        : alert.severity === 'warning'
+                          ? 'border-amber-200 bg-amber-50 dark:border-amber-900/30 dark:bg-amber-950/20'
+                          : 'border-blue-200 bg-blue-50 dark:border-blue-900/30 dark:bg-blue-950/20'
+                    }`}
+                  >
+                    <p className="text-sm font-bold text-neutral-text dark:text-white">{alert.title}</p>
+                    <p className="mt-1 text-xs text-slate-600 dark:text-slate-300">{alert.description}</p>
+                  </button>
                 ))
               )}
-            </tbody>
-          </table>
-        </div>
-        <div className="p-4 bg-slate-50 dark:bg-slate-800/50 border-t border-slate-200 dark:border-slate-800">
-          <span className="text-sm text-slate-500">Showing {gyms.length} gyms</span>
+            </div>
+          </div>
+
+          <div className="rounded-2xl border border-slate-200 bg-white shadow-sm dark:border-slate-800 dark:bg-slate-900">
+            <div className="border-b border-slate-200 px-5 py-4 dark:border-slate-800">
+              <h2 className="text-lg font-bold text-neutral-text dark:text-white">Support Snapshot</h2>
+            </div>
+            <div className="space-y-4 p-5 text-sm text-slate-600 dark:text-slate-300">
+              <div className="flex items-center justify-between">
+                <span>Active subscriptions</span>
+                <span className="font-bold text-neutral-text dark:text-white">{overview.activeSubscriptions}</span>
+              </div>
+              <div className="flex items-center justify-between">
+                <span>Churned or expired</span>
+                <span className="font-bold text-neutral-text dark:text-white">{overview.churnedGyms}</span>
+              </div>
+              <div className="flex items-center justify-between">
+                <span>Trials ending soon</span>
+                <span className="font-bold text-neutral-text dark:text-white">{alerts.filter((alert) => alert.id.startsWith('trial-')).length}</span>
+              </div>
+              <Link to="/super-admin/subscriptions" className="inline-flex items-center gap-2 font-bold text-primary-default hover:underline">
+                Manage subscriptions
+                <span className="material-symbols-outlined text-base">arrow_forward</span>
+              </Link>
+            </div>
+          </div>
         </div>
       </div>
+
+      <ConfirmModal
+        isOpen={confirmState.isOpen}
+        title={confirmState.title}
+        message={confirmState.message}
+        confirmLabel={confirmState.confirmLabel}
+        onConfirm={() => void confirmState.onConfirm()}
+        onCancel={() => setConfirmState(initialConfirm)}
+      />
     </div>
   );
 }

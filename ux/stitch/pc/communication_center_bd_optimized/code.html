@@ -1,0 +1,248 @@
+<!DOCTYPE html>
+
+<html lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>LiftLegend - Notifications Manager</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    colors: {
+                        "primary": "#4aafed",
+                        "energetic-orange": "#ff8c00",
+                        "background-light": "#f6f7f8",
+                        "background-dark": "#111b21",
+                    },
+                    fontFamily: {
+                        "display": ["Inter"]
+                    },
+                    borderRadius: {"DEFAULT": "0.25rem", "lg": "0.5rem", "xl": "0.75rem", "full": "9999px"},
+                },
+            },
+        }
+    </script>
+<style>
+        body { font-family: 'Inter', sans-serif; }
+        .material-symbols-outlined { font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24; }
+    </style>
+</head>
+<body class="bg-background-light dark:bg-background-dark font-display text-slate-900 dark:text-slate-100 min-h-screen">
+<div class="layout-container flex h-full grow flex-col">
+<!-- Top Navigation -->
+<header class="flex items-center justify-between whitespace-nowrap border-b border-solid border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 px-6 lg:px-10 py-3 sticky top-0 z-50">
+<div class="flex items-center gap-8">
+<div class="flex items-center gap-4 text-primary">
+<div class="size-8 flex items-center justify-center bg-primary/10 rounded-lg">
+<span class="material-symbols-outlined text-primary">exercise</span>
+</div>
+<h2 class="text-slate-900 dark:text-white text-lg font-bold leading-tight tracking-tight">LiftLegend</h2>
+</div>
+<nav class="hidden md:flex items-center gap-9">
+<a class="text-slate-600 dark:text-slate-400 text-sm font-medium hover:text-primary transition-colors" href="#">Dashboard</a>
+<a class="text-slate-600 dark:text-slate-400 text-sm font-medium hover:text-primary transition-colors" href="#">Members</a>
+<a class="text-slate-600 dark:text-slate-400 text-sm font-medium hover:text-primary transition-colors" href="#">Workouts</a>
+<a class="text-primary text-sm font-semibold border-b-2 border-primary py-4 -mb-4" href="#">Notifications</a>
+</nav>
+</div>
+<div class="flex flex-1 justify-end gap-6 items-center">
+<label class="hidden sm:flex flex-col min-w-40 !h-10 max-w-64">
+<div class="flex w-full flex-1 items-stretch rounded-lg h-full bg-slate-100 dark:bg-slate-800">
+<div class="text-slate-400 flex items-center justify-center pl-4">
+<span class="material-symbols-outlined text-xl">search</span>
+</div>
+<input class="form-input flex w-full min-w-0 flex-1 border-none bg-transparent focus:ring-0 h-full placeholder:text-slate-400 px-4 text-sm font-normal" placeholder="Search activities..." value=""/>
+</div>
+</label>
+<div class="flex items-center gap-3">
+<button class="size-10 rounded-full flex items-center justify-center text-slate-500 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors">
+<span class="material-symbols-outlined">notifications</span>
+</button>
+<div class="bg-center bg-no-repeat aspect-square bg-cover rounded-full size-10 border-2 border-primary/20" data-alt="User profile avatar of the gym administrator" style='background-image: url("https://lh3.googleusercontent.com/aida-public/AB6AXuAqWJGCCLavAvm9SdOpH3-TceAEpp0GDgb5PAjxO9u_V4AVhUN27vjEqTfuUSLzZak1u10wxKxULEZm87lgNcVMDAuL2x3S9VOwSHiRmPEAzA1Zmu6EmIXSjTkozhBJspzyVk4t9EzF99Ehz1SzrOvGYITb9ETaZoBjhHcWb270mzfvHdizONewIDamtcmnfjR9Xs0by2Dqm4cEhYhyEp59G6nenLpwEySnyMc_H4-C2ud2j8gNkDH4v9Rft8EA-lvYup0AlusdZHt5");'></div>
+</div>
+</div>
+</header>
+<main class="flex-1 max-w-7xl mx-auto w-full px-4 lg:px-10 py-8">
+<div class="flex flex-col gap-2 mb-8">
+<h1 class="text-slate-900 dark:text-white text-3xl font-black leading-tight tracking-tight">Notification Center</h1>
+<p class="text-slate-500 dark:text-slate-400 text-base">Broadcast updates, alerts, and personalized messages to your athlete community.</p>
+</div>
+<!-- Dashboard Grid -->
+<div class="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
+<!-- Left Column: Compose Section -->
+<section class="lg:col-span-5 bg-white dark:bg-slate-900 rounded-xl shadow-sm border border-slate-200 dark:border-slate-800 overflow-hidden">
+<div class="p-6 border-b border-slate-100 dark:border-slate-800">
+<h2 class="text-xl font-bold flex items-center gap-2">
+<span class="material-symbols-outlined text-primary">edit_note</span>
+                            Compose Message
+                        </h2>
+</div>
+<div class="p-6 space-y-6">
+<div class="space-y-4">
+<div>
+<label class="block text-sm font-semibold text-slate-700 dark:text-slate-300 mb-2">Delivery Method</label>
+<div class="grid grid-cols-2 gap-3">
+<button class="flex items-center justify-center gap-2 py-3 px-4 rounded-lg border-2 border-primary bg-primary/5 text-primary font-semibold transition-all">
+<span class="material-symbols-outlined">mail</span>
+                                        Email
+                                    </button>
+<button class="flex items-center justify-center gap-2 py-3 px-4 rounded-lg border-2 border-slate-100 dark:border-slate-800 hover:border-slate-200 dark:hover:border-slate-700 text-slate-600 dark:text-slate-400 font-medium transition-all">
+<span class="material-symbols-outlined">sms</span>
+                                        SMS
+                                    </button>
+</div>
+</div>
+<div>
+<label class="block text-sm font-semibold text-slate-700 dark:text-slate-300 mb-2">Recipient Group</label>
+<select class="form-select w-full rounded-lg border-slate-200 dark:border-slate-800 dark:bg-slate-800 focus:border-primary focus:ring-primary"><option>All Active Members</option><option>Uttara Branch Members</option><option>Dhanmondi Regulars</option><option>Personal Training Clients</option><option>Inactive Members</option></select>
+</div>
+<div>
+<label class="block text-sm font-semibold text-slate-700 dark:text-slate-300 mb-2">Subject</label>
+<input class="form-input w-full rounded-lg border-slate-200 dark:border-slate-800 dark:bg-slate-800 focus:border-primary focus:ring-primary" placeholder="Update on Eid-ul-Adha holiday hours" type="text"/>
+</div>
+<div>
+<label class="block text-sm font-semibold text-slate-700 dark:text-slate-300 mb-2">Message Content</label>
+<div class="relative rounded-lg bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-800">
+<textarea class="form-textarea w-full border-none bg-transparent focus:ring-0 p-4 placeholder:text-slate-400 text-sm" placeholder="Write your announcement here (e.g., Friday Jumu'ah prayer timings update)... Use @name for personalization." rows="6"></textarea>
+<div class="flex items-center gap-2 p-2 border-t border-slate-200 dark:border-slate-700">
+<button class="p-2 text-slate-500 hover:text-primary hover:bg-white dark:hover:bg-slate-900 rounded transition-colors">
+<span class="material-symbols-outlined text-xl">attach_file</span>
+</button>
+<button class="p-2 text-slate-500 hover:text-primary hover:bg-white dark:hover:bg-slate-900 rounded transition-colors">
+<span class="material-symbols-outlined text-xl">mood</span>
+</button>
+<button class="p-2 text-slate-500 hover:text-primary hover:bg-white dark:hover:bg-slate-900 rounded transition-colors">
+<span class="material-symbols-outlined text-xl">image</span>
+</button>
+<div class="flex-1"></div>
+<span class="text-[10px] text-slate-400 font-medium px-2 uppercase tracking-wider">124 / 160 Characters</span>
+</div>
+</div>
+</div>
+</div>
+<button class="w-full bg-energetic-orange hover:bg-orange-600 text-white font-bold py-4 rounded-xl shadow-lg shadow-orange-500/20 flex items-center justify-center gap-2 transition-transform active:scale-95">
+<span class="material-symbols-outlined">send</span>
+                            Send Now
+                        </button>
+</div>
+</section>
+<!-- Right Column: Sent History -->
+<section class="lg:col-span-7 space-y-4">
+<div class="flex items-center justify-between mb-2">
+<h2 class="text-xl font-bold flex items-center gap-2 px-2">
+<span class="material-symbols-outlined text-primary">history</span>
+                            Sent History
+                        </h2>
+<button class="text-sm font-semibold text-primary hover:underline">View All Report</button>
+</div>
+<div class="space-y-3">
+<!-- History Item 1: Sent -->
+<div class="bg-white dark:bg-slate-900 p-4 rounded-xl border border-slate-200 dark:border-slate-800 flex items-center gap-4 hover:shadow-md transition-shadow">
+<div class="size-12 bg-green-100 dark:bg-green-900/30 rounded-full flex items-center justify-center text-green-600 shrink-0">
+<span class="material-symbols-outlined">check_circle</span>
+</div>
+<div class="flex-1 min-w-0">
+<div class="flex justify-between items-start mb-1">
+<h3 class="text-sm font-bold truncate">Ramadan Flash Sale Promotion</h3>
+<span class="text-[10px] font-bold uppercase py-0.5 px-2 rounded-full bg-green-100 dark:bg-green-900/40 text-green-700 dark:text-green-400">Sent</span>
+</div>
+<p class="text-xs text-slate-500 dark:text-slate-400 line-clamp-1">Assalamu Alaikum! Get 20% off on annual memberships this Ramadan...</p>
+<div class="flex items-center gap-4 mt-2">
+<span class="text-[11px] text-slate-400 flex items-center gap-1">
+<span class="material-symbols-outlined text-sm">mail</span> Email
+                                    </span>
+<span class="text-[11px] text-slate-400 flex items-center gap-1">
+<span class="material-symbols-outlined text-sm">schedule</span> 2 hours ago
+                                    </span>
+<span class="text-[11px] text-slate-400 flex items-center gap-1">
+<span class="material-symbols-outlined text-sm">group</span> 1,240 Members
+                                    </span>
+</div>
+</div>
+</div>
+<!-- History Item 2: Pending -->
+<div class="bg-white dark:bg-slate-900 p-4 rounded-xl border border-slate-200 dark:border-slate-800 flex items-center gap-4 hover:shadow-md transition-shadow">
+<div class="size-12 bg-amber-100 dark:bg-amber-900/30 rounded-full flex items-center justify-center text-amber-600 shrink-0">
+<span class="material-symbols-outlined">pending</span>
+</div>
+<div class="flex-1 min-w-0">
+<div class="flex justify-between items-start mb-1">
+<h3 class="text-sm font-bold truncate">Friday Morning Yoga Session at Banani Lake</h3>
+<span class="text-[10px] font-bold uppercase py-0.5 px-2 rounded-full bg-amber-100 dark:bg-amber-900/40 text-amber-700 dark:text-amber-400">Pending</span>
+</div>
+<p class="text-xs text-slate-500 dark:text-slate-400 line-clamp-1">Join us for an outdoor session this Friday at 7 AM. Don't forget your mat!</p>
+<div class="flex items-center gap-4 mt-2">
+<span class="text-[11px] text-slate-400 flex items-center gap-1">
+<span class="material-symbols-outlined text-sm">sms</span> SMS
+                                    </span>
+<span class="text-[11px] text-slate-400 flex items-center gap-1">
+<span class="material-symbols-outlined text-sm">schedule</span> Scheduled: 09:00 AM
+                                    </span>
+<span class="text-[11px] text-slate-400 flex items-center gap-1">
+<span class="material-symbols-outlined text-sm">group</span> 842 Members
+                                    </span>
+</div>
+</div>
+</div>
+<!-- History Item 3: Failed -->
+<div class="bg-white dark:bg-slate-900 p-4 rounded-xl border border-slate-200 dark:border-slate-800 flex items-center gap-4 hover:shadow-md transition-shadow">
+<div class="size-12 bg-red-100 dark:bg-red-900/30 rounded-full flex items-center justify-center text-red-600 shrink-0">
+<span class="material-symbols-outlined">error</span>
+</div>
+<div class="flex-1 min-w-0">
+<div class="flex justify-between items-start mb-1">
+<h3 class="text-sm font-bold truncate">Last Call: Dhaka Open Bench Press Championship</h3>
+<span class="text-[10px] font-bold uppercase py-0.5 px-2 rounded-full bg-red-100 dark:bg-red-900/40 text-red-700 dark:text-red-400">Failed</span>
+</div>
+<p class="text-xs text-slate-500 dark:text-slate-400 line-clamp-1">Register now for the biggest event in Dhaka! Spots are filling fast...</p>
+<div class="flex items-center gap-4 mt-2">
+<span class="text-[11px] text-slate-400 flex items-center gap-1">
+<span class="material-symbols-outlined text-sm">mail</span> Email
+                                    </span>
+<span class="text-[11px] text-slate-400 flex items-center gap-1">
+<span class="material-symbols-outlined text-sm">schedule</span> Yesterday
+                                    </span>
+<button class="text-[11px] text-red-500 font-bold flex items-center gap-1 hover:underline">
+<span class="material-symbols-outlined text-sm">refresh</span> Retry
+                                    </button>
+</div>
+</div>
+</div>
+<!-- History Item 4: Sent -->
+<div class="bg-white dark:bg-slate-900 p-4 rounded-xl border border-slate-200 dark:border-slate-800 flex items-center gap-4 hover:shadow-md transition-shadow opacity-75">
+<div class="size-12 bg-green-100 dark:bg-green-900/30 rounded-full flex items-center justify-center text-green-600 shrink-0">
+<span class="material-symbols-outlined">check_circle</span>
+</div>
+<div class="flex-1 min-w-0">
+<div class="flex justify-between items-start mb-1">
+<h3 class="text-sm font-bold truncate">Zumba Party with Local Instructors</h3>
+<span class="text-[10px] font-bold uppercase py-0.5 px-2 rounded-full bg-green-100 dark:bg-green-900/40 text-green-700 dark:text-green-400">Sent</span>
+</div>
+<p class="text-xs text-slate-500 dark:text-slate-400 line-clamp-1">Get ready for a high-energy session with our top instructors this Saturday!</p>
+<div class="flex items-center gap-4 mt-2">
+<span class="text-[11px] text-slate-400 flex items-center gap-1">
+<span class="material-symbols-outlined text-sm">sms</span> SMS
+                                    </span>
+<span class="text-[11px] text-slate-400 flex items-center gap-1">
+<span class="material-symbols-outlined text-sm">schedule</span> 3 days ago
+                                    </span>
+<span class="text-[11px] text-slate-400 flex items-center gap-1">
+<span class="material-symbols-outlined text-sm">group</span> 450 Members
+                                    </span>
+</div>
+</div>
+</div>
+</div>
+<button class="w-full py-3 border-2 border-dashed border-slate-200 dark:border-slate-800 text-slate-400 hover:text-primary hover:border-primary transition-colors text-sm font-medium rounded-xl">
+                        Load Older Notifications
+                    </button>
+</section>
+</div>
+</main>
+</div>
+</body></html>

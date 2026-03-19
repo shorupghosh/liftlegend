@@ -1,0 +1,256 @@
+<!DOCTYPE html>
+
+<html lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Gym Management - Member Directory</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    colors: {
+                        "primary": "#1978e5",
+                        "background-light": "#f6f7f8",
+                        "background-dark": "#111821",
+                    },
+                    fontFamily: {
+                        "display": ["Inter", "sans-serif"]
+                    },
+                    borderRadius: {
+                        "DEFAULT": "1rem",
+                        "lg": "2rem",
+                        "xl": "3rem",
+                        "full": "9999px"
+                    },
+                },
+            },
+        }
+    </script>
+</head>
+<body class="bg-background-light dark:bg-background-dark font-display text-slate-900 dark:text-slate-100">
+<div class="relative flex min-h-screen w-full flex-col overflow-x-hidden">
+<div class="layout-container flex h-full grow flex-col">
+<!-- Header Section -->
+<header class="flex items-center justify-between whitespace-nowrap border-b border-solid border-slate-200 dark:border-slate-800 bg-white dark:bg-background-dark px-6 py-3 sticky top-0 z-50">
+<div class="flex items-center gap-6">
+<div class="flex items-center gap-3 text-primary">
+<span class="material-symbols-outlined text-3xl font-bold">fitness_center</span>
+<h2 class="text-slate-900 dark:text-slate-100 text-lg font-bold leading-tight tracking-tight">Gym BD</h2>
+</div>
+<nav class="hidden md:flex items-center gap-6">
+<a class="text-slate-600 dark:text-slate-400 text-sm font-medium hover:text-primary transition-colors" href="#">Dashboard</a>
+<a class="text-primary text-sm font-bold border-b-2 border-primary pb-1" href="#">Members</a>
+<a class="text-slate-600 dark:text-slate-400 text-sm font-medium hover:text-primary transition-colors" href="#">Payments</a>
+</nav>
+</div>
+<div class="flex items-center gap-4">
+<button class="p-2 text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-full">
+<span class="material-symbols-outlined">notifications</span>
+</button>
+<div class="bg-slate-200 dark:bg-slate-700 bg-center bg-no-repeat aspect-square bg-cover rounded-full size-10" data-alt="User profile avatar of the gym administrator" style='background-image: url("https://lh3.googleusercontent.com/aida-public/AB6AXuBCiH7LQkmsK_TpNf8IxR-y1QsvY7n8eTZCM8_O6sS_uo0g36ff2iFv2qOXZWEc88DedPCV90uLW4OzOg56JooRHkM3vnkoyDZYuhahzQlrVZlWDM5K1u25lI_RKRXKWMLyYqGXAlQ985rHsabfuSc1KC0zFJbrPokV9B7o0lRRJ7KpJj0Hwpfg3miNCfH0Fea0TVxNkomIqqjNh8efhzzRa0jUI8xpKEUTtl-1-3oNxtT8AfCliIUR-VIsFeMmaP34LchNoZp8V5Wb");'></div>
+</div>
+</header>
+<main class="flex flex-col flex-1 w-full max-w-[768px] mx-auto px-4 py-6">
+<!-- Title and Quick Action -->
+<div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6">
+<div>
+<h1 class="text-slate-900 dark:text-slate-100 text-3xl font-black leading-tight tracking-tight">Members Directory</h1>
+<p class="text-slate-500 dark:text-slate-400 text-sm">Managing 1,248 registered athletes in Bangladesh</p>
+</div>
+<button class="flex items-center justify-center gap-2 rounded-full bg-primary text-white px-6 py-2.5 text-sm font-bold shadow-lg shadow-primary/20 hover:scale-[1.02] active:scale-95 transition-all">
+<span class="material-symbols-outlined text-lg">person_add</span>
+<span>Add Member</span>
+</button>
+</div>
+<!-- Search and Stats -->
+<div class="grid grid-cols-1 gap-4 mb-6">
+<div class="relative group">
+<div class="absolute inset-y-0 left-0 flex items-center pl-4 pointer-events-none text-slate-400 group-focus-within:text-primary transition-colors">
+<span class="material-symbols-outlined">search</span>
+</div>
+<input class="block w-full pl-11 pr-4 py-3 bg-white dark:bg-slate-900 border-none rounded-xl text-slate-900 dark:text-slate-100 focus:ring-2 focus:ring-primary/50 shadow-sm placeholder:text-slate-400" placeholder="Search by name, phone (+880), or ID..." type="text"/>
+</div>
+</div>
+<!-- Filters -->
+<div class="flex gap-2 pb-4 overflow-x-auto no-scrollbar">
+<button class="flex items-center gap-1.5 shrink-0 px-4 py-2 rounded-full bg-primary text-white text-sm font-semibold shadow-md">
+<span>All</span>
+<span class="bg-white/20 px-1.5 py-0.5 rounded text-[10px]">1.2k</span>
+</button>
+<button class="flex items-center gap-1.5 shrink-0 px-4 py-2 rounded-full bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-300 border border-slate-200 dark:border-slate-700 text-sm font-medium hover:border-primary/50 transition-colors">
+<span class="w-2 h-2 rounded-full bg-emerald-500"></span>
+<span>Active</span>
+</button>
+<button class="flex items-center gap-1.5 shrink-0 px-4 py-2 rounded-full bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-300 border border-slate-200 dark:border-slate-700 text-sm font-medium hover:border-primary/50 transition-colors">
+<span class="w-2 h-2 rounded-full bg-amber-500"></span>
+<span>Pending</span>
+</button>
+<button class="flex items-center gap-1.5 shrink-0 px-4 py-2 rounded-full bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-300 border border-slate-200 dark:border-slate-700 text-sm font-medium hover:border-primary/50 transition-colors">
+<span class="w-2 h-2 rounded-full bg-rose-500"></span>
+<span>Expired</span>
+</button>
+<button class="flex items-center gap-1.5 shrink-0 px-4 py-2 rounded-full bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-300 border border-slate-200 dark:border-slate-700 text-sm font-medium hover:border-primary/50 transition-colors">
+<span class="material-symbols-outlined text-lg">filter_list</span>
+<span>Filters</span>
+</button>
+</div>
+<!-- Table Content -->
+<div class="bg-white dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-800 overflow-hidden shadow-sm">
+<div class="overflow-x-auto">
+<table class="w-full text-left border-collapse">
+<thead>
+<tr class="bg-slate-50 dark:bg-slate-800/50">
+<th class="px-4 py-4 text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400">Member Info</th>
+<th class="px-4 py-4 text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400">Status</th>
+<th class="px-4 py-4 text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400">Plan</th>
+<th class="px-4 py-4 text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400 text-right">Last Payment</th>
+</tr>
+</thead>
+<tbody class="divide-y divide-slate-100 dark:divide-slate-800">
+<!-- Row 1 -->
+<tr class="hover:bg-slate-50/80 dark:hover:bg-slate-800/40 transition-colors">
+<td class="px-4 py-4">
+<div class="flex items-center gap-3">
+<div class="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center text-primary font-bold text-sm">AR</div>
+<div>
+<div class="font-bold text-slate-900 dark:text-slate-100 text-sm">Arif Rahman</div>
+<div class="text-xs text-slate-500">#GYM-2024-001</div>
+</div>
+</div>
+</td>
+<td class="px-4 py-4">
+<span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-bold bg-emerald-100 text-emerald-700 dark:bg-emerald-500/10 dark:text-emerald-400">
+                                            Active
+                                        </span>
+</td>
+<td class="px-4 py-4 text-sm text-slate-600 dark:text-slate-400">Monthly VIP</td>
+<td class="px-4 py-4 text-right">
+<div class="text-sm font-bold text-slate-900 dark:text-slate-100">৳2,500</div>
+<div class="text-[10px] text-slate-400">12 Oct 2023</div>
+</td>
+</tr>
+<!-- Row 2 -->
+<tr class="hover:bg-slate-50/80 dark:hover:bg-slate-800/40 transition-colors">
+<td class="px-4 py-4">
+<div class="flex items-center gap-3">
+<div class="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center text-primary font-bold text-sm">SK</div>
+<div>
+<div class="font-bold text-slate-900 dark:text-slate-100 text-sm">Sultana Kamal</div>
+<div class="text-xs text-slate-500">#GYM-2024-089</div>
+</div>
+</div>
+</td>
+<td class="px-4 py-4">
+<span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-bold bg-rose-100 text-rose-700 dark:bg-rose-500/10 dark:text-rose-400">
+                                            Expired
+                                        </span>
+</td>
+<td class="px-4 py-4 text-sm text-slate-600 dark:text-slate-400">Standard</td>
+<td class="px-4 py-4 text-right">
+<div class="text-sm font-bold text-slate-900 dark:text-slate-100">৳1,200</div>
+<div class="text-[10px] text-slate-400">05 Sep 2023</div>
+</td>
+</tr>
+<!-- Row 3 -->
+<tr class="hover:bg-slate-50/80 dark:hover:bg-slate-800/40 transition-colors">
+<td class="px-4 py-4">
+<div class="flex items-center gap-3">
+<div class="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center text-primary font-bold text-sm">TA</div>
+<div>
+<div class="font-bold text-slate-900 dark:text-slate-100 text-sm">Tanvir Ahmed</div>
+<div class="text-xs text-slate-500">#GYM-2023-442</div>
+</div>
+</div>
+</td>
+<td class="px-4 py-4">
+<span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-bold bg-emerald-100 text-emerald-700 dark:bg-emerald-500/10 dark:text-emerald-400">
+                                            Active
+                                        </span>
+</td>
+<td class="px-4 py-4 text-sm text-slate-600 dark:text-slate-400">Yearly Pro</td>
+<td class="px-4 py-4 text-right">
+<div class="text-sm font-bold text-slate-900 dark:text-slate-100">৳15,000</div>
+<div class="text-[10px] text-slate-400">01 Jan 2024</div>
+</td>
+</tr>
+<!-- Row 4 -->
+<tr class="hover:bg-slate-50/80 dark:hover:bg-slate-800/40 transition-colors">
+<td class="px-4 py-4">
+<div class="flex items-center gap-3">
+<div class="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center text-primary font-bold text-sm">NJ</div>
+<div>
+<div class="font-bold text-slate-900 dark:text-slate-100 text-sm">Nusrat Jahan</div>
+<div class="text-xs text-slate-500">#GYM-2024-115</div>
+</div>
+</div>
+</td>
+<td class="px-4 py-4">
+<span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-bold bg-amber-100 text-amber-700 dark:bg-amber-500/10 dark:text-amber-400">
+                                            Due
+                                        </span>
+</td>
+<td class="px-4 py-4 text-sm text-slate-600 dark:text-slate-400">Monthly</td>
+<td class="px-4 py-4 text-right">
+<div class="text-sm font-bold text-rose-500">৳0</div>
+<div class="text-[10px] text-slate-400">Pending</div>
+</td>
+</tr>
+<!-- Row 5 -->
+<tr class="hover:bg-slate-50/80 dark:hover:bg-slate-800/40 transition-colors">
+<td class="px-4 py-4">
+<div class="flex items-center gap-3">
+<div class="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center text-primary font-bold text-sm">RK</div>
+<div>
+<div class="font-bold text-slate-900 dark:text-slate-100 text-sm">Rahat Khan</div>
+<div class="text-xs text-slate-500">#GYM-2024-005</div>
+</div>
+</div>
+</td>
+<td class="px-4 py-4">
+<span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-bold bg-emerald-100 text-emerald-700 dark:bg-emerald-500/10 dark:text-emerald-400">
+                                            Active
+                                        </span>
+</td>
+<td class="px-4 py-4 text-sm text-slate-600 dark:text-slate-400">Standard</td>
+<td class="px-4 py-4 text-right">
+<div class="text-sm font-bold text-slate-900 dark:text-slate-100">৳1,200</div>
+<div class="text-[10px] text-slate-400">10 Oct 2023</div>
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+<!-- Pagination -->
+<div class="flex items-center justify-between mt-6 px-2">
+<p class="text-xs text-slate-500 dark:text-slate-400">Showing 1 to 5 of 1,248 members</p>
+<div class="flex gap-2">
+<button class="p-2 rounded-lg bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-400 hover:bg-slate-50 transition-colors">
+<span class="material-symbols-outlined text-sm">chevron_left</span>
+</button>
+<button class="px-3.5 py-1.5 rounded-lg bg-primary text-white text-xs font-bold">1</button>
+<button class="px-3.5 py-1.5 rounded-lg bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-400 hover:bg-slate-50 transition-colors text-xs font-bold">2</button>
+<button class="px-3.5 py-1.5 rounded-lg bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-400 hover:bg-slate-50 transition-colors text-xs font-bold">3</button>
+<button class="p-2 rounded-lg bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-400 hover:bg-slate-50 transition-colors">
+<span class="material-symbols-outlined text-sm">chevron_right</span>
+</button>
+</div>
+</div>
+</main>
+</div>
+</div>
+<style>
+        .no-scrollbar::-webkit-scrollbar {
+            display: none;
+        }
+        .no-scrollbar {
+            -ms-overflow-style: none;
+            scrollbar-width: none;
+        }
+    </style>
+</body></html>

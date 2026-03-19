@@ -3,6 +3,7 @@ import { supabase } from '../lib/supabase';
 import { useAuth } from '../contexts/AuthContext';
 import { useRealtimeSubscription } from '../hooks/useRealtimeSubscription';
 import { useToast } from '../components/ToastProvider';
+import { formatBdt } from '../lib/currency';
 
 interface ConfirmModal {
   isOpen: boolean;
@@ -94,7 +95,7 @@ export default function MembershipPlans() {
       };
 
       if (editingPlan) {
-        const { error } = await supabase.from('plans').update(payload).eq('id', editingPlan.id);
+        const { error } = await supabase.from('plans').update(payload).eq('id', editingPlan.id).eq('gym_id', gymId);
         if (error) throw error;
         showToast('Plan updated successfully!', 'success');
       } else {
@@ -130,11 +131,11 @@ export default function MembershipPlans() {
             .eq('gym_id', gymId);
 
           if ((count || 0) > 0) {
-            showToast(`Cannot delete — ${count} member(s) are on this plan. Reassign them first.`, 'error');
+            showToast(`Cannot delete - ${count} member(s) are on this plan. Reassign them first.`, 'error');
             return;
           }
 
-          const { error } = await supabase.from('plans').delete().eq('id', plan.id);
+          const { error } = await supabase.from('plans').delete().eq('id', plan.id).eq('gym_id', gymId);
           if (error) throw error;
           showToast('Plan deleted.', 'success');
           fetchPlans();
@@ -208,7 +209,7 @@ export default function MembershipPlans() {
                 </div>
                 <div className="mb-6">
                   <div className="flex items-baseline gap-1">
-                    <span className={`text-4xl font-black ${colorSet.text}`}>৳{plan.price?.toLocaleString()}</span>
+                    <span className={`text-4xl font-black ${colorSet.text}`}>{formatBdt(Number(plan.price || 0))}</span>
                     <span className="text-slate-500 font-medium">/{plan.duration_days}d</span>
                   </div>
                   {plan.description && <p className="text-xs text-slate-400 mt-2">{plan.description}</p>}
@@ -275,7 +276,7 @@ export default function MembershipPlans() {
               </div>
               <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-1.5">
-                  <label htmlFor="plan-price" className="text-sm font-bold text-slate-700 dark:text-slate-300">Price (৳)</label>
+                  <label htmlFor="plan-price" className="text-sm font-bold text-slate-700 dark:text-slate-300">Price (BDT)</label>
                   <input id="plan-price" required value={formData.price} onChange={(e) => setFormData({ ...formData, price: e.target.value })} type="number" min="0" step="0.01" placeholder="5000"
                     className="w-full bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl h-11 px-4 text-sm focus:ring-2 focus:ring-primary-default/20 focus:border-primary-default outline-none transition-all" />
                 </div>

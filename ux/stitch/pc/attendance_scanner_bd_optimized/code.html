@@ -1,0 +1,296 @@
+<!DOCTYPE html>
+
+<html lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>LiftLegend - Attendance Scanner</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    colors: {
+                        "primary": "#4aafed",
+                        "background-light": "#f6f7f8",
+                        "background-dark": "#111b21",
+                        "sidebar-dark": "#1a1d1f",
+                    },
+                    fontFamily: {
+                        "display": ["Inter"]
+                    },
+                    borderRadius: {"DEFAULT": "0.25rem", "lg": "0.5rem", "xl": "0.75rem", "full": "9999px"},
+                },
+            },
+        }
+    </script>
+<style>
+        body { font-family: 'Inter', sans-serif; }
+        .scanner-overlay {
+            background: linear-gradient(rgba(0,0,0,0.5), transparent 20%, transparent 80%, rgba(0,0,0,0.5)),
+                        linear-gradient(90deg, rgba(0,0,0,0.5), transparent 20%, transparent 80%, rgba(0,0,0,0.5));
+        }
+        .scan-line {
+            height: 2px;
+            background: #4aafed;
+            box-shadow: 0 0 15px #4aafed;
+            position: absolute;
+            width: 100%;
+            top: 50%;
+        }
+    </style>
+</head>
+<body class="bg-background-light dark:bg-background-dark text-slate-900 dark:text-slate-100 font-display">
+<div class="flex min-h-screen">
+<!-- Sidebar -->
+<aside class="w-64 bg-sidebar-dark text-white flex flex-col fixed h-full z-20">
+<div class="p-6 flex items-center gap-3">
+<div class="bg-primary rounded-lg p-1.5">
+<span class="material-symbols-outlined text-white text-2xl">fitness_center</span>
+</div>
+<div>
+<h1 class="font-bold text-lg leading-tight">LiftLegend</h1>
+<p class="text-slate-400 text-xs uppercase tracking-wider">Gym Management</p>
+</div>
+</div>
+<nav class="flex-1 px-4 py-4 space-y-1">
+<a class="flex items-center gap-3 px-4 py-3 text-slate-400 hover:text-white hover:bg-white/10 rounded-lg transition-colors" href="#">
+<span class="material-symbols-outlined">dashboard</span>
+<span class="font-medium">Dashboard</span>
+</a>
+<a class="flex items-center gap-3 px-4 py-3 bg-primary text-white rounded-lg transition-colors" href="#">
+<span class="material-symbols-outlined">qr_code_scanner</span>
+<span class="font-medium">Attendance</span>
+</a>
+<a class="flex items-center gap-3 px-4 py-3 text-slate-400 hover:text-white hover:bg-white/10 rounded-lg transition-colors" href="#">
+<span class="material-symbols-outlined">group</span>
+<span class="font-medium">Members</span>
+</a>
+<a class="flex items-center gap-3 px-4 py-3 text-slate-400 hover:text-white hover:bg-white/10 rounded-lg transition-colors" href="#">
+<span class="material-symbols-outlined">exercise</span>
+<span class="font-medium">Workouts</span>
+</a>
+<a class="flex items-center gap-3 px-4 py-3 text-slate-400 hover:text-white hover:bg-white/10 rounded-lg transition-colors" href="#">
+<span class="material-symbols-outlined">settings</span>
+<span class="font-medium">Settings</span>
+</a>
+</nav>
+<div class="p-4 border-t border-white/10">
+<button class="flex items-center gap-3 px-4 py-3 w-full text-slate-400 hover:text-white hover:bg-white/10 rounded-lg transition-colors">
+<span class="material-symbols-outlined">logout</span>
+<span class="font-medium">Log Out</span>
+</button>
+</div>
+</aside>
+<!-- Main Content -->
+<main class="flex-1 ml-64 p-8">
+<!-- Header -->
+<header class="flex justify-between items-center mb-8">
+<div>
+<h2 class="text-2xl font-bold">Attendance Scanner</h2>
+<p class="text-slate-500">Scan member QR codes for facility entry</p>
+</div>
+<div class="flex items-center gap-4">
+<button class="p-2 rounded-full bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 shadow-sm">
+<span class="material-symbols-outlined">notifications</span>
+</button>
+<div class="flex items-center gap-3 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-full px-4 py-1.5 shadow-sm">
+<div class="w-8 h-8 rounded-full bg-primary/20 flex items-center justify-center">
+<span class="material-symbols-outlined text-primary text-xl">person</span>
+</div>
+<span class="font-medium text-sm">Admin View</span>
+</div>
+</div>
+</header>
+<div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+<!-- Left Column: Scanner -->
+<div class="lg:col-span-2 space-y-6">
+<!-- Notifications Section -->
+<div class="space-y-3">
+<div class="flex items-center gap-3 bg-emerald-50 border border-emerald-200 text-emerald-800 p-4 rounded-xl">
+<span class="material-symbols-outlined text-emerald-600">check_circle</span>
+<div class="flex-1">
+<p class="font-bold text-sm">Access Granted</p>
+<p class="text-xs">Arif Rahman - Platinum Membership (Active)</p>
+</div>
+<button class="material-symbols-outlined text-emerald-400 hover:text-emerald-600">close</button>
+</div>
+<div class="flex items-center gap-3 bg-rose-50 border border-rose-200 text-rose-800 p-4 rounded-xl">
+<span class="material-symbols-outlined text-rose-600">error</span>
+<div class="flex-1">
+<p class="font-bold text-sm">Access Denied</p>
+<p class="text-xs">Nusrat Jahan - Membership Expired (12 days ago)</p>
+</div>
+<button class="material-symbols-outlined text-rose-400 hover:text-rose-600">close</button>
+</div>
+</div>
+<!-- Scanner UI -->
+<div class="relative bg-black rounded-2xl overflow-hidden aspect-video shadow-2xl border-4 border-slate-200 dark:border-slate-800">
+<!-- Placeholder for Camera Feed -->
+<img alt="Interior gym background for scanner view" class="w-full h-full object-cover opacity-60 grayscale" data-alt="Modern gym interior with weight racks and neon lights" src="https://lh3.googleusercontent.com/aida-public/AB6AXuDLkesUob5NYzWjFqYnqJoFm9J9bG5hy83bJMKGbhXpmGAtMoO9d8Rqr8oKPdmN_GuB02fkV7QcZSR8S5md2Hop7V6WZgVfi9jm2UH3fVh-1r8B48sNBnHd66Gtw39D1Lmw1X2lRR9UeNVZJI_qUUThnu1P6LkFWgVAc0joG6dVwbj-dMYcebJgNnmWD4wB2LoNngaMa6HU5cjUzNWT8SaLyDGnQfvjvVEyo3T0r7pXewG5NkH_y7iuSY7TGJkY5NP0OFCEVS_rDRZf"/>
+<!-- Scanner Overlays -->
+<div class="absolute inset-0 scanner-overlay"></div>
+<div class="absolute inset-0 flex items-center justify-center">
+<div class="relative w-64 h-64 border-2 border-primary/50 rounded-2xl">
+<!-- Corner Accents -->
+<div class="absolute -top-1 -left-1 w-8 h-8 border-t-4 border-l-4 border-primary rounded-tl-lg"></div>
+<div class="absolute -top-1 -right-1 w-8 h-8 border-t-4 border-r-4 border-primary rounded-tr-lg"></div>
+<div class="absolute -bottom-1 -left-1 w-8 h-8 border-b-4 border-l-4 border-primary rounded-bl-lg"></div>
+<div class="absolute -bottom-1 -right-1 w-8 h-8 border-b-4 border-r-4 border-primary rounded-br-lg"></div>
+<!-- Scanning Line -->
+<div class="scan-line"></div>
+</div>
+</div>
+<!-- Scanner Controls -->
+<div class="absolute bottom-6 left-1/2 -translate-x-1/2 flex items-center gap-4">
+<button class="w-12 h-12 rounded-full bg-white/10 backdrop-blur-md text-white border border-white/20 flex items-center justify-center hover:bg-white/20">
+<span class="material-symbols-outlined">flash_on</span>
+</button>
+<button class="px-6 py-2 rounded-full bg-primary text-white font-bold shadow-lg flex items-center gap-2">
+<span class="material-symbols-outlined text-xl">camera_alt</span>
+                            Scanning Active
+                        </button>
+<button class="w-12 h-12 rounded-full bg-white/10 backdrop-blur-md text-white border border-white/20 flex items-center justify-center hover:bg-white/20">
+<span class="material-symbols-outlined">flip_camera_ios</span>
+</button>
+</div>
+</div>
+</div>
+<!-- Right Column: Live Feed -->
+<div class="lg:col-span-1">
+<div class="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm overflow-hidden h-full flex flex-col">
+<div class="p-6 border-b border-slate-200 dark:border-slate-800 flex justify-between items-center bg-slate-50 dark:bg-slate-900/50">
+<h3 class="font-bold flex items-center gap-2">
+<span class="w-2 h-2 rounded-full bg-rose-500 animate-pulse"></span>
+                            Live Feed
+                        </h3>
+<span class="text-xs text-slate-500 font-medium uppercase tracking-widest">Recent Check-ins</span>
+</div>
+<div class="flex-1 overflow-y-auto">
+<!-- Feed Items -->
+<div class="divide-y divide-slate-100 dark:divide-slate-800">
+<!-- Successful Check-in -->
+<div class="p-4 flex items-center gap-4 hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-colors">
+<div class="relative">
+<div class="w-12 h-12 rounded-full bg-slate-200 overflow-hidden">
+<img alt="Member profile photo" data-alt="Close up portrait of a young man smiling" src="https://lh3.googleusercontent.com/aida-public/AB6AXuDu3vQ3BD4hh_oqo_3NA1rZ49e7MgQvaDYIEWBWx0tdSTLisMLIyxPX18WJCfqMeyJ1w6kEpYDUpl-2UssnLtoZDRP0OTORuKjT2aULjkoBnbdeb-EoCqV48sIH5u9SoW5JKk_h86gQktf46m8NjQ6G_gAgBE3ALNlczeFGZVecZaTVN_bMS4a-ZEFQEIK-tYJfRbkxEi9-FByTDeeJXd4XsaWoYg0gBBCWl36zBvs1ZYBKgHhI3O3NSyQzrPiT6tNUPR5nDt3Jn7Wv"/>
+</div>
+<div class="absolute -bottom-1 -right-1 w-5 h-5 bg-emerald-500 border-2 border-white dark:border-slate-900 rounded-full flex items-center justify-center">
+<span class="material-symbols-outlined text-[12px] text-white font-bold">check</span>
+</div>
+</div>
+<div class="flex-1 min-w-0">
+<p class="text-sm font-bold truncate">Arif Rahman</p>
+<p class="text-xs text-slate-500">Platinum Member</p>
+</div>
+<div class="text-right">
+<p class="text-xs font-medium text-slate-400">14:22:15</p>
+<span class="text-[10px] text-emerald-600 font-bold uppercase">Success</span>
+</div>
+</div>
+<!-- Failed Check-in -->
+<div class="p-4 flex items-center gap-4 hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-colors bg-rose-50/30">
+<div class="relative">
+<div class="w-12 h-12 rounded-full bg-slate-200 overflow-hidden">
+<img alt="Member profile photo" data-alt="Portrait of a young woman with sports gear" src="https://lh3.googleusercontent.com/aida-public/AB6AXuCgEBXPNO-zmbkNRlAn8SpgudtSWgmhyz30M-Ch_ojm6_PCntRxXL9dabHE2nw04h9il8Betcw-BpJ5uaoPNuC9XlZiR7SMwO3b4J0FEs_5DDx4vN_IpOjskwWJi4Ay5ZcL00YS9WtaGomh8c1Vbeqf7sbVqOx0n8B_b9lMyvPOEKs95h3B8YshmtmkziGlURmWLTFKrYzIB3sAkeahmHMkOdCExOkFoMvdx55Oy7XlRcdcyg2cqPryhSUmZ5Ndj_BTJjJaN4DAsub5"/>
+</div>
+<div class="absolute -bottom-1 -right-1 w-5 h-5 bg-rose-500 border-2 border-white dark:border-slate-900 rounded-full flex items-center justify-center">
+<span class="material-symbols-outlined text-[12px] text-white font-bold">close</span>
+</div>
+</div>
+<div class="flex-1 min-w-0">
+<p class="text-sm font-bold truncate">Nusrat Jahan</p>
+<p class="text-xs text-slate-500">Standard Member</p>
+</div>
+<div class="text-right">
+<p class="text-xs font-medium text-slate-400">14:18:42</p>
+<span class="text-[10px] text-rose-600 font-bold uppercase">Expired</span>
+</div>
+</div>
+<!-- More Successful Check-ins -->
+<div class="p-4 flex items-center gap-4 hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-colors">
+<div class="relative">
+<div class="w-12 h-12 rounded-full bg-slate-200 overflow-hidden">
+<img alt="Member profile photo" data-alt="Portrait of a middle aged man in athletic wear" src="https://lh3.googleusercontent.com/aida-public/AB6AXuC-_9lUcT-hM1asg2cgfyaM0xxuIyJscSPH2TgPS1-2zA_2tjiVH8aMNt6ZocYODJvkACO6UFUQcTBszwFCBtLyaSJCZeRStd65-fpJ5yczNWT8kDdlImuA3rnQjA8TuPwk-bu2nRDLoczZXX1ysZzTsus9bKftx8yqGElZlrsAM-QdO4OgjHXvQGsQuc3VXiwCLlS-VLSONG41f0ARzJ3sz7bSzWOpKyaUHw3jmrOdvRojAIu-wAvfaESq_QM1irLrZpwy2jjtTa1Q"/>
+</div>
+<div class="absolute -bottom-1 -right-1 w-5 h-5 bg-emerald-500 border-2 border-white dark:border-slate-900 rounded-full flex items-center justify-center">
+<span class="material-symbols-outlined text-[12px] text-white font-bold">check</span>
+</div>
+</div>
+<div class="flex-1 min-w-0">
+<p class="text-sm font-bold truncate">Tanvir Ahmed</p>
+<p class="text-xs text-slate-500">Day Pass Holder</p>
+</div>
+<div class="text-right">
+<p class="text-xs font-medium text-slate-400">14:05:01</p>
+<span class="text-[10px] text-emerald-600 font-bold uppercase">Success</span>
+</div>
+</div>
+<div class="p-4 flex items-center gap-4 hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-colors">
+<div class="relative">
+<div class="w-12 h-12 rounded-full bg-slate-200 overflow-hidden">
+<img alt="Member profile photo" data-alt="Portrait of a young man with a focused expression" src="https://lh3.googleusercontent.com/aida-public/AB6AXuBl3gMTpHWcVp3ZWtZGoFeDQHJcBPDjqNfjDN71hlNT_tew1riHRE-lG4wmE58ePFtEE41e05B1lTx-5Iy96cuzoVn8kQaD8bPRoiIQsL6GldbUCf_xrMJbrHg2O7CFq677gbs4R0D9s46JdFBmxSufWpKj2lLuutNt_7zQHmK7GghFymtuzt8hzNPKRZXzsmHK5TfVgGeEatBKWrj38Wqu7lWWkWW_T4-lp6ePMNCLlQPLezRAuzqCkOB6fvUhoSm2FgJPSB2VOjyT"/>
+</div>
+<div class="absolute -bottom-1 -right-1 w-5 h-5 bg-emerald-500 border-2 border-white dark:border-slate-900 rounded-full flex items-center justify-center">
+<span class="material-symbols-outlined text-[12px] text-white font-bold">check</span>
+</div>
+</div>
+<div class="flex-1 min-w-0">
+<p class="text-sm font-bold truncate">Samiul Haque</p>
+<p class="text-xs text-slate-500">Platinum Member</p>
+</div>
+<div class="text-right">
+<p class="text-xs font-medium text-slate-400">13:58:22</p>
+<span class="text-[10px] text-emerald-600 font-bold uppercase">Success</span>
+</div>
+</div>
+</div>
+</div>
+<div class="p-4 bg-slate-50 dark:bg-slate-900/50 border-t border-slate-200 dark:border-slate-800 text-center">
+<button class="text-sm text-primary font-bold hover:underline">View All History</button>
+</div>
+</div>
+</div>
+</div>
+<!-- Stats Overview Footer -->
+<div class="mt-8 grid grid-cols-1 md:grid-cols-4 gap-4">
+<div class="bg-white dark:bg-slate-900 p-6 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm">
+<p class="text-slate-500 text-sm mb-1">Total Daily Check-ins</p>
+<div class="flex items-end gap-2">
+<span class="text-3xl font-bold">248</span>
+<span class="text-emerald-500 text-xs font-bold mb-1.5 flex items-center">
+<span class="material-symbols-outlined text-sm">trending_up</span> 12%
+                    </span>
+</div>
+</div>
+<div class="bg-white dark:bg-slate-900 p-6 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm">
+<p class="text-slate-500 text-sm mb-1">Active Members Now</p>
+<div class="flex items-end gap-2">
+<span class="text-3xl font-bold">42</span>
+<span class="text-slate-400 text-xs font-bold mb-1.5">/ 150 capacity</span>
+</div>
+<div class="w-full bg-slate-100 dark:bg-slate-800 h-1.5 rounded-full mt-3 overflow-hidden">
+<div class="bg-primary h-full w-[28%]"></div>
+</div>
+</div>
+<div class="bg-white dark:bg-slate-900 p-6 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm">
+<p class="text-slate-500 text-sm mb-1">Peak Hour Status</p>
+<div class="flex items-end gap-2">
+<span class="text-xl font-bold text-emerald-500">Steady</span>
+</div>
+<p class="text-xs text-slate-400 mt-2">Expected peak at 17:00</p>
+</div>
+<div class="bg-white dark:bg-slate-900 p-6 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm">
+<p class="text-slate-500 text-sm mb-1">Denied Access (Today)</p>
+<div class="flex items-end gap-2">
+<span class="text-3xl font-bold text-rose-500">5</span>
+</div>
+<p class="text-xs text-slate-400 mt-2">All expired memberships</p>
+</div>
+</div>
+</main>
+</div>
+</body></html>

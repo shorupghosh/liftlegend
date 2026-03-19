@@ -1,0 +1,280 @@
+import React, { createContext, useContext, useMemo, useState } from 'react';
+import type { Attendance, Member, Payment } from '../types';
+import {
+  createInitialDemoState,
+  DEMO_GYM,
+  DemoNotification,
+  DemoStaffMember,
+  DemoState,
+  getDemoMetrics,
+} from '../lib/demoData';
+import { isDemoModeActive } from '../lib/demoUtils';
+
+type InvitePayload = {
+  email: string;
+  role: DemoStaffMember['role'];
+};
+
+type DemoDataContextValue = {
+  isDemoMode: boolean;
+  state: DemoState;
+  metrics: ReturnType<typeof getDemoMetrics>;
+  resetDemoData: () => void;
+  addMember: (payload: Pick<Member, 'full_name' | 'email' | 'phone' | 'plan_id'>) => Member;
+  updateMember: (memberId: string, payload: Partial<Member>) => Member | null;
+  deleteMember: (memberId: string) => void;
+  toggleMemberStatus: (memberId: string) => Member | null;
+  addPayment: (payload: Pick<Payment, 'member_id' | 'plan_id' | 'price_paid' | 'payment_method' | 'start_date' | 'end_date'>) => Payment | null;
+  addAttendance: (memberId: string, method?: Attendance['method']) => Attendance | null;
+  inviteStaff: (payload: InvitePayload) => DemoStaffMember;
+  updateStaffRole: (staffId: string, role: DemoStaffMember['role']) => DemoStaffMember | null;
+  removeStaff: (staffId: string) => void;
+  markNotificationRead: (notificationId: string) => void;
+  markAllNotificationsRead: () => void;
+};
+
+const DemoDataContext = createContext<DemoDataContextValue | null>(null);
+
+const findPlanForMember = (state: DemoState, planId?: string) =>
+  state.plans.find((plan) => plan.id === planId) ?? null;
+
+export function DemoDataProvider({ children }: { children: React.ReactNode }) {
+  const [state, setState] = useState<DemoState>(() => createInitialDemoState());
+  const isDemoMode = isDemoModeActive();
+
+  const resetDemoData = () => {
+    setState(createInitialDemoState());
+  };
+
+  const addMember = (payload: Pick<Member, 'full_name' | 'email' | 'phone' | 'plan_id'>) => {
+    const memberId = `demo-member-${Date.now()}`;
+    let createdMember: Member | null = null;
+
+    setState((current) => {
+      const plan = findPlanForMember(current, payload.plan_id);
+      const today = new Date().toISOString();
+      const member: Member = {
+        id: memberId,
+        gym_id: DEMO_GYM.id,
+        full_name: payload.full_name.trim(),
+        email: payload.email || undefined,
+        phone: payload.phone || undefined,
+        plan_id: payload.plan_id || undefined,
+        join_date: today.split('T')[0],
+        expiry_date: plan
+          ? new Date(Date.now() + plan.duration_days * 24 * 60 * 60 * 1000).toISOString().split('T')[0]
+          : undefined,
+        status: 'ACTIVE',
+        created_at: today,
+        qr_code_value: `DEMO:${DEMO_GYM.id}:${memberId}`,
+        qr_generated_at: today,
+        plans: plan ? { name: plan.name, price: plan.price, duration_days: plan.duration_days } : undefined,
+      };
+      createdMember = member;
+      return { ...current, members: [member, ...current.members] };
+    });
+
+    return createdMember!;
+  };
+
+  const updateMember = (memberId: string, payload: Partial<Member>) => {
+    let updated: Member | null = null;
+    setState((current) => {
+      const nextMembers = current.members.map((member) => {
+        if (member.id !== memberId) return member;
+        const plan = payload.plan_id ? findPlanForMember(current, payload.plan_id) : findPlanForMember(current, member.plan_id);
+        updated = {
+          ...member,
+          ...payload,
+          plans: plan ? { name: plan.name, price: plan.price, duration_days: plan.duration_days } : member.plans,
+        };
+        return updated!;
+      });
+      return { ...current, members: nextMembers };
+    });
+    return updated;
+  };
+
+  const deleteMember = (memberId: string) => {
+    setState((current) => ({
+      ...current,
+      members: current.members.filter((member) => member.id !== memberId),
+      payments: current.payments.filter((payment) => payment.member_id !== memberId),
+      attendance: current.attendance.filter((entry) => entry.member_id !== memberId),
+      notifications: current.notifications.filter((entry) => entry.related_member_id !== memberId),
+    }));
+  };
+
+  const toggleMemberStatus = (memberId: string) => {
+    let updated: Member | null = null;
+    setState((current) => ({
+      ...current,
+      members: current.members.map((member) => {
+        if (member.id !== memberId) return member;
+        updated = {
+          ...member,
+          status: member.status === 'ACTIVE' ? 'INACTIVE' : 'ACTIVE',
+        };
+        return updated!;
+      }),
+    }));
+    return updated;
+  };
+
+  const addPayment = (payload: Pick<Payment, 'member_id' | 'plan_id' | 'price_paid' | 'payment_method' | 'start_date' | 'end_date'>) => {
+    let created: Payment | null = null;
+    setState((current) => {
+      const member = current.members.find((item) => item.id === payload.member_id);
+      const plan = current.plans.find((item) => item.id === payload.plan_id);
+      if (!member || !plan) {
+        return current;
+      }
+      created = {
+        id: `demo-payment-${Date.now()}`,
+        gym_id: DEMO_GYM.id,
+        member_id: payload.member_id,
+        plan_id: payload.plan_id,
+        price_paid: payload.price_paid,
+        payment_method: payload.payment_method,
+        start_date: payload.start_date,
+        end_date: payload.end_date,
+        created_at: new Date().toISOString(),
+        members: { full_name: member.full_name },
+        plans: { name: plan.name },
+      };
+      const nextMembers = current.members.map((item) =>
+        item.id === member.id
+          ? {
+              ...item,
+              plan_id: plan.id,
+              expiry_date: payload.end_date,
+              status: 'ACTIVE',
+              plans: { name: plan.name, price: plan.price, duration_days: plan.duration_days },
+            }
+          : item
+      );
+      return {
+        ...current,
+        members: nextMembers,
+        payments: [created!, ...current.payments],
+      };
+    });
+    return created;
+  };
+
+  const addAttendance = (memberId: string, method: Attendance['method'] = 'MANUAL') => {
+    let created: Attendance | null = null;
+    setState((current) => {
+      const member = current.members.find((item) => item.id === memberId);
+      if (!member) {
+        return current;
+      }
+      created = {
+        id: `demo-attendance-${Date.now()}`,
+        gym_id: DEMO_GYM.id,
+        member_id: member.id,
+        check_in_time: new Date().toISOString(),
+        method,
+        members: {
+          full_name: member.full_name,
+          plan_id: member.plan_id,
+          status: member.status,
+          plans: member.plans ? { name: member.plans.name } : undefined,
+        },
+      };
+      return {
+        ...current,
+        attendance: [created!, ...current.attendance],
+      };
+    });
+    return created;
+  };
+
+  const inviteStaff = (payload: InvitePayload) => {
+    const created: DemoStaffMember = {
+      id: `demo-staff-${Date.now()}`,
+      user_id: null,
+      email: payload.email,
+      display_name: payload.email,
+      role: payload.role,
+      status: 'INVITED',
+      joined_at: null,
+      invited_at: new Date().toISOString(),
+      created_at: new Date().toISOString(),
+    };
+
+    setState((current) => ({
+      ...current,
+      staff: [...current.staff, created],
+    }));
+
+    return created;
+  };
+
+  const updateStaffRole = (staffId: string, role: DemoStaffMember['role']) => {
+    let updated: DemoStaffMember | null = null;
+    setState((current) => ({
+      ...current,
+      staff: current.staff.map((member) => {
+        if (member.id !== staffId) return member;
+        updated = { ...member, role };
+        return updated!;
+      }),
+    }));
+    return updated;
+  };
+
+  const removeStaff = (staffId: string) => {
+    setState((current) => ({
+      ...current,
+      staff: current.staff.filter((member) => member.id !== staffId),
+    }));
+  };
+
+  const markNotificationRead = (notificationId: string) => {
+    setState((current) => ({
+      ...current,
+      notifications: current.notifications.map((notification) =>
+        notification.id === notificationId ? { ...notification, read: true } : notification
+      ),
+    }));
+  };
+
+  const markAllNotificationsRead = () => {
+    setState((current) => ({
+      ...current,
+      notifications: current.notifications.map((notification) => ({ ...notification, read: true })),
+    }));
+  };
+
+  const value = useMemo<DemoDataContextValue>(
+    () => ({
+      isDemoMode,
+      state,
+      metrics: getDemoMetrics(state),
+      resetDemoData,
+      addMember,
+      updateMember,
+      deleteMember,
+      toggleMemberStatus,
+      addPayment,
+      addAttendance,
+      inviteStaff,
+      updateStaffRole,
+      removeStaff,
+      markNotificationRead,
+      markAllNotificationsRead,
+    }),
+    [isDemoMode, state]
+  );
+
+  return <DemoDataContext.Provider value={value}>{children}</DemoDataContext.Provider>;
+}
+
+export function useDemoData() {
+  const context = useContext(DemoDataContext);
+  if (!context) {
+    throw new Error('useDemoData must be used within a DemoDataProvider.');
+  }
+  return context;
+}

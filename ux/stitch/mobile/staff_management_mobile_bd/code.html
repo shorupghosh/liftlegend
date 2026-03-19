@@ -1,0 +1,169 @@
+<!DOCTYPE html>
+
+<html lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Staff Management - BD Optimized</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    colors: {
+                        "primary": "#1978e5",
+                        "background-light": "#f6f7f8",
+                        "background-dark": "#111821",
+                    },
+                    fontFamily: {
+                        "display": ["Inter"]
+                    },
+                    borderRadius: {"DEFAULT": "1rem", "lg": "2rem", "xl": "3rem", "full": "9999px"},
+                },
+            },
+        }
+    </script>
+<style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+  </head>
+<body class="bg-background-light dark:bg-background-dark font-display text-slate-900 dark:text-slate-100 min-h-screen flex flex-col">
+<header class="sticky top-0 z-10 bg-white/80 dark:bg-background-dark/80 backdrop-blur-md border-b border-slate-200 dark:border-slate-800 px-4 py-4">
+<div class="flex items-center justify-between gap-4">
+<div class="flex items-center gap-3">
+<button class="p-2 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-full transition-colors">
+<span class="material-symbols-outlined block">arrow_back</span>
+</button>
+<h1 class="text-xl font-bold tracking-tight">Staff Management</h1>
+</div>
+<button class="bg-primary text-white flex items-center gap-2 px-4 py-2 rounded-full font-semibold text-sm shadow-lg shadow-primary/20 hover:bg-primary/90 active:scale-95 transition-all">
+<span class="material-symbols-outlined text-sm">person_add</span>
+<span>Invite</span>
+</button>
+</div>
+</header>
+<main class="flex-1 overflow-y-auto pb-24">
+<div class="px-4 py-4">
+<div class="relative mb-6">
+<span class="material-symbols-outlined absolute left-4 top-1/2 -translate-y-1/2 text-slate-400">search</span>
+<input class="w-full pl-12 pr-4 py-3 bg-white dark:bg-slate-900 border-none rounded-2xl shadow-sm focus:ring-2 focus:ring-primary/50 placeholder:text-slate-400" placeholder="Search by name or role" type="text"/>
+</div>
+<div class="flex gap-2 mb-6 overflow-x-auto pb-2 no-scrollbar">
+<button class="px-5 py-2 rounded-full bg-primary text-white text-sm font-semibold shrink-0">All Staff (24)</button>
+<button class="px-5 py-2 rounded-full bg-white dark:bg-slate-900 text-slate-600 dark:text-slate-400 text-sm font-semibold border border-slate-200 dark:border-slate-800 shrink-0">Admins</button>
+<button class="px-5 py-2 rounded-full bg-white dark:bg-slate-900 text-slate-600 dark:text-slate-400 text-sm font-semibold border border-slate-200 dark:border-slate-800 shrink-0">Managers</button>
+<button class="px-5 py-2 rounded-full bg-white dark:bg-slate-900 text-slate-600 dark:text-slate-400 text-sm font-semibold border border-slate-200 dark:border-slate-800 shrink-0">Editors</button>
+</div>
+<div class="space-y-4">
+<div class="bg-white dark:bg-slate-900 p-4 rounded-3xl shadow-sm border border-slate-100 dark:border-slate-800 flex items-center gap-4">
+<div class="w-16 h-16 rounded-2xl bg-center bg-cover border-2 border-primary/10" data-alt="Portrait of a male staff member Alex" style="background-image: url('https://lh3.googleusercontent.com/aida-public/AB6AXuDTdV6mc3KltpLHawFOX9Y01atWBS2Y-h-et4XfcDVZ2Jq1UGOzwfF-cEDosjSxAyyCEha-k3WwJ7iwCqI2A4ka3biAcfmgbOmFIszaDszjwf3k6BTBPsu66s_7x_JGl_5-vtX2gojt4OxFKcza_1D0cuCeZIS69z9hApa0DWQ3XMs523qxB94kf_u5h-4dti6Jc5yh3fdN_kA1jqzTNLe0O-2vJpqB1GqXH-sck1rDDJZ2Lfj6CvJ4_6ph0tgmclyy9fZfsO-v9uMO')"></div>
+<div class="flex-1">
+<div class="flex items-center justify-between mb-1">
+<h3 class="font-bold text-slate-900 dark:text-slate-100">Alex Rivera</h3>
+<span class="text-[10px] uppercase tracking-wider font-bold px-2 py-0.5 rounded-full bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400">Active</span>
+</div>
+<p class="text-xs font-medium text-primary mb-1 uppercase tracking-tight">Senior Manager</p>
+<p class="text-xs text-slate-500 dark:text-slate-400">Joined 2 months ago</p>
+</div>
+<button class="p-2 text-slate-400 hover:text-primary transition-colors">
+<span class="material-symbols-outlined">more_vert</span>
+</button>
+</div>
+<div class="bg-white dark:bg-slate-900 p-4 rounded-3xl shadow-sm border border-slate-100 dark:border-slate-800 flex items-center gap-4">
+<div class="w-16 h-16 rounded-2xl bg-center bg-cover border-2 border-primary/10" data-alt="Portrait of a female staff member Sarah" style="background-image: url('https://lh3.googleusercontent.com/aida-public/AB6AXuBRpHGiWJmMauF82AQYfulxfcSwJrYXMEQvx88TBRmOq2RVpvpkU-IONs4yipsOma-ZjZeGrB_lgUyAqNnZvVx2XEhUgkvKafTwjeaJff-ZO9CZUGborpwcJwdFDGSfhJ4XZauNklJVSJgmGHU1UCBLBMfNPLbu103GrzZtDeneCK5k9hvwBbO1Qk_5rhOfLbUhj31_pss8lLSSwRxpAmJpggu7qGn-3_1rTyW6zt077i66zRY3ZnAXQlvzaIK0xlZkBG087DOwrCK4')"></div>
+<div class="flex-1">
+<div class="flex items-center justify-between mb-1">
+<h3 class="font-bold text-slate-900 dark:text-slate-100">Sarah Chen</h3>
+<span class="text-[10px] uppercase tracking-wider font-bold px-2 py-0.5 rounded-full bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400">Active</span>
+</div>
+<p class="text-xs font-medium text-primary mb-1 uppercase tracking-tight">Lead Designer</p>
+<p class="text-xs text-slate-500 dark:text-slate-400">Joined 5 months ago</p>
+</div>
+<button class="p-2 text-slate-400 hover:text-primary transition-colors">
+<span class="material-symbols-outlined">more_vert</span>
+</button>
+</div>
+<div class="bg-white dark:bg-slate-900 p-4 rounded-3xl shadow-sm border border-slate-100 dark:border-slate-800 flex items-center gap-4 opacity-75">
+<div class="w-16 h-16 rounded-2xl bg-center bg-cover border-2 border-slate-200 dark:border-slate-700 grayscale" data-alt="Portrait of a male staff member Marcus" style="background-image: url('https://lh3.googleusercontent.com/aida-public/AB6AXuBLgYHsMNGMETY0-YW6J652kXIxEYpOOff8mzUvMcu7vxNLIrGNbYNWnWXAc_nmp0UPiJWxaa0JA1YHohJbHpuhxBG0W3l0lidfRceUVTRJoLD7XaebOBkLcgusjFKyT2pshm_OBf2QUc1gGyuGkxEBkbAhT9my70IN9Ef01uuPJVigB0ptspmqwkzKQZzuH2zOHaNT_-Bf0zqmNioNl4X9CpksXv3Fw-ct-nFSWcoCWQ3vx4yYWaZpcb50TvpL0lvtQKGQjgqbFnkT')"></div>
+<div class="flex-1">
+<div class="flex items-center justify-between mb-1">
+<h3 class="font-bold text-slate-900 dark:text-slate-100">Marcus Wright</h3>
+<span class="text-[10px] uppercase tracking-wider font-bold px-2 py-0.5 rounded-full bg-slate-100 text-slate-600 dark:bg-slate-800 dark:text-slate-400">Offline</span>
+</div>
+<p class="text-xs font-medium text-primary/70 mb-1 uppercase tracking-tight">Fullstack Dev</p>
+<p class="text-xs text-slate-500 dark:text-slate-400">Last seen 2h ago</p>
+</div>
+<button class="p-2 text-slate-400 hover:text-primary transition-colors">
+<span class="material-symbols-outlined">more_vert</span>
+</button>
+</div>
+<div class="bg-white dark:bg-slate-900 p-4 rounded-3xl shadow-sm border border-slate-100 dark:border-slate-800 flex items-center gap-4">
+<div class="w-16 h-16 rounded-2xl bg-center bg-cover border-2 border-primary/10" data-alt="Portrait of a female staff member Elena" style="background-image: url('https://lh3.googleusercontent.com/aida-public/AB6AXuDmN1tiezvzoxrCkxcOpQhBT8b7R-lUXzSqzYWeKj2sDC6zaSKrHy9pQe52FEnrob8BPN4unDaNEwUyIPm3l3QOXZIJUPDR2pmosJPq2pQzrlAECMJ5anC4oC-tAFbjTPlx6KyETeAKsVmIsrYLj8C38t38ltkcSWQOuxKNwhBQj0ElAqxrWI7H12eVg_6-LcIsUuPY2I_01CYVdEkUfi1n-NRiFrI1N1JHj6eFUqLME1DdtJ1ND6I_nI23XtyfHe8Gf4LoRRm5zCOc')"></div>
+<div class="flex-1">
+<div class="flex items-center justify-between mb-1">
+<h3 class="font-bold text-slate-900 dark:text-slate-100">Elena Gomez</h3>
+<span class="text-[10px] uppercase tracking-wider font-bold px-2 py-0.5 rounded-full bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400">On Leave</span>
+</div>
+<p class="text-xs font-medium text-primary mb-1 uppercase tracking-tight">Content Strategist</p>
+<p class="text-xs text-slate-500 dark:text-slate-400">Back in 3 days</p>
+</div>
+<button class="p-2 text-slate-400 hover:text-primary transition-colors">
+<span class="material-symbols-outlined">more_vert</span>
+</button>
+</div>
+<div class="bg-primary/5 dark:bg-primary/10 p-4 rounded-3xl border border-dashed border-primary/30 flex flex-col items-center justify-center py-8 gap-3">
+<div class="w-12 h-12 rounded-full bg-primary/20 flex items-center justify-center text-primary">
+<span class="material-symbols-outlined">group_add</span>
+</div>
+<div class="text-center">
+<p class="font-bold text-slate-900 dark:text-slate-100">Grow your team</p>
+<p class="text-sm text-slate-500 dark:text-slate-400">Invite new members to collaborate</p>
+</div>
+<button class="mt-2 px-6 py-2 bg-primary text-white rounded-full font-bold text-sm">Send Invite</button>
+</div>
+</div>
+</div>
+</main>
+<nav class="fixed bottom-0 left-0 right-0 bg-white dark:bg-slate-900 border-t border-slate-200 dark:border-slate-800 pb-safe-area-inset-bottom">
+<div class="flex justify-around items-center h-16 px-4 max-w-md mx-auto">
+<a class="flex flex-col items-center gap-0.5 text-slate-400" href="#">
+<span class="material-symbols-outlined">dashboard</span>
+<span class="text-[10px] font-medium">Home</span>
+</a>
+<a class="flex flex-col items-center gap-0.5 text-primary" href="#">
+<span class="material-symbols-outlined">group</span>
+<span class="text-[10px] font-bold">Staff</span>
+</a>
+<div class="relative -top-6">
+<button class="w-14 h-14 bg-primary text-white rounded-full flex items-center justify-center shadow-xl shadow-primary/30 active:scale-90 transition-transform">
+<span class="material-symbols-outlined text-3xl">add</span>
+</button>
+</div>
+<a class="flex flex-col items-center gap-0.5 text-slate-400" href="#">
+<span class="material-symbols-outlined">calendar_today</span>
+<span class="text-[10px] font-medium">Schedule</span>
+</a>
+<a class="flex flex-col items-center gap-0.5 text-slate-400" href="#">
+<span class="material-symbols-outlined">settings</span>
+<span class="text-[10px] font-medium">Settings</span>
+</a>
+</div>
+</nav>
+<style>
+        .no-scrollbar::-webkit-scrollbar {
+            display: none;
+        }
+        .no-scrollbar {
+            -ms-overflow-style: none;
+            scrollbar-width: none;
+        }
+        .pb-safe-area-inset-bottom {
+            padding-bottom: env(safe-area-inset-bottom);
+        }
+    </style>
+</body></html>

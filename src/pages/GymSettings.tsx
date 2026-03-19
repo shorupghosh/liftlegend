@@ -20,7 +20,11 @@ export default function GymSettings() {
   const fetchGym = async () => {
     setLoading(true);
     try {
-      const { data, error } = await supabase.from('gyms').select('id, name, contact_phone, branding').eq('id', gymId).single();
+      const { data, error } = await supabase
+        .from('gyms')
+        .select('id, name, contact_phone, branding, subscription_tier, status, next_billing_date')
+        .eq('id', gymId)
+        .single();
       if (error) throw error;
       setGym(data);
       setFormData({
@@ -62,8 +66,9 @@ export default function GymSettings() {
     if (!user?.email) return;
     setSendingReset(true);
     try {
+      const appUrl = import.meta.env.VITE_APP_URL || window.location.origin;
       const { error } = await supabase.auth.resetPasswordForEmail(user.email, {
-        redirectTo: `${window.location.origin}/login`,
+        redirectTo: `${appUrl}/login`,
       });
       if (error) throw error;
       showToast('Password reset link sent to your email!', 'success');
@@ -180,6 +185,7 @@ export default function GymSettings() {
                 </p>
               </div>
             </div>
+            <a href="/admin/settings/subscription" className="px-5 py-2.5 bg-slate-900 dark:bg-white text-white dark:text-slate-900 rounded-xl text-sm font-bold hover:brightness-110 active:scale-95 transition-all flex items-center gap-2"> Manage </a>
           </div>
         </section>
 

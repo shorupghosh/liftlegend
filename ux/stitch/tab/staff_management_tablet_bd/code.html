@@ -1,0 +1,213 @@
+<!DOCTYPE html>
+
+<html class="light" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Staff Management Portal - Tablet View</title>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    colors: {
+                        "primary": "#1978e5",
+                        "background-light": "#f6f7f8",
+                        "background-dark": "#111821",
+                    },
+                    fontFamily: {
+                        "display": ["Inter", "sans-serif"]
+                    },
+                    borderRadius: {
+                        "DEFAULT": "1rem",
+                        "lg": "2rem",
+                        "xl": "3rem",
+                        "full": "9999px"
+                    },
+                },
+            },
+        }
+    </script>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<style>
+        body { font-family: 'Inter', sans-serif; }
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+    </style>
+</head>
+<body class="bg-background-light dark:bg-background-dark text-slate-900 dark:text-slate-100 antialiased">
+<div class="relative flex min-h-screen w-full flex-col overflow-x-hidden">
+<header class="sticky top-0 z-50 flex items-center justify-between border-b border-slate-200 dark:border-slate-800 bg-white/80 dark:bg-background-dark/80 backdrop-blur-md px-6 py-4">
+<div class="flex items-center gap-4">
+<div class="flex items-center justify-center bg-primary rounded-lg p-2 text-white">
+<span class="material-symbols-outlined text-2xl">group</span>
+</div>
+<div>
+<h2 class="text-slate-900 dark:text-slate-100 text-lg font-bold leading-tight tracking-tight">Staff Management</h2>
+<p class="text-slate-500 dark:text-slate-400 text-xs font-medium">Enterprise Admin</p>
+</div>
+</div>
+<div class="flex items-center gap-3">
+<button class="flex items-center justify-center rounded-full size-10 bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:bg-primary/10 hover:text-primary transition-colors">
+<span class="material-symbols-outlined text-xl">notifications</span>
+</button>
+<button class="flex items-center justify-center rounded-full size-10 bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:bg-primary/10 hover:text-primary transition-colors">
+<span class="material-symbols-outlined text-xl">settings</span>
+</button>
+<div class="ml-2 h-10 w-10 rounded-full border-2 border-primary/20 bg-slate-200 overflow-hidden" data-alt="Professional profile headshot of administrative user" style="background-image: url('https://lh3.googleusercontent.com/aida-public/AB6AXuCZhwhg8Rbrp42llJUFGwf_6eyZg-LJELQbsC5yo5kOQCPavv9uLSwSOANLdL2taIiHxFF64SitNp5SbaWBgV7haMV9isimqWDTui7DfjFqmC6vFklscPct-ZJFxqXdnbEhe3Bls1VR2GvEc890fGZ_0ng8KsTyK8boe77MlbD7p3dlH9yLghPcvbcIZlLDKiG4r4VgqqdrgF48CLucEcWkAMGMQ3fmy59fDYq5EVlKnxooxhOmMX_XFD0oBpEmETKSPxkAaNdIcF_s'); background-size: cover;">
+</div>
+</div>
+</header>
+<main class="flex-1 max-w-[768px] mx-auto w-full px-6 py-8">
+<div class="flex flex-col gap-8">
+<section class="flex flex-col gap-6">
+<div class="flex items-center justify-between">
+<div>
+<h1 class="text-3xl font-bold tracking-tight text-slate-900 dark:text-slate-100">Staff Directory</h1>
+<p class="text-slate-500 dark:text-slate-400 mt-1">Manage team members and performance metrics.</p>
+</div>
+<button class="bg-primary hover:bg-primary/90 text-white px-5 py-2.5 rounded-full flex items-center gap-2 font-semibold shadow-lg shadow-primary/20 transition-all">
+<span class="material-symbols-outlined text-lg">person_add</span>
+<span>Add New</span>
+</button>
+</div>
+<div class="relative w-full">
+<span class="material-symbols-outlined absolute left-4 top-1/2 -translate-y-1/2 text-slate-400">search</span>
+<input class="w-full bg-white dark:bg-slate-800 border-none rounded-xl py-4 pl-12 pr-4 shadow-sm ring-1 ring-slate-200 dark:ring-slate-700 focus:ring-2 focus:ring-primary transition-all text-slate-900 dark:text-slate-100" placeholder="Search staff by name, role or department..." type="text"/>
+</div>
+<div class="flex overflow-x-auto gap-2 pb-2 scrollbar-hide">
+<button class="bg-primary text-white px-6 py-2 rounded-full font-medium whitespace-nowrap">All Staff (42)</button>
+<button class="bg-white dark:bg-slate-800 text-slate-600 dark:text-slate-300 px-6 py-2 rounded-full font-medium border border-slate-200 dark:border-slate-700 whitespace-nowrap hover:border-primary transition-colors">Active</button>
+<button class="bg-white dark:bg-slate-800 text-slate-600 dark:text-slate-300 px-6 py-2 rounded-full font-medium border border-slate-200 dark:border-slate-700 whitespace-nowrap hover:border-primary transition-colors">On Leave</button>
+<button class="bg-white dark:bg-slate-800 text-slate-600 dark:text-slate-300 px-6 py-2 rounded-full font-medium border border-slate-200 dark:border-slate-700 whitespace-nowrap hover:border-primary transition-colors">Inactive</button>
+</div>
+</section>
+<section class="grid grid-cols-1 gap-4">
+<div class="bg-white dark:bg-slate-800 rounded-xl p-5 border border-slate-200 dark:border-slate-700 flex items-center gap-5 shadow-sm hover:shadow-md transition-shadow">
+<div class="size-14 rounded-full bg-slate-100 flex-shrink-0 overflow-hidden" data-alt="Avatar image of Eleanor Pena" style="background-image: url('https://lh3.googleusercontent.com/aida-public/AB6AXuB1erRU4CW-8TLli0OnfMnKytfB4uRBEY2XeYWQpN1H55cdxHhJQ9KgIvA3NslEsE1lPqhUD4li8tkQlPlOB_StmHjVJ37qphbuZGWfX8M2RaDbL_KemfzRSb1_SLBdRnagMh7RZcce4ojjW7vSpYRL6PYMdBrnfBHLSFgXJl8fQiiY9FC7fgC8P8ZnWNEKjS30-DD5PNxcatBStItj6DjO-whmMteRsRqzvWbCyui3JqScWzQy1q6hjSWXrMQvIdo1SzJpdum5eimJ'); background-size: cover;"></div>
+<div class="flex-1 min-w-0">
+<div class="flex items-center justify-between mb-1">
+<h3 class="font-bold text-slate-900 dark:text-slate-100 truncate">Eleanor Pena</h3>
+<span class="px-3 py-1 bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400 rounded-full text-xs font-bold uppercase tracking-wider">Active</span>
+</div>
+<p class="text-sm text-slate-500 dark:text-slate-400 font-medium">Senior Manager • Operations</p>
+<div class="mt-2 flex items-center gap-4">
+<span class="flex items-center gap-1 text-xs text-slate-400">
+<span class="material-symbols-outlined text-sm">schedule</span> 2 mins ago
+                                </span>
+<span class="flex items-center gap-1 text-xs text-slate-400">
+<span class="material-symbols-outlined text-sm">mail</span> e.pena@corp.com
+                                </span>
+</div>
+</div>
+<button class="text-slate-400 hover:text-primary transition-colors">
+<span class="material-symbols-outlined">more_vert</span>
+</button>
+</div>
+<div class="bg-white dark:bg-slate-800 rounded-xl p-5 border border-slate-200 dark:border-slate-700 flex items-center gap-5 shadow-sm hover:shadow-md transition-shadow">
+<div class="size-14 rounded-full bg-slate-100 flex-shrink-0 overflow-hidden" data-alt="Avatar image of Brooklyn Simmons" style="background-image: url('https://lh3.googleusercontent.com/aida-public/AB6AXuDmAdWOAV3pvSGgTgWIkv7cyNMCu0-uXrQC1ElaPBpv4wz28jYQA8iea6wQU4NBbKewleM3vbI41SOUxBsxWwgQDhrgfMH1fcVHleEB4sLfZlbtSO23BfxzY8XCqgKNcXHnPyl0OcOvAU5fV9xO8wR04BJh42AtbG2gcy27jrpTtli1SoHSrmoTRDHYUnDPgodKi0lTedehmLa1SOoySslZLbhogzLBhHCKgPooQS4TK5blhReLrln7WnpKnAYsflUeXhLF1RNLzBDj'); background-size: cover;"></div>
+<div class="flex-1 min-w-0">
+<div class="flex items-center justify-between mb-1">
+<h3 class="font-bold text-slate-900 dark:text-slate-100 truncate">Brooklyn Simmons</h3>
+<span class="px-3 py-1 bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400 rounded-full text-xs font-bold uppercase tracking-wider">On Leave</span>
+</div>
+<p class="text-sm text-slate-500 dark:text-slate-400 font-medium">Product Designer • Creative</p>
+<div class="mt-2 flex items-center gap-4">
+<span class="flex items-center gap-1 text-xs text-slate-400">
+<span class="material-symbols-outlined text-sm">schedule</span> 1 day ago
+                                </span>
+<span class="flex items-center gap-1 text-xs text-slate-400">
+<span class="material-symbols-outlined text-sm">mail</span> b.simmons@corp.com
+                                </span>
+</div>
+</div>
+<button class="text-slate-400 hover:text-primary transition-colors">
+<span class="material-symbols-outlined">more_vert</span>
+</button>
+</div>
+<div class="bg-white dark:bg-slate-800 rounded-xl p-5 border border-slate-200 dark:border-slate-700 flex items-center gap-5 shadow-sm hover:shadow-md transition-shadow">
+<div class="size-14 rounded-full bg-slate-100 flex-shrink-0 overflow-hidden" data-alt="Avatar image of Jerome Bell" style="background-image: url('https://lh3.googleusercontent.com/aida-public/AB6AXuA-rL0wFdhwe5vYQQOmKyUtd11J04AARY07aBi2VUgMkROtoesnai7RlGAOPSDJ7_tw2_w6qIj8QYOX9vElMXxA_1LoJx8W5XhwVyqRs3genovE21dEQetENgVQDbZsPHcOg3TzESOE3LlFek6gwY5wNweRVRdMR47VtjWv_d8sR579bP05349MJdMVeYGO1PsGPtbGpmKzLrZ-RvHsQKsBJlg3_9loDU1FFuN6fZmT8j4qzm1SE9T8VBUfVwZm4l5-hj3LordmugBT'); background-size: cover;"></div>
+<div class="flex-1 min-w-0">
+<div class="flex items-center justify-between mb-1">
+<h3 class="font-bold text-slate-900 dark:text-slate-100 truncate">Jerome Bell</h3>
+<span class="px-3 py-1 bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400 rounded-full text-xs font-bold uppercase tracking-wider">Active</span>
+</div>
+<p class="text-sm text-slate-500 dark:text-slate-400 font-medium">Software Engineer • Engineering</p>
+<div class="mt-2 flex items-center gap-4">
+<span class="flex items-center gap-1 text-xs text-slate-400">
+<span class="material-symbols-outlined text-sm">schedule</span> Online Now
+                                </span>
+<span class="flex items-center gap-1 text-xs text-slate-400">
+<span class="material-symbols-outlined text-sm">mail</span> j.bell@corp.com
+                                </span>
+</div>
+</div>
+<button class="text-slate-400 hover:text-primary transition-colors">
+<span class="material-symbols-outlined">more_vert</span>
+</button>
+</div>
+<div class="bg-white dark:bg-slate-800 rounded-xl p-5 border border-slate-200 dark:border-slate-700 flex items-center gap-5 shadow-sm hover:shadow-md transition-shadow">
+<div class="size-14 rounded-full bg-slate-100 flex-shrink-0 overflow-hidden" data-alt="Avatar image of Jane Cooper" style="background-image: url('https://lh3.googleusercontent.com/aida-public/AB6AXuAXTSvrw65ft1aMP_0h_vkQ4rdpoZmXtCHdDkLad9YbmYdhPgooL-QNNgS2lbe8S6v8fzTNNY1SukJhcZoDvIpyWMfN7ogMcfHrFMiL0QVOAcjU57nUdg0yuMz_coDrgtXKwLpcTGygHo1sgPFpsPjpmqvcx52ziHmYdXkkq1U5d-o3tEuhTOF9I4LOD3wU327xO4UL9AwSr4fAjQbYDnfLwf_pcMiieScEj8TXK6IizVNzf5S6YYWIo4By8W5PHLpVkJM8tGCvam5i'); background-size: cover;"></div>
+<div class="flex-1 min-w-0">
+<div class="flex items-center justify-between mb-1">
+<h3 class="font-bold text-slate-900 dark:text-slate-100 truncate">Jane Cooper</h3>
+<span class="px-3 py-1 bg-slate-100 text-slate-700 dark:bg-slate-700/50 dark:text-slate-400 rounded-full text-xs font-bold uppercase tracking-wider">Inactive</span>
+</div>
+<p class="text-sm text-slate-500 dark:text-slate-400 font-medium">HR Specialist • Human Resources</p>
+<div class="mt-2 flex items-center gap-4">
+<span class="flex items-center gap-1 text-xs text-slate-400">
+<span class="material-symbols-outlined text-sm">schedule</span> 5 days ago
+                                </span>
+<span class="flex items-center gap-1 text-xs text-slate-400">
+<span class="material-symbols-outlined text-sm">mail</span> j.cooper@corp.com
+                                </span>
+</div>
+</div>
+<button class="text-slate-400 hover:text-primary transition-colors">
+<span class="material-symbols-outlined">more_vert</span>
+</button>
+</div>
+</section>
+<div class="flex items-center justify-between py-4 border-t border-slate-200 dark:border-slate-800">
+<button class="flex items-center gap-2 text-sm font-semibold text-slate-500 hover:text-primary transition-colors">
+<span class="material-symbols-outlined">chevron_left</span> Previous
+                    </button>
+<div class="flex gap-2">
+<button class="size-8 rounded-full bg-primary text-white text-sm font-bold">1</button>
+<button class="size-8 rounded-full hover:bg-slate-200 dark:hover:bg-slate-800 text-sm font-bold">2</button>
+<button class="size-8 rounded-full hover:bg-slate-200 dark:hover:bg-slate-800 text-sm font-bold">3</button>
+</div>
+<button class="flex items-center gap-2 text-sm font-semibold text-slate-500 hover:text-primary transition-colors">
+                        Next <span class="material-symbols-outlined">chevron_right</span>
+</button>
+</div>
+</div>
+</main>
+<nav class="fixed bottom-0 left-0 right-0 z-50 bg-white dark:bg-background-dark border-t border-slate-200 dark:border-slate-800 px-6 py-4 flex justify-around">
+<a class="flex flex-col items-center gap-1 text-primary" href="#">
+<span class="material-symbols-outlined">grid_view</span>
+<span class="text-[10px] font-bold">Dashboard</span>
+</a>
+<a class="flex flex-col items-center gap-1 text-slate-400 hover:text-primary transition-colors" href="#">
+<span class="material-symbols-outlined">groups</span>
+<span class="text-[10px] font-bold">Staff</span>
+</a>
+<a class="flex flex-col items-center gap-1 text-slate-400 hover:text-primary transition-colors" href="#">
+<span class="material-symbols-outlined">calendar_today</span>
+<span class="text-[10px] font-bold">Schedules</span>
+</a>
+<a class="flex flex-col items-center gap-1 text-slate-400 hover:text-primary transition-colors" href="#">
+<span class="material-symbols-outlined">payments</span>
+<span class="text-[10px] font-bold">Payroll</span>
+</a>
+<a class="flex flex-col items-center gap-1 text-slate-400 hover:text-primary transition-colors" href="#">
+<span class="material-symbols-outlined">bar_chart</span>
+<span class="text-[10px] font-bold">Reports</span>
+</a>
+</nav>
+<div class="h-20"></div>
+</div>
+</body></html>

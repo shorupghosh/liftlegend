@@ -1,15 +1,23 @@
 import { Navigate, Outlet } from 'react-router-dom';
 import { useAuth } from '../../contexts/AuthContext';
+import { isDemoModeActive } from '../../lib/demoUtils';
+import { PageLoader } from '../ui/PageLoader';
 
 export const ProtectedRoute = ({ allowedRoles }: { allowedRoles?: string[] }) => {
     const { session, userRole, gymStatus, loading } = useAuth();
+    const isDemo = isDemoModeActive();
 
     if (loading) {
-        return (
-            <div className="flex bg-neutral-default items-center justify-center min-h-screen">
-                <div className="size-12 border-4 border-primary-default border-t-transparent rounded-full animate-spin"></div>
-            </div>
-        );
+        return <div className="min-h-screen bg-neutral-default p-6"><PageLoader label="Opening workspace..." /></div>;
+    }
+
+    // Demo mode handles its own bypass
+    if (isDemo) {
+        // Prevent demo users from entering super-admin routes
+        if (allowedRoles?.includes('SUPER_ADMIN')) {
+            return <Navigate to="/admin" replace />;
+        }
+        return <Outlet />;
     }
 
     // Not logged in -> go to login
@@ -37,7 +45,7 @@ export const ProtectedRoute = ({ allowedRoles }: { allowedRoles?: string[] }) =>
     }
 
     // Check if gym is locked (only for tenant staff, not super admins)
-    if (userRole !== 'SUPER_ADMIN' && gymStatus === 'LOCKED') {
+    if (userRole !== 'SUPER_ADMIN' && ['LOCKED', 'SUSPENDED', 'PAST_DUE', 'EXPIRED', 'DELETED'].includes(gymStatus || '')) {
         return <Navigate to="/subscription-locked" replace />;
     }
 
