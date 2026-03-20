@@ -15,9 +15,24 @@ import { EmptyState } from '../components/ui/EmptyState';
 import { getMemberExpiryAlert, calculateExpiryDate, getDaysLeft } from '../lib/memberExpiry';
 import { useDemoData } from '../contexts/DemoDataContext';
 import { useDemoMode } from '../hooks/useDemoMode';
+import { useDebounce } from '../hooks/useDebounce';
 import UsageLimitBanner, { UsageLimitGuard } from '../components/plan/UsageLimitBanner';
 
 const PAGE_SIZE = 50;
+
+// Inline Skeleton for loading states
+const MemberSkeleton = () => (
+  <div className="bg-white dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-800 p-4 animate-pulse">
+    <div className="flex items-center gap-3">
+      <div className="size-11 rounded-full bg-slate-100 dark:bg-slate-800 shrink-0" />
+      <div className="flex-1 space-y-2">
+        <div className="h-4 bg-slate-100 dark:bg-slate-800 rounded w-1/2" />
+        <div className="h-3 bg-slate-50 dark:bg-slate-800/50 rounded w-1/3" />
+      </div>
+      <div className="h-6 w-16 bg-slate-100 dark:bg-slate-800 rounded-full" />
+    </div>
+  </div>
+);
 
 interface ConfirmModal {
   isOpen: boolean;
@@ -39,6 +54,7 @@ export default function MembersManagement() {
   const [editingMember, setEditingMember] = useState<Member | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
+  const debouncedSearch = useDebounce(searchQuery, 400);
   const [filterStatus, setFilterStatus] = useState('All Members');
   const [page, setPage] = useState(1);
   const [totalCount, setTotalCount] = useState(0);
@@ -67,13 +83,21 @@ export default function MembersManagement() {
       const from = (page - 1) * PAGE_SIZE;
       const to = from + PAGE_SIZE - 1;
 
+      // START OPTIMIZED QUERY
+      let query = supabase
+        .from('members')
+        .select('id, gym_id, full_name, email, phone, status, join_date, expiry_date, created_at, plan_id, plans(name, price, duration_days)', { count: 'exact' })
+        .eq('gym_id', gymId)
+        .order('created_at', { ascending: false })
+        .range(from, to);
+
+      // Server-side search filter
+      if (debouncedSearch) {
+        query = query.or(`full_name.ilike.%${debouncedSearch}%,email.ilike.%${debouncedSearch}%,phone.ilike.%${debouncedSearch}%`);
+      }
+
       const [membersRes, plansRes] = await Promise.all([
-        supabase
-          .from('members')
-          .select('*, plans(name, price, duration_days)', { count: 'exact' })
-          .eq('gym_id', gymId)
-          .order('created_at', { ascending: false })
-          .range(from, to),
+        query,
         supabase
           .from('plans')
           .select('id, name, price, duration_days')
@@ -83,16 +107,16 @@ export default function MembersManagement() {
       if (membersRes.error) throw membersRes.error;
       if (plansRes.error) throw plansRes.error;
 
-      setMembers(membersRes.data || []);
+      setMembers((membersRes.data as any) || []);
       setTotalCount(membersRes.count || 0);
       setPlans(plansRes.data || []);
     } catch (error) {
       console.error('Error fetching data:', error);
-      showToast('Failed to load members. Please refresh.', 'error');
+      showToast('Failed to load members.', 'error');
     } finally {
       setLoading(false);
     }
-  }, [demoState.members, demoState.plans, gymId, isDemoMode, page, showToast]);
+  }, [debouncedSearch, demoState.members, demoState.plans, gymId, isDemoMode, page, showToast]);
 
   useEffect(() => {
     fetchMembers();
@@ -417,16 +441,7 @@ export default function MembersManagement() {
   };
 
   const filteredMembers = members.filter(m => {
-    // 1. Search filter
-    const query = searchQuery.toLowerCase();
-    const searchMatch = !query || 
-      m.full_name?.toLowerCase().includes(query) ||
-      m.email?.toLowerCase().includes(query) ||
-      m.phone?.includes(query);
-
-    if (!searchMatch) return false;
-
-    // 2. Status filter
+    // 1. Database handles search now
     if (filterStatus === 'All Members') return true;
 
     const daysLeft = getDaysLeft(m.expiry_date);
@@ -434,11 +449,11 @@ export default function MembersManagement() {
 
     switch (filterStatus) {
       case 'Active':
-        return !hasExpiry || daysLeft >= 0;
+        return m.status === 'ACTIVE' && (!hasExpiry || daysLeft >= 0);
       case 'Expired':
         return hasExpiry && daysLeft < 0;
       case 'Expiring Soon':
-        return hasExpiry && daysLeft >= 3 && daysLeft <= 7;
+        return hasExpiry && daysLeft >= 0 && daysLeft <= 7;
       case 'Payment Due':
         return ((m as Member & { due_amount?: number }).due_amount || 0) > 0;
       default:
@@ -541,18 +556,7 @@ export default function MembersManagement() {
       {/* ═══ Mobile Card Layout (< 640px) ═══ */}
       <div className="sm:hidden space-y-3">
         {loading ? (
-          Array.from({ length: 4 }).map((_, i) => (
-            <div key={i} className="bg-white dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-800 p-4">
-              <div className="flex items-center gap-3">
-                <div className="skeleton w-10 h-10 rounded-full shrink-0" />
-                <div className="flex-1">
-                  <div className="skeleton w-32 h-3.5 mb-2" />
-                  <div className="skeleton w-24 h-2.5" />
-                </div>
-                <div className="skeleton w-16 h-6 rounded-full" />
-              </div>
-            </div>
-          ))
+          Array.from({ length: 5 }).map((_, i) => <MemberSkeleton key={i} />)
         ) : filteredMembers.length === 0 ? (
           <EmptyState
             icon={searchQuery ? 'search_off' : 'group'}

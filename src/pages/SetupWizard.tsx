@@ -238,8 +238,8 @@ export default function SetupWizard() {
   const steps = [
     { id: 1, title: 'Gym Info', icon: Store, pct: 25 },
     { id: 2, title: 'Pricing Plan', icon: CreditCard, pct: 50 },
-    { id: 3, title: 'Your 1st Member', icon: UserPlus, pct: 75 },
-    { id: 4, title: 'Test Check-in', icon: Fingerprint, pct: 100 }
+    { id: 3, title: 'Add Your First Member', icon: UserPlus, pct: 75 },
+    { id: 4, title: 'Try Your First Check-In', icon: Fingerprint, pct: 100 }
   ];
 
   return (

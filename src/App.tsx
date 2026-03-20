@@ -10,11 +10,13 @@ import { DemoDataProvider } from './contexts/DemoDataContext';
 import { PlanProvider } from './contexts/PlanContext';
 import { ProtectedRoute } from './components/auth/ProtectedRoute';
 import FeatureRoute from './components/auth/FeatureRoute';
-import AdminLayout from './components/layout/AdminLayout';
 import { ErrorBoundary } from './components/ErrorBoundary';
 import { ToastProvider } from './components/ToastProvider';
 import { PageLoader } from './components/ui/PageLoader';
-import PlanUpgradeModal from './components/plan/PlanUpgradeModal';
+
+// Lazy-load layout & modal — they only matter after auth, not on landing page
+const AdminLayout = lazy(() => import('./components/layout/AdminLayout'));
+const PlanUpgradeModal = lazy(() => import('./components/plan/PlanUpgradeModal'));
 
 // Lazy-loaded pages — each becomes its own chunk, loaded on demand
 const LandingPage = lazy(() => import('./pages/LandingPage'));
@@ -53,6 +55,7 @@ function RouteLoader() {
 
 export default function App() {
   return (
+    <div style={{ fontFamily: '"Manrope", sans-serif' }} className="antialiased">
     <ErrorBoundary>
       <ToastProvider>
         <Router>
@@ -102,12 +105,15 @@ export default function App() {
               </Route>
             </Routes>
             </Suspense>
-            <PlanUpgradeModal />
+            <Suspense fallback={null}>
+              <PlanUpgradeModal />
+            </Suspense>
             </PlanProvider>
             </AuthProvider>
           </DemoDataProvider>
         </Router>
       </ToastProvider>
     </ErrorBoundary>
+    </div>
   );
 }

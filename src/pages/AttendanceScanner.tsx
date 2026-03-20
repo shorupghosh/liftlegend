@@ -3,13 +3,27 @@ import { supabase } from '../lib/supabase';
 import { useAuth } from '../contexts/AuthContext';
 import { useRealtimeSubscription } from '../hooks/useRealtimeSubscription';
 import { useToast } from '../components/ToastProvider';
-import { Html5QrcodeScanner } from 'html5-qrcode';
+// html5-qrcode is dynamically imported below to avoid loading ~370KB on page mount
 import { Member, Attendance } from '../types';
 import { parseQrValue } from '../lib/qrCode';
 import { getDaysLeft } from '../lib/memberExpiry';
 import { EmptyState } from '../components/ui/EmptyState';
 import { useDemoData } from '../contexts/DemoDataContext';
 import { useDemoMode } from '../hooks/useDemoMode';
+import { useDebounce } from '../hooks/useDebounce';
+
+const CheckinSkeleton = () => (
+  <div className="bg-white dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-800 p-4 animate-pulse">
+    <div className="flex items-center gap-3">
+      <div className="size-10 rounded-full bg-slate-100 dark:bg-slate-800 shrink-0" />
+      <div className="flex-1 space-y-2">
+        <div className="h-4 bg-slate-100 dark:bg-slate-800 rounded w-1/3" />
+        <div className="h-3 bg-slate-50 dark:bg-slate-800/50 rounded w-1/4" />
+      </div>
+      <div className="h-4 w-12 bg-slate-100 dark:bg-slate-800 rounded" />
+    </div>
+  </div>
+);
 
 export default function AttendanceScanner() {
   const { gymId } = useAuth();
@@ -20,10 +34,13 @@ export default function AttendanceScanner() {
   const [recentCheckins, setRecentCheckins] = useState<Partial<Attendance>[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
+  const debouncedSearch = useDebounce(searchTerm, 400);
   const [showManualModal, setShowManualModal] = useState(false);
   const [showQrModal, setShowQrModal] = useState(false);
   const [checkingIn, setCheckingIn] = useState(false);
   const [todayCount, setTodayCount] = useState(0);
+  const [totalMembers, setTotalMembers] = useState(0);
+  const [activeMembers, setActiveMembers] = useState(0);
   const [notification, setNotification] = useState<{ type: 'success' | 'error'; message: string; detail: string } | null>(null);
 
   const fetchData = useCallback(async () => {
@@ -40,24 +57,27 @@ export default function AttendanceScanner() {
             .slice(0, 20)
         );
         setTodayCount(demoState.attendance.filter((entry) => entry.check_in_time.startsWith(today)).length);
+        setTotalMembers(demoState.members.length);
+        setActiveMembers(demoState.members.filter(m => m.status === 'ACTIVE').length);
         return;
       }
 
       const today = new Date();
       today.setHours(0, 0, 0, 0);
 
-      const [membersRes, checkinsRes, countRes] = await Promise.all([
-        supabase.from('members').select('id, full_name, email, phone, status, expiry_date, qr_code_value, plans(name)').eq('gym_id', gymId).order('full_name'),
+      const [checkinsRes, countRes, totalRes, activeRes] = await Promise.all([
         supabase.from('attendance').select('*, members(full_name, email, status, plans(name))').eq('gym_id', gymId).gte('check_in_time', today.toISOString()).order('check_in_time', { ascending: false }).limit(20),
         supabase.from('attendance').select('id', { count: 'exact', head: true }).eq('gym_id', gymId).gte('check_in_time', today.toISOString()),
+        supabase.from('members').select('id', { count: 'exact', head: true }).eq('gym_id', gymId),
+        supabase.from('members').select('id', { count: 'exact', head: true }).eq('gym_id', gymId).eq('status', 'ACTIVE'),
       ]);
 
-      if (membersRes.error) throw membersRes.error;
       if (checkinsRes.error) throw checkinsRes.error;
 
-      setMembers(membersRes.data as unknown as Partial<Member>[] || []);
       setRecentCheckins(checkinsRes.data as unknown as Partial<Attendance>[] || []);
       setTodayCount(countRes.count || 0);
+      setTotalMembers(totalRes.count || 0);
+      setActiveMembers(activeRes.count || 0);
     } catch (error) {
       console.error('Error fetching attendance data:', error);
       showToast('Failed to load attendance data.', 'error');
@@ -89,28 +109,69 @@ export default function AttendanceScanner() {
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, [showManualModal, showQrModal]);
 
-  // Handle QR scanning — uses qr_code_value lookup
+  // Handle QR scanning — dynamically imports html5-qrcode only when QR modal opens
   useEffect(() => {
     if (!showQrModal || !gymId || isDemoMode) return;
 
-    const timer = setTimeout(() => {
-      const scanner = new Html5QrcodeScanner("qr-reader", { fps: 10, qrbox: { width: 250, height: 250 } }, false);
+    let scannerInstance: any = null;
 
-      scanner.render((decodedText) => {
-        scanner.clear();
-        setShowQrModal(false);
-        handleQrScan(decodedText);
-      }, (_errorMessage) => {
-        // Ignore continuous scan failures
-      });
+    const initScanner = async () => {
+      try {
+        const { Html5QrcodeScanner } = await import('html5-qrcode');
+        scannerInstance = new Html5QrcodeScanner("qr-reader", { fps: 10, qrbox: { width: 250, height: 250 } }, false);
 
-      return () => {
-        scanner.clear().catch(console.error);
-      };
-    }, 100);
+        scannerInstance.render((decodedText: string) => {
+          scannerInstance.clear();
+          setShowQrModal(false);
+          handleQrScan(decodedText);
+        }, (_errorMessage: string) => {
+          // Ignore continuous scan failures
+        });
+      } catch (err) {
+        console.error('Failed to load QR scanner:', err);
+        showToast('Failed to load QR scanner.', 'error');
+      }
+    };
 
-    return () => clearTimeout(timer);
+    const timer = setTimeout(initScanner, 100);
+
+    return () => {
+      clearTimeout(timer);
+      if (scannerInstance) {
+        scannerInstance.clear().catch(console.error);
+      }
+    };
   }, [showQrModal, gymId, isDemoMode]);
+
+  // Handle Manual Search
+  const [searchingMembers, setSearchingMembers] = useState(false);
+  useEffect(() => {
+    if (!debouncedSearch || isDemoMode || !gymId) {
+      if (isDemoMode) setMembers(demoState.members.filter(m => m.full_name.toLowerCase().includes(searchTerm.toLowerCase())));
+      return;
+    }
+
+    const searchMembers = async () => {
+      setSearchingMembers(true);
+      try {
+        const { data, error } = await supabase
+          .from('members')
+          .select('id, full_name, status, expiry_date, plans(name)')
+          .eq('gym_id', gymId)
+          .or(`full_name.ilike.%${debouncedSearch}%,phone.ilike.%${debouncedSearch}%`)
+          .limit(10);
+        
+        if (error) throw error;
+        setMembers(data as any[]);
+      } catch (err) {
+        console.error('Search error:', err);
+      } finally {
+        setSearchingMembers(false);
+      }
+    };
+
+    searchMembers();
+  }, [debouncedSearch, gymId, isDemoMode, demoState.members, searchTerm]);
 
   /**
    * Handle a scanned QR code:
@@ -324,11 +385,6 @@ export default function AttendanceScanner() {
     }
   };
 
-  const filteredMembers = members.filter(m =>
-    m.full_name!.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    (m.email && m.email.toLowerCase().includes(searchTerm.toLowerCase()))
-  );
-
   const formatTime = (ts: string) => new Date(ts).toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
 
   return (
@@ -375,7 +431,6 @@ export default function AttendanceScanner() {
         </div>
       )}
 
-      {/* Stats */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
         <div className="bg-white dark:bg-slate-900 p-5 rounded-xl border border-slate-200 dark:border-slate-800 shadow-sm">
           <p className="text-slate-500 text-xs font-medium mb-1">Today's Check-ins</p>
@@ -383,15 +438,15 @@ export default function AttendanceScanner() {
         </div>
         <div className="bg-white dark:bg-slate-900 p-5 rounded-xl border border-slate-200 dark:border-slate-800 shadow-sm">
           <p className="text-slate-500 text-xs font-medium mb-1">Total Members</p>
-          <span className="text-2xl font-bold text-neutral-text dark:text-white">{members.length}</span>
+          <span className="text-2xl font-bold text-neutral-text dark:text-white">{totalMembers}</span>
         </div>
         <div className="bg-white dark:bg-slate-900 p-5 rounded-xl border border-slate-200 dark:border-slate-800 shadow-sm">
           <p className="text-slate-500 text-xs font-medium mb-1">Active Members</p>
-          <span className="text-2xl font-bold text-emerald-500">{members.filter(m => m.status === 'ACTIVE').length}</span>
+          <span className="text-2xl font-bold text-emerald-500">{activeMembers}</span>
         </div>
         <div className="bg-white dark:bg-slate-900 p-5 rounded-xl border border-slate-200 dark:border-slate-800 shadow-sm">
           <p className="text-slate-500 text-xs font-medium mb-1">Inactive Members</p>
-          <span className="text-2xl font-bold text-rose-500">{members.filter(m => m.status !== 'ACTIVE').length}</span>
+          <span className="text-2xl font-bold text-rose-500">{Math.max(0, totalMembers - activeMembers)}</span>
         </div>
       </div>
 
@@ -482,28 +537,32 @@ export default function AttendanceScanner() {
               />
             </div>
             <div className="flex-1 overflow-y-auto divide-y divide-slate-100 dark:divide-slate-800">
-              {filteredMembers.length === 0 ? (
+              {searchingMembers ? (
+                <div className="p-12 flex justify-center">
+                  <div className="size-8 border-4 border-primary-default border-t-transparent rounded-full animate-spin" />
+                </div>
+              ) : members.length === 0 ? (
                 <div className="p-4">
                   <EmptyState
                     icon="search_off"
                     title="No members found"
-                    description="Try a different name or email to continue the check-in."
+                    description={debouncedSearch ? "Try a different name or email." : "Type a name to search members."}
                   />
                 </div>
               ) : (
-                filteredMembers.map((member) => (
+                members.map((member) => (
                   <button
                     key={member.id}
                     onClick={() => handleCheckIn(member)}
                     disabled={checkingIn}
-                    className="w-full p-4 flex items-center gap-3 hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors text-left disabled:opacity-50"
+                    className="w-full p-4 flex items-center gap-3 hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors text-left disabled:opacity-50 group"
                   >
-                    <div className="size-10 rounded-full bg-primary-default/10 flex items-center justify-center text-primary-default font-bold">
+                    <div className="size-10 rounded-full bg-primary-default/10 flex items-center justify-center text-primary-default font-bold group-hover:scale-110 transition-transform">
                       {member.full_name!.charAt(0)}
                     </div>
                     <div className="flex-1">
                       <p className="text-sm font-bold text-neutral-text dark:text-white">{member.full_name}</p>
-                      <p className="text-xs text-slate-500">{member.email || member.phone || 'No contact'}</p>
+                      <p className="text-xs text-slate-500">{member.phone || 'No phone'}</p>
                     </div>
                     <span className={`text-[10px] font-bold uppercase px-2 py-1 rounded-full ${member.status === 'ACTIVE' ? 'bg-emerald-100 dark:bg-emerald-900/30 text-emerald-700 dark:text-emerald-400' : 'bg-rose-100 dark:bg-rose-900/30 text-rose-700 dark:text-rose-400'}`}>
                       {member.status}

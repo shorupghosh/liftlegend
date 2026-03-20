@@ -1,4 +1,5 @@
-import React, { useEffect, useState, useCallback } from 'react';
+import React, { useCallback, useEffect, useMemo, useState } from 'react';
+import { useSearchParams } from 'react-router-dom';
 import { supabase } from '../lib/supabase';
 import { useAuth } from '../contexts/AuthContext';
 import { useRealtimeSubscription } from '../hooks/useRealtimeSubscription';
@@ -7,258 +8,632 @@ import { PaymentModal } from '../components/payments/PaymentModal';
 import { PaymentsTable } from '../components/payments/PaymentsTable';
 import { useDemoData } from '../contexts/DemoDataContext';
 import { useDemoMode } from '../hooks/useDemoMode';
-
+import { useDebounce } from '../hooks/useDebounce';
 import { Payment, Member, Plan } from '../types';
 
+const PaymentSkeleton = () => (
+  <div className="bg-white dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-800 p-4 animate-pulse">
+    <div className="flex items-center gap-3">
+      <div className="size-10 rounded-lg bg-slate-100 dark:bg-slate-800 shrink-0" />
+      <div className="flex-1 space-y-2">
+        <div className="h-4 bg-slate-100 dark:bg-slate-800 rounded w-1/3" />
+        <div className="h-3 bg-slate-50 dark:bg-slate-800/50 rounded w-1/4" />
+      </div>
+      <div className="h-4 w-20 bg-slate-100 dark:bg-slate-800 rounded" />
+    </div>
+  </div>
+);
+
+type MemberLite = Partial<Member> & { due_amount?: number };
+type ReceiptRecord = {
+  id: string;
+  created_at: string;
+  member_name: string;
+  member_phone: string;
+  plan_name: string;
+  amount_paid: number;
+  amount_due: number;
+  payment_method: string;
+  start_date: string;
+  end_date: string;
+};
+
+const ITEMS_PER_PAGE = 20;
+const PAYMENT_METHODS = ['CASH', 'CARD', 'BKASH', 'BANK_TRANSFER'] as const;
+
+function paymentMethodLabel(method: string) {
+  if (method === 'BKASH') return 'bKash';
+  if (method === 'BANK_TRANSFER') return 'Bank Transfer';
+  return method;
+}
+
+function methodSortValue(method: string) {
+  if (method === 'CASH') return 0;
+  if (method === 'BKASH') return 1;
+  if (method === 'CARD') return 2;
+  return 3;
+}
+
+function formatCurrency(amount: number) {
+  return `BDT ${Math.max(0, Math.round(amount)).toLocaleString()}`;
+}
+
+function downloadReceipt(receipt: ReceiptRecord) {
+  const lines = [
+    `Receipt ID: ${receipt.id}`,
+    `Date: ${new Date(receipt.created_at).toLocaleString()}`,
+    `Member: ${receipt.member_name}`,
+    `Phone: ${receipt.member_phone || 'N/A'}`,
+    `Plan: ${receipt.plan_name}`,
+    `Amount Paid: ${formatCurrency(receipt.amount_paid)}`,
+    `Remaining Due: ${formatCurrency(receipt.amount_due)}`,
+    `Method: ${paymentMethodLabel(receipt.payment_method)}`,
+    `Start Date: ${new Date(receipt.start_date).toLocaleDateString()}`,
+    `End Date: ${new Date(receipt.end_date).toLocaleDateString()}`,
+  ];
+
+  const blob = new Blob([lines.join('\n')], { type: 'text/plain;charset=utf-8' });
+  const url = URL.createObjectURL(blob);
+  const anchor = document.createElement('a');
+  anchor.href = url;
+  anchor.download = `${receipt.id}.txt`;
+  document.body.appendChild(anchor);
+  anchor.click();
+  anchor.remove();
+  URL.revokeObjectURL(url);
+}
+
+function buildWhatsAppReceiptMessage(receipt: ReceiptRecord) {
+  return [
+    `Receipt ${receipt.id}`,
+    `Member: ${receipt.member_name}`,
+    `Plan: ${receipt.plan_name}`,
+    `Paid: ${formatCurrency(receipt.amount_paid)}`,
+    `Due: ${formatCurrency(receipt.amount_due)}`,
+    `Method: ${paymentMethodLabel(receipt.payment_method)}`,
+    `Valid: ${new Date(receipt.start_date).toLocaleDateString()} to ${new Date(receipt.end_date).toLocaleDateString()}`,
+  ].join('\n');
+}
+
 export default function PaymentManagement() {
-    const { gymId } = useAuth();
-    const { isDemoMode } = useDemoMode();
-    const { state: demoState, addPayment } = useDemoData();
-    const { showToast } = useToast();
-    const [payments, setPayments] = useState<Payment[]>([]);
-    const [members, setMembers] = useState<Partial<Member>[]>([]);
-    const [plans, setPlans] = useState<Partial<Plan>[]>([]);
-    const [loading, setLoading] = useState(true);
-    const [showAddModal, setShowAddModal] = useState(false);
-    const [isSubmitting, setIsSubmitting] = useState(false);
-    const [searchQuery, setSearchQuery] = useState('');
-    const [filterMethod, setFilterMethod] = useState('');
-    const [page, setPage] = useState(0);
-    const [totalCount, setTotalCount] = useState(0);
-    const ITEMS_PER_PAGE = 20;
-    const [formData, setFormData] = useState({
-        member_id: '',
-        plan_id: '',
-        price_paid: '',
-        payment_method: 'CASH',
-        start_date: new Date().toISOString().split('T')[0],
-        end_date: '',
+  const { gymId } = useAuth();
+  const { isDemoMode } = useDemoMode();
+  const { state: demoState, addPayment } = useDemoData();
+  const { showToast } = useToast();
+  const [searchParams] = useSearchParams();
+
+  const [payments, setPayments] = useState<Payment[]>([]);
+  const [members, setMembers] = useState<MemberLite[]>([]);
+  const [plans, setPlans] = useState<Partial<Plan>[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [showAddModal, setShowAddModal] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [searchQuery, setSearchQuery] = useState('');
+  const debouncedSearch = useDebounce(searchQuery, 400);
+  const [filterMethod, setFilterMethod] = useState('');
+  const [page, setPage] = useState(0);
+  const [totalCount, setTotalCount] = useState(0);
+  const [latestReceipt, setLatestReceipt] = useState<ReceiptRecord | null>(null);
+  const [formData, setFormData] = useState({
+    member_id: '',
+    plan_id: '',
+    price_paid: '',
+    payment_method: 'CASH',
+    start_date: new Date().toISOString().split('T')[0],
+    end_date: '',
+  });
+
+  const resetForm = useCallback(() => {
+    setFormData({
+      member_id: '',
+      plan_id: '',
+      price_paid: '',
+      payment_method: 'CASH',
+      start_date: new Date().toISOString().split('T')[0],
+      end_date: '',
     });
+  }, []);
 
-    const fetchPayments = useCallback(async () => {
-        if (!gymId && !isDemoMode) return;
-        setLoading(true);
-        try {
-            if (isDemoMode) {
-                setPayments(demoState.payments);
-                setTotalCount(demoState.payments.length);
-                setLoading(false);
-                return;
-            }
-            // Apply filtering logic at the query level
-            let query = supabase
-                .from('membership_history')
-                .select('*, members(full_name), plans(name)', { count: 'exact' })
-                .eq('gym_id', gymId)
-                .order('created_at', { ascending: false });
+  const getPlanById = useCallback(
+    (planId: string) => plans.find((plan) => plan.id === planId),
+    [plans]
+  );
 
-            if (filterMethod) {
-                query = query.eq('payment_method', filterMethod);
-            }
+  const calculateEndDate = useCallback(
+    (startDateStr: string, planId: string): string => {
+      const selectedPlan = getPlanById(planId);
+      if (!selectedPlan || !startDateStr) return '';
+      const duration = Number(selectedPlan.duration_days || 30);
+      const startDate = new Date(startDateStr);
+      const endDate = new Date(startDate);
+      endDate.setDate(endDate.getDate() + duration);
+      return endDate.toISOString().split('T')[0];
+    },
+    [getPlanById]
+  );
 
-            const { data, count, error } = await query.range(page * ITEMS_PER_PAGE, (page + 1) * ITEMS_PER_PAGE - 1);
-            if (error) throw error;
+  const planAmount = useMemo(() => {
+    const selectedPlan = getPlanById(formData.plan_id);
+    return Number(selectedPlan?.price || 0);
+  }, [formData.plan_id, getPlanById]);
 
-            setPayments(data || []);
-            setTotalCount(count || 0);
-        } catch (error: any) {
-            console.error('Error fetching payments:', error);
-            showToast('Failed to load payments.', 'error');
-        } finally {
-            setLoading(false);
-        }
-    }, [demoState.payments, filterMethod, gymId, isDemoMode, page, showToast]);
+  const paidAmount = useMemo(() => Number(formData.price_paid || 0), [formData.price_paid]);
+  const modalDueAmount = useMemo(() => Math.max(0, planAmount - paidAmount), [paidAmount, planAmount]);
 
-    const fetchFormData = useCallback(async () => {
-        if (!gymId && !isDemoMode) return;
-        try {
-            if (isDemoMode) {
-                setMembers(demoState.members.filter(member => member.status === 'ACTIVE'));
-                setPlans(demoState.plans);
-                return;
-            }
-            const [membersRes, plansRes] = await Promise.all([
-                supabase.from('members').select('id, full_name').eq('gym_id', gymId).eq('status', 'ACTIVE'),
-                supabase.from('plans').select('id, name, price, duration_days').eq('gym_id', gymId)
-            ]);
-            setMembers(membersRes.data || []);
-            setPlans(plansRes.data || []);
-        } catch (error) {
-            console.error('Error fetching form data:', error);
-        }
-    }, [demoState.members, demoState.plans, gymId, isDemoMode]);
+  const memberOutstandingMap = useMemo(() => {
+    const map = new Map<string, number>();
 
-    useEffect(() => {
-        fetchPayments();
-        fetchFormData();
-    }, [fetchPayments, fetchFormData]);
-
-    useRealtimeSubscription({ table: 'membership_history', gymId, onChange: fetchPayments });
-
-    // BUG-11 FIXED: Calculate end date from given startDate param (not stale closure)
-    const calculateEndDate = (startDateStr: string, planId: string): string => {
-        const selectedPlan = plans.find(p => p.id === planId);
-        if (!selectedPlan || !startDateStr) return '';
-        const startDate = new Date(startDateStr);
-        const endDate = new Date(startDate);
-        endDate.setDate(endDate.getDate() + (selectedPlan.duration_days || 30));
-        return endDate.toISOString().split('T')[0];
-    };
-
-    const handlePlanChange = (planId: string) => {
-        const selectedPlan = plans.find(p => p.id === planId);
-        setFormData(prev => ({
-            ...prev,
-            plan_id: planId,
-            price_paid: selectedPlan ? selectedPlan.price.toString() : prev.price_paid,
-            end_date: calculateEndDate(formData.start_date, planId),
-        }));
-    };
-
-    const handleStartDateChange = (startDate: string) => {
-        setFormData(prev => ({
-            ...prev,
-            start_date: startDate,
-            // BUG-11 FIXED: re-calculate end using the new startDate value directly
-            end_date: prev.plan_id ? calculateEndDate(startDate, prev.plan_id) : prev.end_date,
-        }));
-    };
-
-    const handleCloseModal = () => {
-        setShowAddModal(false);
-        setFormData({ member_id: '', plan_id: '', price_paid: '', payment_method: 'CASH', start_date: new Date().toISOString().split('T')[0], end_date: '' });
-    };
-
-    const handleRecordPayment = async (e: React.FormEvent) => {
-        e.preventDefault();
-        if (isDemoMode) {
-            addPayment({
-                member_id: formData.member_id,
-                plan_id: formData.plan_id,
-                price_paid: Number(formData.price_paid),
-                payment_method: formData.payment_method,
-                start_date: formData.start_date,
-                end_date: formData.end_date,
-            });
-            showToast('Payment recorded. This is demo mode. Changes are not saved.', 'info');
-            handleCloseModal();
-            return;
-        }
-        if (!gymId) return;
-
-        // BUG-10 FIXED: Validate end date >= start date
-        if (formData.end_date && formData.start_date && formData.end_date < formData.start_date) {
-            showToast('End date cannot be before start date.', 'error');
-            return;
-        }
-
-        if (Number(formData.price_paid) < 0) {
-            showToast('Payment amount cannot be negative.', 'error');
-            return;
-        }
-
-        setIsSubmitting(true);
-        try {
-            const { data, error } = await supabase
-                .from('membership_history')
-                .insert([{
-                    gym_id: gymId,
-                    member_id: formData.member_id,
-                    plan_id: formData.plan_id,
-                    price_paid: Number(formData.price_paid),
-                    payment_method: formData.payment_method,
-                    start_date: formData.start_date,
-                    end_date: formData.end_date
-                }])
-                .select('*, members(full_name), plans(name)')
-                .single();
-
-            if (error) throw error;
-            setPayments([data, ...payments]);
-            handleCloseModal();
-            showToast('Payment recorded successfully!', 'success');
-        } catch (error: any) {
-            console.error('Error recording payment:', error);
-            showToast(error.message || 'Failed to record payment.', 'error');
-        } finally {
-            setIsSubmitting(false);
-        }
-    };
-
-    const filteredPayments = payments.filter(p => {
-        const matchesSearch = !searchQuery || p.members?.full_name?.toLowerCase().includes(searchQuery.toLowerCase());
-        return matchesSearch;
-    });
-
-    const totalPages = Math.ceil(totalCount / ITEMS_PER_PAGE);
-
-    return (
-        <div className="p-4 sm:p-6 lg:p-8 space-y-4 sm:space-y-6">
-            {/* Page Header */}
-            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 sm:gap-4">
-                <div>
-                    <h1 className="text-xl sm:text-2xl lg:text-3xl font-display font-extrabold text-neutral-text dark:text-white tracking-tight">
-                        Payments
-                    </h1>
-                    <p className="text-slate-500 dark:text-slate-400 text-xs sm:text-sm mt-1">Track membership renewals, fees, and revenue.</p>
-                </div>
-                <button
-                    onClick={() => setShowAddModal(true)}
-                    className="flex items-center gap-2 rounded-xl h-11 px-4 sm:px-5 bg-primary-default text-white text-sm font-bold shadow-lg shadow-primary-default/20 hover:brightness-110 active:scale-95 transition-all self-start sm:self-auto"
-                >
-                    <span className="material-symbols-outlined text-lg">add_card</span>
-                    Record Payment
-                </button>
-            </div>
-
-            {/* Search + Filter */}
-            <div className="flex flex-col sm:flex-row gap-3">
-                <div className="relative flex-1">
-                    <span className="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-xl">search</span>
-                    <input
-                        value={searchQuery}
-                        onChange={e => setSearchQuery(e.target.value)}
-                        placeholder="Search by member name..."
-                        className="w-full bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl h-11 pl-10 pr-4 text-sm focus:ring-2 focus:ring-primary-default/20 focus:border-primary-default outline-none transition-all"
-                    />
-                </div>
-                <select
-                    value={filterMethod}
-                    onChange={e => setFilterMethod(e.target.value)}
-                    className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl h-11 px-4 text-sm outline-none focus:ring-2 focus:ring-primary-default/20"
-                >
-                    <option value="">All Methods</option>
-                    <option value="CASH">Cash</option>
-                    <option value="CARD">Card</option>
-                    <option value="BKASH">bKash</option>
-                    <option value="BANK_TRANSFER">Bank Transfer</option>
-                </select>
-            </div>
-
-            <PaymentsTable
-                loading={loading}
-                filteredPayments={filteredPayments}
-                paymentsLength={payments.length}
-                totalCount={totalCount}
-                totalPages={totalPages}
-                page={page}
-                setPage={setPage}
-                ITEMS_PER_PAGE={ITEMS_PER_PAGE}
-            />
-
-            {/* Record Payment Modal — BUG-17 backdrop fix */}
-            <PaymentModal
-                showAddModal={showAddModal}
-                handleCloseModal={handleCloseModal}
-                handleRecordPayment={handleRecordPayment}
-                formData={formData}
-                setFormData={setFormData}
-                members={members as Partial<Member>[]}
-                plans={plans as Partial<Plan>[]}
-                handlePlanChange={handlePlanChange}
-                handleStartDateChange={handleStartDateChange}
-                isSubmitting={isSubmitting}
-            />
-        </div>
+    const sorted = [...payments].sort(
+      (a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
     );
+
+    sorted.forEach((payment) => {
+      if (map.has(payment.member_id)) return;
+      const planPrice = Number(plans.find((plan) => plan.id === payment.plan_id)?.price || payment.price_paid);
+      map.set(payment.member_id, Math.max(0, planPrice - Number(payment.price_paid || 0)));
+    });
+
+    members.forEach((member) => {
+      if (!member.id || map.has(member.id)) return;
+      if (typeof member.due_amount === 'number' && member.due_amount > 0) {
+        map.set(member.id, member.due_amount);
+      }
+    });
+
+    return map;
+  }, [members, payments, plans]);
+
+  const collectionSummary = useMemo(() => {
+    const summary = new Map<string, number>();
+    PAYMENT_METHODS.forEach((method) => summary.set(method, 0));
+
+    const today = new Date();
+    const todayStart = new Date(today.getFullYear(), today.getMonth(), today.getDate()).getTime();
+    const todayEnd = todayStart + 24 * 60 * 60 * 1000;
+
+    payments.forEach((payment) => {
+      const timestamp = new Date(payment.created_at).getTime();
+      if (timestamp < todayStart || timestamp >= todayEnd) return;
+      summary.set(payment.payment_method, (summary.get(payment.payment_method) || 0) + Number(payment.price_paid || 0));
+    });
+
+    const items = [...summary.entries()]
+      .filter(([, value]) => value > 0)
+      .map(([method, amount]) => ({ method, amount }))
+      .sort((a, b) => methodSortValue(a.method) - methodSortValue(b.method));
+
+    const total = items.reduce((sum, entry) => sum + entry.amount, 0);
+    return { items, total };
+  }, [payments]);
+
+  const fetchPayments = useCallback(async () => {
+    if (!gymId && !isDemoMode) return;
+    setLoading(true);
+    try {
+      if (isDemoMode) {
+        let filtered = demoState.payments;
+        if (debouncedSearch) {
+          const s = debouncedSearch.toLowerCase();
+          filtered = filtered.filter(p => 
+            p.id.toLowerCase().includes(s) || 
+            (p as any).member_name?.toLowerCase().includes(s)
+          );
+        }
+        setPayments(filtered);
+        setTotalCount(filtered.length);
+        setLoading(false);
+        return;
+      }
+
+      const from = page * ITEMS_PER_PAGE;
+      const to = from + ITEMS_PER_PAGE - 1;
+
+      // START OPTIMIZED QUERY
+      let query = supabase
+        .from('membership_history')
+        .select(`
+          id, 
+          created_at, 
+          member_id, 
+          plan_id, 
+          price_paid, 
+          payment_method, 
+          start_date, 
+          end_date, 
+          members(full_name, phone), 
+          plans(name, price)
+        `, { count: 'exact' })
+        .eq('gym_id', gymId)
+        .order('created_at', { ascending: false })
+        .range(from, to);
+
+      if (debouncedSearch) {
+        query = query.ilike('id', `%${debouncedSearch}%`);
+      }
+
+      if (filterMethod) {
+        query = query.eq('payment_method', filterMethod);
+      }
+
+      const { data, count, error } = await query;
+      if (error) throw error;
+
+      setPayments((data || []) as any[]);
+      setTotalCount(count || 0);
+    } catch (error) {
+      console.error('Error fetching payments:', error);
+      showToast('Failed to load payments.', 'error');
+    } finally {
+      setLoading(false);
+    }
+  }, [debouncedSearch, demoState.payments, filterMethod, gymId, isDemoMode, page, showToast]);
+
+  const fetchFormData = useCallback(async () => {
+    if (!gymId && !isDemoMode) return;
+    try {
+      if (isDemoMode) {
+        setMembers(
+          demoState.members
+            .filter((member) => member.status === 'ACTIVE')
+            .map((member) => ({
+              ...member,
+              due_amount: Number((member as any).dueAmount || 0),
+            }))
+        );
+        setPlans(demoState.plans);
+        return;
+      }
+
+      const [membersRes, plansRes] = await Promise.all([
+        supabase
+          .from('members')
+          .select('id, full_name, phone, plan_id')
+          .eq('gym_id', gymId)
+          .eq('status', 'ACTIVE'),
+        supabase.from('plans').select('id, name, price, duration_days').eq('gym_id', gymId),
+      ]);
+
+      setMembers((membersRes.data || []) as MemberLite[]);
+      setPlans(plansRes.data || []);
+    } catch (error) {
+      console.error('Error fetching form data:', error);
+      showToast('Failed to load members or plans.', 'error');
+    }
+  }, [demoState.members, demoState.plans, gymId, isDemoMode, showToast]);
+
+  useEffect(() => {
+    fetchPayments();
+    fetchFormData();
+  }, [fetchPayments, fetchFormData]);
+
+  useRealtimeSubscription({ table: 'membership_history', gymId, onChange: fetchPayments });
+
+  useEffect(() => {
+    const memberId = searchParams.get('memberId');
+    if (!memberId || members.length === 0) return;
+
+    const targetMember = members.find((entry) => entry.id === memberId);
+    if (!targetMember) return;
+
+    const planId = targetMember.plan_id || '';
+    setShowAddModal(true);
+    setFormData((current) => ({
+      ...current,
+      member_id: memberId,
+      plan_id: planId,
+      price_paid: planId ? String(Number(getPlanById(planId)?.price || 0)) : current.price_paid,
+      end_date: planId ? calculateEndDate(current.start_date, planId) : current.end_date,
+    }));
+  }, [calculateEndDate, getPlanById, members, searchParams]);
+
+  const handlePlanChange = (planId: string) => {
+    const selectedPlan = getPlanById(planId);
+    setFormData((previous) => ({
+      ...previous,
+      plan_id: planId,
+      price_paid: selectedPlan ? String(Number(selectedPlan.price || 0)) : previous.price_paid,
+      end_date: calculateEndDate(previous.start_date, planId),
+    }));
+  };
+
+  const handleStartDateChange = (startDate: string) => {
+    setFormData((previous) => ({
+      ...previous,
+      start_date: startDate,
+      end_date: previous.plan_id ? calculateEndDate(startDate, previous.plan_id) : previous.end_date,
+    }));
+  };
+
+  const handleCloseModal = () => {
+    setShowAddModal(false);
+    resetForm();
+  };
+
+  const getPaymentDueAmount = useCallback(
+    (payment: Payment) => {
+      const planPrice = Number(plans.find((plan) => plan.id === payment.plan_id)?.price || payment.price_paid || 0);
+      return Math.max(0, planPrice - Number(payment.price_paid || 0));
+    },
+    [plans]
+  );
+
+  const prepareReceipt = useCallback(
+    (payment: Payment) => {
+      const member = members.find((entry) => entry.id === payment.member_id);
+      const dueAmount = getPaymentDueAmount(payment);
+      return {
+        id: `RCP-${new Date(payment.created_at).getTime()}`,
+        created_at: payment.created_at,
+        member_name: payment.members?.full_name || member?.full_name || 'Unknown Member',
+        member_phone: (payment as any).members?.phone || member?.phone || '',
+        plan_name: payment.plans?.name || plans.find((plan) => plan.id === payment.plan_id)?.name || 'Custom Plan',
+        amount_paid: Number(payment.price_paid || 0),
+        amount_due: dueAmount,
+        payment_method: payment.payment_method,
+        start_date: payment.start_date,
+        end_date: payment.end_date,
+      } satisfies ReceiptRecord;
+    },
+    [getPaymentDueAmount, members, plans]
+  );
+
+  const handleRecordPayment = async (event: React.FormEvent) => {
+    event.preventDefault();
+
+    if (formData.end_date && formData.start_date && formData.end_date < formData.start_date) {
+      showToast('End date cannot be before start date.', 'error');
+      return;
+    }
+
+    if (Number(formData.price_paid) < 0) {
+      showToast('Payment amount cannot be negative.', 'error');
+      return;
+    }
+
+    if (isDemoMode) {
+      addPayment({
+        member_id: formData.member_id,
+        plan_id: formData.plan_id,
+        price_paid: Number(formData.price_paid),
+        payment_method: formData.payment_method,
+        start_date: formData.start_date,
+        end_date: formData.end_date,
+      });
+
+      const member = members.find((entry) => entry.id === formData.member_id);
+      const plan = plans.find((entry) => entry.id === formData.plan_id);
+      const demoPayment: Payment = {
+        id: `demo-${Date.now()}`,
+        gym_id: gymId || 'demo-gym-id',
+        member_id: formData.member_id,
+        plan_id: formData.plan_id,
+        price_paid: Number(formData.price_paid),
+        payment_method: formData.payment_method,
+        start_date: formData.start_date,
+        end_date: formData.end_date,
+        created_at: new Date().toISOString(),
+        members: { full_name: member?.full_name || 'Unknown Member' },
+        plans: { name: plan?.name || 'Custom Plan' },
+      };
+
+      const receipt = prepareReceipt(demoPayment);
+      setLatestReceipt(receipt);
+      showToast(
+        receipt.amount_due > 0
+          ? `Partial payment recorded. Remaining due: ${formatCurrency(receipt.amount_due)}`
+          : 'Payment recorded. This is demo mode and changes are not persisted.',
+        'info'
+      );
+      handleCloseModal();
+      return;
+    }
+
+    if (!gymId) return;
+    setIsSubmitting(true);
+
+    try {
+      const { data, error } = await supabase
+        .from('membership_history')
+        .insert([
+          {
+            gym_id: gymId,
+            member_id: formData.member_id,
+            plan_id: formData.plan_id,
+            price_paid: Number(formData.price_paid),
+            payment_method: formData.payment_method,
+            start_date: formData.start_date,
+            end_date: formData.end_date,
+          },
+        ])
+        .select('*, members(full_name, phone), plans(name, price)')
+        .single();
+
+      if (error) throw error;
+
+      const newPayment = data as Payment;
+      setPayments((current) => [newPayment, ...current]);
+
+      const receipt = prepareReceipt(newPayment);
+      setLatestReceipt(receipt);
+
+      showToast(
+        receipt.amount_due > 0
+          ? `Payment recorded. Remaining due: ${formatCurrency(receipt.amount_due)}`
+          : 'Payment recorded successfully.',
+        'success'
+      );
+      handleCloseModal();
+    } catch (error: any) {
+      console.error('Error recording payment:', error);
+      showToast(error.message || 'Failed to record payment.', 'error');
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  const filteredPayments = useMemo(() => {
+    return payments.filter((payment) => {
+      if (!searchQuery) return true;
+      return payment.members?.full_name?.toLowerCase().includes(searchQuery.toLowerCase());
+    });
+  }, [payments, searchQuery]);
+
+  const totalPages = Math.ceil(totalCount / ITEMS_PER_PAGE);
+  const totalOutstandingDue = useMemo(
+    () => [...memberOutstandingMap.values()].reduce((sum, amount) => sum + amount, 0),
+    [memberOutstandingMap]
+  );
+
+  const handleViewReceipt = (payment: Payment) => {
+    setLatestReceipt(prepareReceipt(payment));
+  };
+
+  const handleShareReceipt = () => {
+    if (!latestReceipt) return;
+    const message = buildWhatsAppReceiptMessage(latestReceipt);
+    const encoded = encodeURIComponent(message);
+    const rawPhone = (latestReceipt.member_phone || '').replace(/\D/g, '');
+
+    if (rawPhone) {
+      const localPhone = rawPhone.startsWith('88') ? rawPhone : `88${rawPhone}`;
+      window.open(`https://wa.me/${localPhone}?text=${encoded}`, '_blank', 'noopener,noreferrer');
+      return;
+    }
+
+    navigator.clipboard
+      .writeText(message)
+      .then(() => showToast('Receipt copied. Paste it into WhatsApp.', 'success'))
+      .catch(() => showToast('Failed to copy receipt text.', 'error'));
+  };
+
+  return (
+    <div className="space-y-4 p-4 sm:space-y-6 sm:p-6 lg:p-8">
+      <div className="flex flex-col justify-between gap-3 sm:flex-row sm:items-center sm:gap-4">
+        <div>
+          <h1 className="text-xl font-display font-extrabold tracking-tight text-neutral-text dark:text-white sm:text-2xl lg:text-3xl">
+            Payments
+          </h1>
+          <p className="mt-1 text-xs text-slate-500 dark:text-slate-400 sm:text-sm">
+            Record renewals, track dues, and see today&apos;s collections.
+          </p>
+        </div>
+        <button
+          onClick={() => setShowAddModal(true)}
+          className="flex h-11 items-center gap-2 self-start rounded-xl bg-primary-default px-4 text-sm font-bold text-white shadow-lg shadow-primary-default/20 transition-all hover:brightness-110 active:scale-95 sm:self-auto sm:px-5"
+        >
+          <span className="material-symbols-outlined text-lg">add_card</span>
+          Record Payment
+        </button>
+      </div>
+
+      <div className="grid grid-cols-1 gap-3 md:grid-cols-3">
+        <div className="rounded-xl border border-slate-200 bg-white p-4 shadow-sm dark:border-slate-800 dark:bg-slate-900">
+          <p className="text-xs font-bold uppercase tracking-wider text-slate-500">Outstanding dues</p>
+          <p className="mt-2 text-2xl font-black text-amber-600 dark:text-amber-300">{formatCurrency(totalOutstandingDue)}</p>
+        </div>
+        <div className="rounded-xl border border-slate-200 bg-white p-4 shadow-sm dark:border-slate-800 dark:bg-slate-900">
+          <p className="text-xs font-bold uppercase tracking-wider text-slate-500">Today&apos;s collections</p>
+          <p className="mt-2 text-2xl font-black text-emerald-600 dark:text-emerald-300">{formatCurrency(collectionSummary.total)}</p>
+        </div>
+        <div className="rounded-xl border border-slate-200 bg-white p-4 shadow-sm dark:border-slate-800 dark:bg-slate-900">
+          <p className="text-xs font-bold uppercase tracking-wider text-slate-500">Payment methods today</p>
+          {collectionSummary.items.length === 0 ? (
+            <p className="mt-2 text-sm font-medium text-slate-500 dark:text-slate-400">No collections recorded yet.</p>
+          ) : (
+            <div className="mt-2 space-y-1">
+              {collectionSummary.items.map((entry) => (
+                <div key={entry.method} className="flex items-center justify-between text-xs">
+                  <span className="font-semibold text-slate-500 dark:text-slate-400">{paymentMethodLabel(entry.method)}</span>
+                  <span className="font-bold text-neutral-text dark:text-white">{formatCurrency(entry.amount)}</span>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+      </div>
+
+      <div className="flex flex-col gap-3 sm:flex-row">
+        <div className="relative flex-1">
+          <span className="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-xl text-slate-400">search</span>
+          <input
+            value={searchQuery}
+            onChange={(event) => setSearchQuery(event.target.value)}
+            placeholder="Search by member name..."
+            className="h-11 w-full rounded-xl border border-slate-200 bg-white pl-10 pr-4 text-sm outline-none transition-all focus:border-primary-default focus:ring-2 focus:ring-primary-default/20 dark:border-slate-800 dark:bg-slate-900"
+          />
+        </div>
+        <select
+          value={filterMethod}
+          onChange={(event) => setFilterMethod(event.target.value)}
+          className="h-11 rounded-xl border border-slate-200 bg-white px-4 text-sm outline-none focus:ring-2 focus:ring-primary-default/20 dark:border-slate-800 dark:bg-slate-900"
+        >
+          <option value="">All Methods</option>
+          <option value="CASH">Cash</option>
+          <option value="CARD">Card</option>
+          <option value="BKASH">bKash</option>
+          <option value="BANK_TRANSFER">Bank Transfer</option>
+        </select>
+      </div>
+
+      <PaymentsTable
+        loading={loading}
+        filteredPayments={filteredPayments}
+        paymentsLength={payments.length}
+        totalCount={totalCount}
+        totalPages={totalPages}
+        page={page}
+        setPage={setPage}
+        ITEMS_PER_PAGE={ITEMS_PER_PAGE}
+        getPaymentDueAmount={getPaymentDueAmount}
+        onViewReceipt={handleViewReceipt}
+      />
+
+      {latestReceipt && (
+        <div className="rounded-xl border border-slate-200 bg-white p-4 shadow-sm dark:border-slate-800 dark:bg-slate-900">
+          <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+            <div>
+              <p className="text-xs font-black uppercase tracking-widest text-slate-500">Latest receipt</p>
+              <p className="mt-1 text-sm font-bold text-neutral-text dark:text-white">
+                {latestReceipt.member_name} | {latestReceipt.plan_name}
+              </p>
+              <p className="text-xs text-slate-500">
+                Paid {formatCurrency(latestReceipt.amount_paid)} | Due {formatCurrency(latestReceipt.amount_due)}
+              </p>
+            </div>
+            <div className="flex gap-2">
+              <button
+                type="button"
+                onClick={() => downloadReceipt(latestReceipt)}
+                className="inline-flex h-10 items-center rounded-xl border border-slate-200 px-3 text-xs font-bold text-slate-600 transition-colors hover:bg-slate-100 dark:border-slate-700 dark:text-slate-300 dark:hover:bg-slate-800"
+              >
+                Download Receipt
+              </button>
+              <button
+                type="button"
+                onClick={handleShareReceipt}
+                className="inline-flex h-10 items-center rounded-xl bg-emerald-600 px-3 text-xs font-bold text-white transition-colors hover:bg-emerald-500"
+              >
+                Share on WhatsApp
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      <PaymentModal
+        showAddModal={showAddModal}
+        handleCloseModal={handleCloseModal}
+        handleRecordPayment={handleRecordPayment}
+        formData={formData}
+        setFormData={setFormData}
+        members={members}
+        plans={plans}
+        handlePlanChange={handlePlanChange}
+        handleStartDateChange={handleStartDateChange}
+        isSubmitting={isSubmitting}
+        expectedAmount={planAmount}
+        dueAmount={modalDueAmount}
+      />
+    </div>
+  );
 }

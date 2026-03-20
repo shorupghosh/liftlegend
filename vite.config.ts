@@ -19,10 +19,13 @@ export default defineConfig(({ mode }) => {
       },
     },
     build: {
-      // Generate source maps for easier debugging in production
       sourcemap: false,
-      // Increase chunk size warning limit (our app is large)
-      chunkSizeWarningLimit: 1000,
+      // Target modern browsers for smaller output
+      target: 'es2022',
+      // Minimize CSS
+      cssMinify: true,
+      // Chunk size warning
+      chunkSizeWarningLimit: 500,
       rollupOptions: {
         output: {
           // Code-split large vendor libraries for better caching
@@ -30,6 +33,8 @@ export default defineConfig(({ mode }) => {
             'react-vendor': ['react', 'react-dom', 'react-router-dom'],
             'supabase-vendor': ['@supabase/supabase-js'],
             'ui-vendor': ['lucide-react'],
+            // QR code libraries in their own chunk — only loaded by AttendanceScanner
+            'qr-vendor': ['html5-qrcode', 'qrcode'],
           },
         },
       },

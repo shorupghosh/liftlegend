@@ -81,7 +81,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
             setUserRole('OWNER');
             setGymId('demo-gym-id');
             setGymStatus('ACTIVE');
-            setSubscriptionTier('ELITE LEGEND');
+            setSubscriptionTier('PREMIUM');
             setDashboardModeState((window.sessionStorage.getItem('liftlegend_demo_dashboard_mode') as 'basic' | 'advanced') || 'advanced');
             setOnboardingCompleted(true);
             setLoading(false);
@@ -171,48 +171,36 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
             }
 
             // Fetch gym status for lock detection (skip for super admins)
+            // Single combined query — avoids 3 separate round-trips to gyms table
             if ((!isSuperAdmin || activeImpersonation) && (activeImpersonation?.gymId || selectedRole.gym_id)) {
-                // First get the core gym data that we KNOW exists
-                const { data: gymData, error: gymError } = await supabase
-                    .from('gyms')
-                    .select('status, subscription_tier')
-                    .eq('id', activeImpersonation?.gymId || selectedRole.gym_id)
-                    .maybeSingle();
-                if (gymError) throw gymError;
-                setGymStatus(gymData?.status || null);
-                setSubscriptionTier(gymData?.subscription_tier || 'BASIC');
-                
-                // Then try to get onboarding_completed, handling failure gracefully if column is missing
                 try {
-                    const { data: onboardingData, error: onboardingError } = await supabase
+                    const { data: gymData, error: gymError } = await supabase
                         .from('gyms')
-                        .select('onboarding_completed')
-                        .eq('id', activeImpersonation?.gymId || selectedRole.gym_id)
-                        .maybeSingle();
-                    
-                    if (!onboardingError && onboardingData) {
-                        setOnboardingCompleted(onboardingData.onboarding_completed !== false);
-                    } else {
-                        setOnboardingCompleted(true); // Default to true if missing to avoid breaking logins
-                    }
-                } catch {
-                    setOnboardingCompleted(true);
-                }
-                
-                // Attempt to fetch dashboard mode from database cleanly
-                try {
-                    const { data: modeData, error: modeError } = await supabase
-                        .from('gyms')
-                        .select('dashboard_mode')
+                        .select('status, subscription_tier, onboarding_completed, dashboard_mode')
                         .eq('id', activeImpersonation?.gymId || selectedRole.gym_id)
                         .maybeSingle();
 
-                    if (!modeError && modeData) {
-                        setDashboardModeState(modeData.dashboard_mode || 'advanced');
-                    } else {
-                        setDashboardModeState('advanced');
+                    if (gymError) throw gymError;
+
+                    setGymStatus(gymData?.status || null);
+                    setSubscriptionTier(gymData?.subscription_tier || 'BASIC');
+                    setOnboardingCompleted(gymData?.onboarding_completed !== false);
+                    setDashboardModeState(gymData?.dashboard_mode || 'advanced');
+                } catch (err) {
+                    // Graceful fallback if some columns don't exist yet
+                    console.error('Failed to fetch gym data:', err);
+                    try {
+                        const { data: fallbackData } = await supabase
+                            .from('gyms')
+                            .select('status, subscription_tier')
+                            .eq('id', activeImpersonation?.gymId || selectedRole.gym_id)
+                            .maybeSingle();
+                        setGymStatus(fallbackData?.status || null);
+                        setSubscriptionTier(fallbackData?.subscription_tier || 'BASIC');
+                    } catch {
+                        // Ultimate fallback
                     }
-                } catch {
+                    setOnboardingCompleted(true);
                     setDashboardModeState('advanced');
                 }
             } else {

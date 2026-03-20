@@ -22,9 +22,9 @@ export default function SubscriptionLock() {
 
     // Plans data
     const plans = [
-        { name: 'Starter', price: '৳1,000', tag: '', features: ['Up to 100 Members', 'QR Code Attendance', 'Basic Analytics'], missing: ['SMS Campaigns', 'Multi-Staff Access'] },
-        { name: 'Power Plus', price: '৳1,500', tag: 'Most Popular', features: ['Up to 500 Members', 'Everything in Starter', 'Automated SMS Alerts', 'Multi-Staff Access'], missing: [] },
-        { name: 'Elite Legend', price: '৳2,000', tag: '', features: ['Unlimited Members', 'Custom API Integration', 'Priority 24/7 Support', 'Dedicated Account Manager'], missing: [] },
+    { name: 'Basic', price: '৳1,000', tag: '', features: ['Up to 100 Members', 'QR Code Attendance', 'Basic Analytics'], missing: ['SMS Campaigns', 'Multi-Staff Access'] },
+    { name: 'Advanced', price: '৳1,500', tag: 'Most Popular', features: ['Up to 500 Members', 'Everything in Basic', 'Automated SMS Alerts', 'Multi-Staff Access'], missing: [] },
+    { name: 'Premium', price: '৳2,000', tag: '', features: ['Unlimited Members', 'Custom API Integration', 'Priority 24/7 Support', 'Dedicated Account Manager'], missing: [] },
     ];
 
     return (

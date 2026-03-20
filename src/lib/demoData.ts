@@ -53,7 +53,7 @@ const plans: Plan[] = [
   {
     id: 'plan-elite',
     gym_id: DEMO_GYM_ID,
-    name: 'Elite Legend',
+    name: 'Premium',
     price: 4500,
     duration_days: 30,
     duration_type: 'DAYS',
@@ -64,7 +64,7 @@ const plans: Plan[] = [
   {
     id: 'plan-power',
     gym_id: DEMO_GYM_ID,
-    name: 'Power Plus',
+    name: 'Advanced',
     price: 3200,
     duration_days: 30,
     duration_type: 'DAYS',
@@ -74,7 +74,7 @@ const plans: Plan[] = [
   {
     id: 'plan-starter',
     gym_id: DEMO_GYM_ID,
-    name: 'Starter',
+    name: 'Basic',
     price: 2200,
     duration_days: 30,
     duration_type: 'DAYS',
@@ -291,7 +291,17 @@ export const createInitialDemoState = (): DemoState => ({
   notifications: notifications.map((item) => ({ ...item })),
 });
 
-export const getDemoMetrics = (state: DemoState) => {
+export type DemoMetrics = {
+  totalMembers: number;
+  activeMembers: number;
+  expiringSoon: number;
+  revenue: number;
+  todayCheckins: number;
+  retentionRate: number;
+  churnRisk: number;
+};
+
+export const getDemoMetrics = (state: DemoState): DemoMetrics => {
   const activeMembers = state.members.filter((member) => member.status === 'ACTIVE').length;
   const expiringSoon = state.members.filter((member) => {
     if (!member.expiry_date) return false;

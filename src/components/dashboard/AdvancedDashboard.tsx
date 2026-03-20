@@ -38,7 +38,7 @@ const StatCard = React.memo(({ label, value, trend, icon, color, onClick }: {
   </div>
 ));
 
-const SmartAlert = React.memo(({ type, title, desc, action }: { type: 'urgent' | 'opportunity' | 'info'; title: string; desc: string; action: string }) => {
+const SmartAlert = React.memo(({ type, title, desc, action, onAction }: { type: 'urgent' | 'opportunity' | 'info'; title: string; desc: string; action: string; onAction?: () => void }) => {
   const colors = {
     urgent: 'border-red-500/20 bg-red-500/5 text-red-600',
     opportunity: 'border-blue-500/20 bg-blue-500/5 text-blue-600',
@@ -55,7 +55,7 @@ const SmartAlert = React.memo(({ type, title, desc, action }: { type: 'urgent' |
           <p className="text-[10px] sm:text-xs opacity-70 truncate">{desc}</p>
         </div>
       </div>
-      <button className="text-[10px] font-black uppercase tracking-widest hover:underline shrink-0 text-primary-default">{action}</button>
+      <button onClick={onAction} className="text-[10px] font-black uppercase tracking-widest hover:underline shrink-0 text-primary-default">{action}</button>
     </div>
   );
 });
@@ -97,7 +97,6 @@ export default function AdvancedDashboard({ previewUnlocked = false }: AdvancedD
   });
   const [recentCheckins, setRecentCheckins] = useState<any[]>([]);
   const [weeklyCheckins, setWeeklyCheckins] = useState<number[]>([0, 0, 0, 0, 0, 0, 0]);
-  const [selectedYear, setSelectedYear] = useState(new Date().getFullYear());
 
   const fetchDashboardData = useCallback(async () => {
     if (!gymId && !isDemoMode) return;
@@ -176,9 +175,12 @@ export default function AdvancedDashboard({ previewUnlocked = false }: AdvancedD
   useRealtimeSubscription({ table: 'members', gymId, onChange: fetchDashboardData });
   useRealtimeSubscription({ table: 'attendance', gymId, onChange: fetchDashboardData });
 
-  // Heatmap Data
-  const days = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
-  const hours = ['6AM', '9AM', '12PM', '3PM', '6PM', '9PM'];
+  const dayLabels = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+  const weeklyTotal = weeklyCheckins.reduce((sum, count) => sum + count, 0);
+  const weeklyMax = Math.max(...weeklyCheckins, 1);
+  const busiestDayIndex = weeklyCheckins.findIndex((count) => count === weeklyMax);
+  const busiestDay = dayLabels[busiestDayIndex >= 0 ? busiestDayIndex : 0];
+  const todayShare = weeklyTotal > 0 ? Math.round((metrics.todayCheckins / weeklyTotal) * 100) : 0;
 
   if (loading) {
     return <PageLoader label="Loading analytics..." />;
@@ -197,19 +199,17 @@ export default function AdvancedDashboard({ previewUnlocked = false }: AdvancedD
           <h1 className="text-2xl sm:text-3xl font-display font-black text-slate-900 dark:text-white tracking-tight">
              Advanced Dashboard
           </h1>
-          <p className="text-slate-500 dark:text-slate-400 text-xs sm:text-sm">
-             Real-time intelligence and operational control for your gym.
-          </p>
+          <p className="text-slate-500 dark:text-slate-400 text-xs sm:text-sm">Operations and growth overview for the last 7 days.</p>
         </div>
         <div className="flex items-center gap-2">
            {!isBasicPlan && (
-             <button className="h-10 px-4 rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 text-xs font-bold text-slate-600 dark:text-slate-300 flex items-center gap-2 hover:bg-slate-50 transition-colors shrink-0">
+             <button onClick={() => navigate('/admin/analytics')} className="h-10 px-4 rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 text-xs font-bold text-slate-600 dark:text-slate-300 flex items-center gap-2 hover:bg-slate-50 transition-colors shrink-0">
                <span className="material-symbols-outlined text-lg">calendar_today</span>
                Last 30 Days
              </button>
            )}
-           <button className={`h-10 px-5 rounded-xl ${isBasicPlan ? 'bg-slate-900 dark:bg-slate-800' : 'bg-primary-default'} text-white text-[10px] sm:text-xs font-black uppercase tracking-widest shadow-lg ${isBasicPlan ? '' : 'shadow-primary-default/20'} hover:brightness-110 active:scale-95 transition-all text-center`}>
-             {isBasicPlan ? 'View Plans' : 'Export BI Report'}
+           <button onClick={() => navigate(isBasicPlan ? '/admin/settings/subscription' : '/admin/analytics')} className={`h-10 px-5 rounded-xl ${isBasicPlan ? 'bg-slate-900 dark:bg-slate-800' : 'bg-primary-default'} text-white text-[10px] sm:text-xs font-black uppercase tracking-widest shadow-lg ${isBasicPlan ? '' : 'shadow-primary-default/20'} hover:brightness-110 active:scale-95 transition-all text-center`}>
+             {isBasicPlan ? 'View Plans' : 'Open Analytics'}
            </button>
         </div>
       </div>
@@ -222,7 +222,7 @@ export default function AdvancedDashboard({ previewUnlocked = false }: AdvancedD
         {isBasicPlan ? (
           <StatCard label="Check-ins Today" value={metrics.todayCheckins.toLocaleString()} icon="done_all" color="amber" onClick={() => navigate('/admin/attendance')} />
         ) : (
-          <StatCard label="New Members" value="+24" trend={{ value: '15%', positive: true }} icon="person_add" color="indigo" onClick={() => navigate('/admin/members')} />
+          <StatCard label="Check-ins (7d)" value={weeklyTotal.toLocaleString()} icon="person_add" color="indigo" onClick={() => navigate('/admin/attendance')} />
         )}
         
         <div className="relative">
@@ -238,153 +238,79 @@ export default function AdvancedDashboard({ previewUnlocked = false }: AdvancedD
 
       {/* Main Analytics Section */}
       <div className="grid grid-cols-1 xl:grid-cols-3 gap-6">
-        {/* Growth Trends Chart */}
+        {/* Weekly Attendance Chart */}
         <div className="xl:col-span-2 bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 p-5 sm:p-6 shadow-sm relative overflow-hidden">
           {isBasicPlan && <LockedOverlay message="Performance Roadmap" plan="ADVANCED" />}
           <div className="flex flex-col sm:flex-row sm:items-center justify-between mb-8 gap-4">
              <div>
-               <h4 className="text-lg font-bold text-slate-900 dark:text-white">Performance Roadmap</h4>
-               <p className="text-xs text-slate-500">Revenue and membership growth velocity</p>
+               <h4 className="text-lg font-bold text-slate-900 dark:text-white">Attendance Trend (Last 7 Days)</h4>
+               <p className="text-xs text-slate-500">Daily check-ins from your actual attendance records</p>
              </div>
-             <div className="flex items-center gap-4">
-               <div className="flex items-center gap-2 font-bold text-[10px] text-slate-400"><div className="size-2 bg-primary-default rounded-full" /> REVENUE</div>
-               <div className="flex items-center gap-2 font-bold text-[10px] text-slate-400"><div className="size-2 bg-blue-400 rounded-full" /> MEMBERS</div>
+             <div className="text-[11px] font-bold text-slate-500">
+               Total: <span className="text-slate-900 dark:text-white">{weeklyTotal}</span> check-ins
              </div>
           </div>
           
           <div className="h-64 sm:h-72 flex flex-col relative">
              <div className="flex-1 flex items-end justify-between px-2 sm:px-4 border-b border-dashed border-slate-100 dark:border-slate-800 pb-1">
-                {[45, 60, 55, 80, 75, 90, 85].map((h, i) => (
+                {weeklyCheckins.map((count, i) => {
+                  const h = Math.max(Math.round((count / weeklyMax) * 100), count > 0 ? 8 : 3);
+                  return (
                   <div key={i} className="w-8 sm:w-12 bg-primary-default/10 rounded-t-lg relative group transition-all" style={{ height: `${h}%` }}>
-                    <div className="absolute bottom-0 w-full bg-primary-default rounded-t-lg scale-x-75 opacity-40 group-hover:opacity-100 transition-all" style={{ height: `${h-25}%` }} />
+                    <div className="absolute bottom-0 w-full bg-primary-default rounded-t-lg scale-x-75 opacity-60 group-hover:opacity-100 transition-all" style={{ height: `${h}%` }} />
+                    <span className="absolute -top-6 left-1/2 -translate-x-1/2 text-[10px] font-bold text-slate-500">{count}</span>
                   </div>
-                ))}
+                )})}
              </div>
              <div className="flex justify-between mt-3 text-[10px] font-bold text-slate-400 px-2 uppercase">
-                {['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'].map(d => <span key={d}>{d}</span>)}
+                {dayLabels.map(d => <span key={d}>{d}</span>)}
              </div>
           </div>
 
           <div className="grid grid-cols-3 gap-4 mt-8">
              <div className="p-3 bg-slate-50 dark:bg-slate-800/50 rounded-xl border border-slate-100 dark:border-slate-800">
-                <p className="text-[10px] font-bold text-slate-400 uppercase mb-1">Avg. LTV</p>
-                <p className="text-base sm:text-lg font-black text-slate-900 dark:text-white">{isBasicPlan ? 'BDT ----' : 'BDT 8.5K'}</p>
+                <p className="text-[10px] font-bold text-slate-400 uppercase mb-1">Busiest Day</p>
+                <p className="text-base sm:text-lg font-black text-slate-900 dark:text-white">{busiestDay}</p>
              </div>
              <div className="p-3 bg-slate-50 dark:bg-slate-800/50 rounded-xl border border-slate-100 dark:border-slate-800">
-                <p className="text-[10px] font-bold text-slate-400 uppercase mb-1">CAC</p>
-                <p className="text-base sm:text-lg font-black text-slate-900 dark:text-white">{isBasicPlan ? 'BDT ---' : 'BDT 420'}</p>
+                <p className="text-[10px] font-bold text-slate-400 uppercase mb-1">Peak Count</p>
+                <p className="text-base sm:text-lg font-black text-slate-900 dark:text-white">{weeklyMax}</p>
              </div>
              <div className="p-3 bg-slate-50 dark:bg-slate-800/50 rounded-xl border border-slate-100 dark:border-slate-800">
-                <p className="text-[10px] font-bold text-slate-400 uppercase mb-1">Net Growth</p>
-                <p className={`text-base sm:text-lg font-black ${isBasicPlan ? 'text-slate-300' : 'text-emerald-600'}`}>{isBasicPlan ? '+ --.-%' : '+24.5%'}</p>
+                <p className="text-[10px] font-bold text-slate-400 uppercase mb-1">Today Share</p>
+                <p className="text-base sm:text-lg font-black text-emerald-600">{todayShare}%</p>
              </div>
           </div>
         </div>
 
-        {/* Smart Actions & AI Insights */}
+        {/* Smart Actions */}
         <div className="space-y-6">
           <div className="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 p-5 sm:p-6 shadow-sm relative overflow-hidden">
             {isBasicPlan && <LockedOverlay message="Smart Action Center" plan="ADVANCED" />}
              <h4 className="text-lg font-bold text-slate-900 dark:text-white mb-4">Action Center</h4>
              <div className="space-y-4">
-                <SmartAlert type="urgent" title="Expiry Alert" desc="12 members expiring in 48h." action="Automate SMS" />
-                <SmartAlert type="opportunity" title="Retention Win" desc="5 members reached 30 sessions." action="Send Gift" />
-                <SmartAlert type="info" title="Revenue Insight" desc="New 'Elite' plan is converting at 15%." action="See Data" />
+                <SmartAlert type="urgent" title="Expiry Alert" desc="12 members expiring in 48h." action="Review Members" onAction={() => navigate('/admin/members')} />
+                <SmartAlert type="opportunity" title="Retention Win" desc="5 members reached 30 sessions." action="Open Campaigns" onAction={() => navigate('/admin/notifications')} />
+                <SmartAlert type="info" title="Revenue Insight" desc="New Advanced plan is converting at 15%." action="See Data" onAction={() => navigate('/admin/analytics')} />
              </div>
           </div>
 
-          <div className="bg-gradient-to-br from-indigo-600 to-primary-default rounded-2xl p-6 text-white shadow-xl shadow-primary-default/20 relative overflow-hidden group">
-            {isBasicPlan && <LockedOverlay message="AI Growth Insights" plan="PREMIUM" />}
-            <div className="absolute top-0 right-0 p-4 opacity-10 group-hover:opacity-20 transition-opacity">
-               <span className="material-symbols-outlined text-6xl">auto_awesome</span>
+          <div className="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 p-6 shadow-sm relative overflow-hidden">
+            {isBasicPlan && <LockedOverlay message="Workflow Shortcuts" plan="ADVANCED" />}
+            <h4 className="font-bold text-sm uppercase tracking-wider text-slate-700 dark:text-slate-200 mb-4">Workflow Shortcuts</h4>
+            <div className="space-y-3">
+              <button onClick={() => navigate('/admin/members')} className="w-full py-3 bg-slate-900 dark:bg-slate-800 text-white font-black text-[10px] uppercase tracking-widest rounded-xl hover:brightness-110 transition-all shadow-md active:scale-95">
+                Review Expiring Members
+              </button>
+              <button onClick={() => navigate('/admin/payments')} className="w-full py-3 bg-primary-default text-white font-black text-[10px] uppercase tracking-widest rounded-xl hover:brightness-110 transition-all shadow-md active:scale-95">
+                Collect Due Payments
+              </button>
+              <button onClick={() => navigate('/admin/staff')} className="w-full py-3 border border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-200 font-black text-[10px] uppercase tracking-widest rounded-xl hover:bg-slate-50 dark:hover:bg-slate-800 transition-all active:scale-95">
+                Open Staff Schedule
+              </button>
             </div>
-             <div className="flex items-center gap-2 mb-3">
-               <span className="material-symbols-outlined text-lg">psychology</span>
-               <h4 className="font-bold text-sm uppercase tracking-wider">Strategic Recommendation</h4>
-             </div>
-             <p className="text-xs sm:text-sm opacity-90 leading-relaxed mb-6 font-medium">
-               High traffic detected on Friday evenings. Suggest adding a "Power HIIT" class at 7PM to increase capacity by 20% and member satisfaction.
-             </p>
-             <button className="w-full py-3 bg-white text-primary-default font-black text-[10px] uppercase tracking-widest rounded-xl hover:bg-slate-50 transition-all shadow-md active:scale-95">
-               Apply to Schedule
-             </button>
           </div>
         </div>
-      </div>
-
-      {/* Operational Grid */}
-      <div className="grid grid-cols-1 xl:grid-cols-2 gap-6">
-         {/* Peak Hours Heatmap */}
-         <div className="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 p-5 sm:p-6 shadow-sm overflow-hidden relative">
-            {isBasicPlan && <LockedOverlay message="Peak Visitor Analytics" plan="PREMIUM" />}
-            <div className="flex items-center justify-between mb-6">
-               <div>
-                  <h4 className="text-lg font-bold text-slate-900 dark:text-white">Peak Visitor Heatmap</h4>
-                  <p className="text-[10px] text-slate-500 uppercase font-black">Capacity Utilization</p>
-               </div>
-               <div className="flex gap-1.5">
-                  {[1, 2, 3, 4].map(i => <div key={i} className={`size-3 rounded-sm bg-primary-default opacity-${i*20}`} />)}
-               </div>
-            </div>
-            
-            <div className="overflow-x-auto pb-2">
-               <div className="min-w-[450px]">
-                  <div className="grid grid-cols-8 gap-2 mb-3">
-                     <div />
-                     {days.map(d => <div key={d} className="text-[10px] font-black text-slate-400 text-center uppercase tracking-tighter">{d}</div>)}
-                  </div>
-                  {hours.map(h => (
-                    <div key={h} className="grid grid-cols-8 gap-2 mb-2">
-                       <div className="text-[9px] font-black text-slate-400 flex items-center">{h}</div>
-                       {days.map(d => {
-                          const intensity = Math.floor(Math.random() * 5);
-                          return (
-                             <div key={d} className={`h-8 rounded-lg bg-primary-default transition-all hover:scale-110 cursor-pointer opacity-${intensity === 0 ? '5' : intensity * 20} shadow-sm border border-black/5`} />
-                          );
-                       })}
-                    </div>
-                  ))}
-               </div>
-            </div>
-         </div>
-
-         {/* Trainer Leaderboard */}
-         <div className="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 p-5 sm:p-6 shadow-sm flex flex-col relative overflow-hidden">
-            {isBasicPlan && <LockedOverlay message="Trainer KPIs" plan="ADVANCED" />}
-            <div className="flex items-center justify-between mb-6">
-               <h4 className="text-lg font-bold text-slate-900 dark:text-white">Trainer Performance</h4>
-               <button className="text-[10px] font-black text-primary-default uppercase tracking-widest hover:underline">Commission Report</button>
-            </div>
-            <div className="space-y-5 flex-1">
-               {[
-                 { name: 'Sagar Ahmed', role: 'Head Coach', rating: 4.9, sessions: 142, growth: '+12%' },
-                 { name: 'Nasrin Sultana', role: 'Senior Trainer', rating: 4.8, sessions: 98, growth: '+5%' },
-                 { name: 'Arif Islam', role: 'Strength Coach', rating: 4.7, sessions: 112, growth: '+8%' }
-               ].map((t, i) => (
-                 <div key={i} className="flex items-center justify-between group p-3 rounded-xl hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-colors border border-transparent hover:border-slate-100 dark:hover:border-slate-800">
-                    <div className="flex items-center gap-3">
-                       <div className="size-10 rounded-full bg-primary-default/10 text-primary-default flex items-center justify-center font-black text-sm border border-primary-default/20">
-                         {t.name.split(' ').map(n => n[0]).join('')}
-                       </div>
-                       <div className="min-w-0">
-                         <p className="text-sm font-bold text-slate-900 dark:text-white truncate">{t.name}</p>
-                         <p className="text-[9px] text-slate-500 font-black uppercase tracking-widest">{t.role}</p>
-                       </div>
-                    </div>
-                    <div className="flex items-center gap-6">
-                       <div className="text-right hidden sm:block">
-                         <p className="text-xs font-black text-slate-900 dark:text-white">{t.sessions} <span className="text-[9px] opacity-50">SESS</span></p>
-                         <div className="flex items-center justify-end gap-0.5">
-                            <span className="material-symbols-outlined text-[10px] text-amber-500">star</span>
-                            <span className="text-[10px] font-black text-slate-500">{t.rating}</span>
-                         </div>
-                       </div>
-                       <span className="text-xs font-black text-emerald-600 group-hover:scale-110 transition-transform">{t.growth}</span>
-                    </div>
-                 </div>
-               ))}
-            </div>
-         </div>
       </div>
 
       {/* Recent Check-ins (Shifted to bottom as operational log) */}

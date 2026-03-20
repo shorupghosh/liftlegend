@@ -2,10 +2,16 @@ import React, { useEffect, useState } from 'react';
 import { supabase } from '../lib/supabase';
 import { useAuth } from '../contexts/AuthContext';
 import { useToast } from '../components/ToastProvider';
+import { useDemoMode } from '../hooks/useDemoMode';
+import { useDemoData } from '../contexts/DemoDataContext';
+import { PLAN_DISPLAY, normalizeTier } from '../lib/planConfig';
+import { StatusBadge, toneFromStatus } from '../components/ui/StatusBadge';
 
 export default function GymSettings() {
   const { gymId, user } = useAuth();
   const { showToast } = useToast();
+  const { isDemoMode } = useDemoMode();
+  const { state: demoState } = useDemoData();
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [sendingReset, setSendingReset] = useState(false);
@@ -13,13 +19,34 @@ export default function GymSettings() {
   const [formData, setFormData] = useState({ name: '', contact_phone: '', address: '', logo_url: '' });
 
   useEffect(() => {
-    if (!gymId) return;
+    if (!gymId && !isDemoMode) return;
     fetchGym();
-  }, [gymId]);
+  }, [gymId, isDemoMode]);
 
   const fetchGym = async () => {
     setLoading(true);
     try {
+      if (isDemoMode) {
+        const demoGym = {
+          id: 'demo-gym-id',
+          name: demoState.gymName,
+          contact_phone: '+880 1712-345678',
+          branding: { address: 'Banani, Dhaka', logo_url: '' },
+          subscription_tier: 'PREMIUM',
+          status: 'ACTIVE',
+          next_billing_date: new Date(Date.now() + (23 * 24 * 60 * 60 * 1000)).toISOString(),
+        };
+        setGym(demoGym);
+        setFormData({
+          name: demoGym.name,
+          contact_phone: demoGym.contact_phone,
+          address: demoGym.branding.address,
+          logo_url: demoGym.branding.logo_url,
+        });
+        setLoading(false);
+        return;
+      }
+
       const { data, error } = await supabase
         .from('gyms')
         .select('id, name, contact_phone, branding, subscription_tier, status, next_billing_date')
@@ -42,6 +69,10 @@ export default function GymSettings() {
   };
 
   const handleSave = async () => {
+    if (isDemoMode) {
+      showToast('Settings are read-only in demo mode.', 'info');
+      return;
+    }
     if (!gymId) return;
     setSaving(true);
     try {
@@ -63,6 +94,10 @@ export default function GymSettings() {
   };
 
   const handlePasswordReset = async () => {
+    if (isDemoMode) {
+      showToast('Password reset is disabled in demo mode.', 'info');
+      return;
+    }
     if (!user?.email) return;
     setSendingReset(true);
     try {
@@ -79,6 +114,9 @@ export default function GymSettings() {
     }
   };
 
+  const normalizedTier = normalizeTier(gym?.subscription_tier || 'PREMIUM');
+  const planName = PLAN_DISPLAY[normalizedTier]?.name || 'Premium';
+
   if (loading) return (
     <div className="flex justify-center items-center h-40">
       <div className="size-10 border-4 border-primary-default border-t-transparent rounded-full animate-spin" />
@@ -92,9 +130,26 @@ export default function GymSettings() {
         <p className="text-slate-500 dark:text-slate-400 text-sm mt-1">Manage your gym profile, subscription, and account settings.</p>
       </div>
 
-      <div className="max-w-3xl space-y-6">
+      <div className="max-w-5xl space-y-6">
+        <section className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          <div className="bg-white dark:bg-slate-900 rounded-2xl p-5 shadow-sm border border-slate-200 dark:border-slate-800">
+            <p className="text-xs uppercase tracking-wider font-bold text-slate-500">Current Plan</p>
+            <p className="mt-2 text-lg font-black text-neutral-text dark:text-white">{planName}</p>
+          </div>
+          <div className="bg-white dark:bg-slate-900 rounded-2xl p-5 shadow-sm border border-slate-200 dark:border-slate-800">
+            <p className="text-xs uppercase tracking-wider font-bold text-slate-500">Gym Status</p>
+            <div className="mt-2">
+              <StatusBadge label={gym?.status || 'UNKNOWN'} tone={toneFromStatus(gym?.status)} />
+            </div>
+          </div>
+          <div className="bg-white dark:bg-slate-900 rounded-2xl p-5 shadow-sm border border-slate-200 dark:border-slate-800">
+            <p className="text-xs uppercase tracking-wider font-bold text-slate-500">Support</p>
+            <p className="mt-2 text-sm font-semibold text-neutral-text dark:text-white">WhatsApp and phone onboarding available</p>
+          </div>
+        </section>
+
         {/* Gym Profile */}
-        <section className="bg-white dark:bg-slate-900 rounded-xl p-6 shadow-sm border border-slate-200 dark:border-slate-800">
+        <section className="bg-white dark:bg-slate-900 rounded-2xl p-6 shadow-sm border border-slate-200 dark:border-slate-800">
           <h2 className="text-lg font-bold mb-5 flex items-center gap-2 text-neutral-text dark:text-white">
             <span className="material-symbols-outlined text-primary-default">domain</span> Gym Profile
           </h2>
@@ -137,7 +192,7 @@ export default function GymSettings() {
         </section>
 
         {/* Account & Security */}
-        <section className="bg-white dark:bg-slate-900 rounded-xl p-6 shadow-sm border border-slate-200 dark:border-slate-800">
+        <section className="bg-white dark:bg-slate-900 rounded-2xl p-6 shadow-sm border border-slate-200 dark:border-slate-800">
           <h2 className="text-lg font-bold mb-5 flex items-center gap-2 text-neutral-text dark:text-white">
             <span className="material-symbols-outlined text-primary-default">lock</span> Security
           </h2>
@@ -162,16 +217,12 @@ export default function GymSettings() {
         </section>
 
         {/* Subscription Info */}
-        <section className="bg-white dark:bg-slate-900 rounded-xl p-6 shadow-sm border border-slate-200 dark:border-slate-800">
+        <section className="bg-white dark:bg-slate-900 rounded-2xl p-6 shadow-sm border border-slate-200 dark:border-slate-800">
           <div className="flex items-center justify-between mb-5">
             <h2 className="text-lg font-bold flex items-center gap-2 text-neutral-text dark:text-white">
               <span className="material-symbols-outlined text-primary-default">credit_card</span> Subscription
             </h2>
-            <span className={`px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wider ${gym?.status === 'ACTIVE' ? 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400' :
-              gym?.status === 'LOCKED' ? 'bg-red-100 text-red-700' : 'bg-amber-100 text-amber-700'
-              }`}>
-              {gym?.status || 'Unknown'}
-            </span>
+            <StatusBadge label={gym?.status || 'UNKNOWN'} tone={toneFromStatus(gym?.status)} />
           </div>
           <div className="flex flex-col md:flex-row md:items-center justify-between p-4 bg-slate-50 dark:bg-slate-800/50 rounded-xl border border-slate-200 dark:border-slate-800 gap-4">
             <div className="flex items-center gap-4">
@@ -179,7 +230,7 @@ export default function GymSettings() {
                 <span className="material-symbols-outlined">workspace_premium</span>
               </div>
               <div>
-                <p className="font-bold text-neutral-text dark:text-white">{gym?.subscription_tier || 'FREE'} Plan</p>
+                <p className="font-bold text-neutral-text dark:text-white">{planName} Plan</p>
                 <p className="text-slate-500 text-sm">
                   {gym?.next_billing_date ? `Next billing: ${new Date(gym.next_billing_date).toLocaleDateString()}` : 'No billing date set'}
                 </p>

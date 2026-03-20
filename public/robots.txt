@@ -1,0 +1,13 @@
+User-agent: *
+Allow: /
+Allow: /login
+Allow: /book-demo
+
+# Block authenticated dashboard routes from crawlers
+Disallow: /admin/
+Disallow: /super-admin/
+Disallow: /setup
+Disallow: /subscription-locked
+Disallow: /demo
+
+Sitemap: https://liftlegend.com/sitemap.xml

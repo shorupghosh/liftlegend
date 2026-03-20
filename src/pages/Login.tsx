@@ -9,6 +9,7 @@ const Login: React.FC = () => {
     const { user, userRole, gymStatus, loading: authLoading, onboardingCompleted } = useAuth();
     const [searchParams] = useSearchParams();
     const [isSignUp, setIsSignUp] = useState(searchParams.get('signup') === 'true');
+    const selectedPlan = searchParams.get('plan');
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
     const [confirmPassword, setConfirmPassword] = useState('');
@@ -71,6 +72,7 @@ const Login: React.FC = () => {
                         gym_name: gymName.trim(),
                         address: gymAddress.trim(),
                         capacity: memberCapacity,
+                        selected_plan_tier: selectedPlan || 'ADVANCED',
                     },
                 },
             });
@@ -149,7 +151,7 @@ const Login: React.FC = () => {
                         </p>
                         {isSignUp && (
                             <div className="mt-4 inline-flex items-center px-3 py-1 rounded-full bg-blue-50 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300 text-sm font-medium border border-blue-200 dark:border-blue-800">
-                                You'll start on Advanced Plan (Trial)
+                                {selectedPlan ? `Selected plan: ${selectedPlan}` : "You'll start on Advanced Plan (Trial)"}
                             </div>
                         )}
                     </div>
@@ -176,27 +178,30 @@ const Login: React.FC = () => {
                                         required={isSignUp}
                                         value={gymName}
                                         onChange={(e) => setGymName(e.target.value)}
+                                        autoComplete="organization"
                                         className="w-full px-4 py-3 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-slate-900 dark:text-white rounded-xl focus:ring-2 focus:ring-primary-default/20 focus:border-primary-default outline-none transition-all"
-                                        placeholder="Awesome Gym"
+                                        placeholder="LiftZone Fitness"
                                     />
                                 </div>
                                 <div className="space-y-2">
-                                    <label htmlFor="login-gym-address" className="text-sm font-medium text-slate-700 dark:text-slate-300">Gym Address (Optional)</label>
+                                    <label htmlFor="login-gym-address" className="text-sm font-medium text-slate-700 dark:text-slate-300">Gym Location (Optional)</label>
                                     <input
                                         id="login-gym-address"
                                         type="text"
                                         value={gymAddress}
                                         onChange={(e) => setGymAddress(e.target.value)}
+                                        autoComplete="street-address"
                                         className="w-full px-4 py-3 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-slate-900 dark:text-white rounded-xl focus:ring-2 focus:ring-primary-default/20 focus:border-primary-default outline-none transition-all"
-                                        placeholder="123 Fitness St"
+                                        placeholder="Banani, Dhaka"
                                     />
                                 </div>
                                 <div className="space-y-2">
-                                    <label htmlFor="login-gym-capacity" className="text-sm font-medium text-slate-700 dark:text-slate-300">Approx Member Size</label>
+                                    <label htmlFor="login-gym-capacity" className="text-sm font-medium text-slate-700 dark:text-slate-300">Current Member Count</label>
                                     <select
                                         id="login-gym-capacity"
                                         value={memberCapacity}
                                         onChange={(e) => setMemberCapacity(e.target.value)}
+                                        autoComplete="off"
                                         className="w-full px-4 py-3 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-slate-900 dark:text-white rounded-xl focus:ring-2 focus:ring-primary-default/20 focus:border-primary-default outline-none transition-all"
                                     >
                                         <option value="0-100">0 - 100 Members</option>
@@ -215,7 +220,8 @@ const Login: React.FC = () => {
                                     id="login-email"
                                     type="email"
                                     required
-                                    autoComplete={isSignUp ? "new-password" : "email"}
+                                    autoComplete="email"
+                                    name="email"
                                     value={email}
                                     onChange={(e) => setEmail(e.target.value)}
                                     className="w-full pl-10 pr-4 py-3 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-slate-900 dark:text-white rounded-xl focus:ring-2 focus:ring-primary-default/20 focus:border-primary-default outline-none transition-all"
@@ -234,6 +240,7 @@ const Login: React.FC = () => {
                                     required
                                     minLength={6}
                                     autoComplete={isSignUp ? "new-password" : "current-password"}
+                                    name="password"
                                     value={password}
                                     onChange={(e) => setPassword(e.target.value)}
                                     className="w-full pl-10 pr-12 py-3 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-slate-900 dark:text-white rounded-xl focus:ring-2 focus:ring-primary-default/20 focus:border-primary-default outline-none transition-all"

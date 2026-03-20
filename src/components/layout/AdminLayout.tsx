@@ -186,14 +186,18 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
                     {/* More button */}
                     <button
                         onClick={() => setMoreMenuOpen(!moreMenuOpen)}
-                        className={`flex flex-col items-center justify-center gap-1 transition-colors relative ${
+                        className={`flex flex-col items-center justify-center gap-1 transition-colors relative touch-manipulation w-full h-full min-h-[64px] ${
                             moreMenuOpen ? 'text-primary-default' : 'text-slate-400 dark:text-slate-500'
                         }`}
+                        aria-label="Toggle more menu"
                     >
                         <span className="material-symbols-outlined text-2xl">
                             {moreMenuOpen ? 'close' : 'more_horiz'}
                         </span>
                         <span className="text-[10px] font-bold tracking-tight">More</span>
+                        {moreMenuOpen && (
+                            <div className="absolute top-0 left-1/2 -translate-x-1/2 w-10 h-0.5 bg-primary-default rounded-full" />
+                        )}
                     </button>
                 </div>
 

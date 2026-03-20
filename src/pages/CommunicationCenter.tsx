@@ -49,6 +49,24 @@ export default function CommunicationCenter() {
     }
   };
 
+  const handleQuickRenew = async (notification: NotificationItem) => {
+    await markRead(notification.id);
+    if (!notification.related_member_id) {
+      return;
+    }
+    navigate(`/admin/payments?memberId=${notification.related_member_id}`);
+  };
+
+  const handleCopyReminder = async (notification: NotificationItem) => {
+    const text = `Reminder from your gym: ${notification.message}`;
+    try {
+      await navigator.clipboard.writeText(text);
+      await markRead(notification.id);
+    } catch {
+      await markRead(notification.id);
+    }
+  };
+
   return (
     <div className="space-y-6 p-6 lg:p-8">
       <div className="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
@@ -108,8 +126,23 @@ export default function CommunicationCenter() {
 
       <div className="overflow-hidden rounded-xl border border-slate-200 bg-white shadow-sm dark:border-slate-800 dark:bg-slate-900">
         {loading ? (
-          <div className="flex justify-center py-12">
-            <div className="size-8 animate-spin rounded-full border-4 border-primary-default border-t-transparent" />
+          <div className="divide-y divide-slate-100 dark:divide-slate-800">
+            {Array.from({ length: 4 }).map((_, i) => (
+              <div key={i} className="flex animate-pulse items-start gap-4 p-5">
+                <div className="size-11 rounded-full bg-slate-100 dark:bg-slate-800" />
+                <div className="flex-1 space-y-3">
+                  <div className="flex gap-2">
+                    <div className="h-4 w-32 rounded bg-slate-100 dark:bg-slate-800" />
+                    <div className="h-4 w-36 rounded-full bg-slate-50 dark:bg-slate-900" />
+                  </div>
+                  <div className="h-3 w-3/4 rounded bg-slate-50 dark:bg-slate-900" />
+                  <div className="flex gap-2 pt-1">
+                    <div className="h-8 w-24 rounded-lg bg-slate-50 dark:bg-slate-900" />
+                    <div className="h-8 w-24 rounded-lg bg-slate-50 dark:bg-slate-900" />
+                  </div>
+                </div>
+              </div>
+            ))}
           </div>
         ) : filteredNotifications.length === 0 ? (
           <div className="p-12 text-center text-slate-500">
@@ -119,10 +152,8 @@ export default function CommunicationCenter() {
         ) : (
           <div className="divide-y divide-slate-100 dark:divide-slate-800">
             {filteredNotifications.map((notification) => (
-              <button
+              <div
                 key={notification.id}
-                type="button"
-                onClick={() => handleNotificationClick(notification)}
                 className={`flex w-full items-start gap-4 p-5 text-left transition-colors ${
                   notification.is_read
                     ? 'bg-white hover:bg-slate-50 dark:bg-slate-900 dark:hover:bg-slate-800/40'
@@ -145,8 +176,33 @@ export default function CommunicationCenter() {
                     <span>{formatRelativeTime(notification.created_at)}</span>
                     {notification.related_member_id && <span>Open member</span>}
                   </div>
+                  <div className="mt-3 flex flex-wrap gap-2">
+                    <button
+                      type="button"
+                      onClick={() => handleNotificationClick(notification)}
+                      className="inline-flex h-9 items-center rounded-lg border border-slate-200 px-3 text-[11px] font-black uppercase tracking-widest text-slate-600 transition-colors hover:bg-slate-100 dark:border-slate-700 dark:text-slate-300 dark:hover:bg-slate-800"
+                    >
+                      Open Member
+                    </button>
+                    {(notification.type === 'expiry' || notification.type === 'payment_due') && notification.related_member_id && (
+                      <button
+                        type="button"
+                        onClick={() => handleQuickRenew(notification)}
+                        className="inline-flex h-9 items-center rounded-lg bg-primary-default px-3 text-[11px] font-black uppercase tracking-widest text-white transition-colors hover:brightness-110"
+                      >
+                        Renew Now
+                      </button>
+                    )}
+                    <button
+                      type="button"
+                      onClick={() => handleCopyReminder(notification)}
+                      className="inline-flex h-9 items-center rounded-lg bg-slate-900 px-3 text-[11px] font-black uppercase tracking-widest text-white transition-colors hover:bg-slate-800 dark:bg-white dark:text-slate-900 dark:hover:bg-slate-100"
+                    >
+                      Copy Reminder
+                    </button>
+                  </div>
                 </div>
-              </button>
+              </div>
             ))}
           </div>
         )}

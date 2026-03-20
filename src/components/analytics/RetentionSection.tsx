@@ -82,6 +82,11 @@ function ReminderActionModal({
     return null;
   }
 
+  const whatsappPhone = state.member.phone ? state.member.phone.replace(/\D/g, '') : '';
+  const whatsappTarget = whatsappPhone
+    ? `https://wa.me/${whatsappPhone.startsWith('88') ? whatsappPhone : `88${whatsappPhone}`}?text=${encodeURIComponent(state.message)}`
+    : null;
+
   return (
     <div className="fixed inset-0 z-[200] flex items-center justify-center bg-black/70 p-4 backdrop-blur-sm" onClick={onClose}>
       <div
@@ -133,7 +138,7 @@ function ReminderActionModal({
           </div>
 
           <div className="rounded-2xl border border-dashed border-slate-300 px-4 py-3 text-sm text-slate-500 dark:border-slate-700 dark:text-slate-400">
-            V1 uses a manual contact workflow. Copy the message, then contact the member via phone, WhatsApp, or SMS.
+            Use these actions to run real follow-up: copy reminder, open WhatsApp, then log response in member notes.
           </div>
 
           <div className="flex flex-col gap-3 sm:flex-row">
@@ -151,6 +156,16 @@ function ReminderActionModal({
             >
               Copy Reminder
             </button>
+            {whatsappTarget && (
+              <a
+                href={whatsappTarget}
+                target="_blank"
+                rel="noreferrer"
+                className="flex h-12 flex-1 items-center justify-center rounded-2xl bg-emerald-600 text-sm font-black uppercase tracking-widest text-white transition-all hover:bg-emerald-500"
+              >
+                Open WhatsApp
+              </a>
+            )}
           </div>
         </div>
       </div>

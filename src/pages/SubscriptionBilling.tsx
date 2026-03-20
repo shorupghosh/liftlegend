@@ -3,6 +3,7 @@ import { supabase } from '../lib/supabase';
 import { useAuth } from '../contexts/AuthContext';
 import { usePlan } from '../contexts/PlanContext';
 import { useToast } from '../components/ToastProvider';
+import { StatusBadge, toneFromStatus } from '../components/ui/StatusBadge';
 import {
   PLAN_DISPLAY,
   PLAN_LIMITS,
@@ -26,20 +27,12 @@ interface GymSubscription {
   location_limit: number;
 }
 
-const STATUS_COLORS: Record<string, string> = {
-  ACTIVE: 'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400',
-  TRIAL: 'bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400',
-  EXPIRED: 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400',
-  SUSPENDED: 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400',
-  PAST_DUE: 'bg-orange-100 text-orange-700 dark:bg-orange-900/30 dark:text-orange-400',
-};
-
 // The 3 purchasable plan keys
 const PURCHASABLE_TIERS: SubscriptionTier[] = ['BASIC', 'ADVANCED', 'PREMIUM'];
 
 export default function SubscriptionBilling() {
   const { gymId } = useAuth();
-  const { usage, usageLoaded, refreshUsage, tier: currentTier } = usePlan();
+  const { usage, usageLoaded, tier: currentTier } = usePlan();
   const { showToast } = useToast();
 
   const [gym, setGym] = useState<GymSubscription | null>(null);
@@ -95,29 +88,41 @@ export default function SubscriptionBilling() {
     setSubmitting(true);
     try {
       const targetTier = changePlanModal.targetTier;
-      const targetLimits = PLAN_LIMITS[targetTier];
+      const currentPlan = PLAN_DISPLAY[currentTier]?.name || currentTier;
+      const targetPlan = PLAN_DISPLAY[targetTier]?.name || targetTier;
+      const requestSubject = `Plan change request: ${currentPlan} -> ${targetPlan}`;
 
-      const { error } = await supabase.from('gyms').update({
-        subscription_tier: targetTier,
-        status: 'ACTIVE',
-        member_limit: targetLimits.maxMembers,
-        staff_limit: targetLimits.maxStaff,
-        location_limit: targetLimits.maxLocations,
-        next_billing_date: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString(),
-      }).eq('id', gymId);
+      const { error } = await supabase.from('support_tickets').insert({
+        gym_id: gymId,
+        subject: requestSubject,
+        category: 'BILLING',
+        priority: 'MEDIUM',
+        status: 'OPEN',
+      });
 
-      if (error) throw error;
+      if (error) {
+        if (error.code === '42P01') {
+          const existingRequests = JSON.parse(window.localStorage.getItem('liftlegend_plan_change_requests') || '[]');
+          window.localStorage.setItem('liftlegend_plan_change_requests', JSON.stringify([
+            {
+              gym_id: gymId,
+              subject: requestSubject,
+              current_tier: currentTier,
+              target_tier: targetTier,
+              created_at: new Date().toISOString(),
+            },
+            ...existingRequests,
+          ]));
+        } else {
+          throw error;
+        }
+      }
 
-      showToast(`Plan changed to ${PLAN_DISPLAY[targetTier]?.name || targetTier} successfully!`, 'success');
+      showToast(`Plan change request sent for ${targetPlan}. Our team will confirm billing before activation.`, 'success');
       setChangePlanModal({ open: false, targetTier: null });
-      await fetchGym();
-      await refreshUsage();
-
-      // Force reload to update auth context with new tier everywhere
-      setTimeout(() => window.location.reload(), 800);
     } catch (err: any) {
       console.error('Failed to change plan:', err);
-      showToast(err.message || 'Failed to change plan.', 'error');
+      showToast(err.message || 'Failed to submit plan change request.', 'error');
     } finally {
       setSubmitting(false);
     }
@@ -159,9 +164,7 @@ export default function SubscriptionBilling() {
               <div>
                 <div className="flex items-center gap-3 mb-1">
                   <h2 className="text-2xl font-black tracking-tight">{planDisplay.name}</h2>
-                  <span className={`px-2.5 py-0.5 rounded-full text-[10px] font-black uppercase tracking-widest ${STATUS_COLORS[gymStatus] || 'bg-slate-500/20 text-slate-300'}`}>
-                    {gymStatus}
-                  </span>
+                  <StatusBadge label={gymStatus} tone={toneFromStatus(gymStatus)} />
                 </div>
                 <p className="text-white/60 text-sm">{planDisplay.description}</p>
                 <div className="flex flex-wrap items-center gap-4 mt-3 text-sm">
@@ -361,7 +364,7 @@ export default function SubscriptionBilling() {
                         : 'bg-slate-200 dark:bg-slate-700 text-slate-700 dark:text-slate-300 hover:bg-slate-300 dark:hover:bg-slate-600'
                     }`}
                   >
-                    {isCurrent ? '✓ Current Plan' : upgrading ? 'Upgrade' : 'Downgrade'}
+                    {isCurrent ? '✓ Current Plan' : upgrading ? 'Request Upgrade' : 'Request Downgrade'}
                   </button>
                 </div>
               );
@@ -373,9 +376,9 @@ export default function SubscriptionBilling() {
         <div className="rounded-2xl border border-emerald-200 bg-emerald-50 dark:border-emerald-900/40 dark:bg-emerald-950/20 p-5 flex items-start gap-3">
           <span className="material-symbols-outlined text-emerald-600 dark:text-emerald-400 text-xl mt-0.5 shrink-0">info</span>
           <div>
-            <p className="text-sm font-semibold text-emerald-900 dark:text-emerald-200">No payment gateway in V1</p>
+            <p className="text-sm font-semibold text-emerald-900 dark:text-emerald-200">Online billing is coming soon</p>
             <p className="text-sm text-emerald-700 dark:text-emerald-300 mt-0.5">
-              Plan changes take effect immediately. In a future update, payment processing will be integrated. For now, changes are handled directly.
+              For now, plan changes are submitted as requests and handled manually by our team while payment method capture and invoice history are being finalized.
             </p>
           </div>
         </div>

@@ -4,6 +4,9 @@ import { useAuth } from '../contexts/AuthContext';
 import { useRealtimeSubscription } from '../hooks/useRealtimeSubscription';
 import { useToast } from '../components/ToastProvider';
 import { formatBdt } from '../lib/currency';
+import { useDemoMode } from '../hooks/useDemoMode';
+import { useDemoData } from '../contexts/DemoDataContext';
+import { EmptyState } from '../components/ui/EmptyState';
 
 interface ConfirmModal {
   isOpen: boolean;
@@ -15,6 +18,8 @@ interface ConfirmModal {
 export default function MembershipPlans() {
   const { gymId } = useAuth();
   const { showToast } = useToast();
+  const { isDemoMode } = useDemoMode();
+  const { state: demoState } = useDemoData();
   const [plans, setPlans] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [showModal, setShowModal] = useState(false);
@@ -31,9 +36,15 @@ export default function MembershipPlans() {
   });
 
   const fetchPlans = useCallback(async () => {
-    if (!gymId) return;
+    if (!gymId && !isDemoMode) return;
     setLoading(true);
     try {
+      if (isDemoMode) {
+        setPlans(demoState.plans);
+        setLoading(false);
+        return;
+      }
+
       const { data, error } = await supabase
         .from('plans')
         .select('id, name, price, duration_days, duration_type, description, is_popular')
@@ -47,21 +58,29 @@ export default function MembershipPlans() {
     } finally {
       setLoading(false);
     }
-  }, [gymId, showToast]);
+  }, [demoState.plans, gymId, isDemoMode, showToast]);
 
   useEffect(() => {
     fetchPlans();
   }, [fetchPlans]);
 
-  useRealtimeSubscription({ table: 'plans', gymId, onChange: fetchPlans });
+  useRealtimeSubscription({ table: 'plans', gymId, onChange: fetchPlans, enabled: !isDemoMode });
 
   const openCreateModal = () => {
+    if (isDemoMode) {
+      showToast('Plan editing is disabled in demo mode.', 'info');
+      return;
+    }
     setEditingPlan(null);
     setFormData({ name: '', price: '', duration_days: '30', duration_type: 'DAYS', description: '', is_popular: false });
     setShowModal(true);
   };
 
   const openEditModal = (plan: any) => {
+    if (isDemoMode) {
+      showToast('Plan editing is disabled in demo mode.', 'info');
+      return;
+    }
     setEditingPlan(plan);
     setFormData({
       name: plan.name,
@@ -81,6 +100,10 @@ export default function MembershipPlans() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (isDemoMode) {
+      showToast('Plan changes are disabled in demo mode.', 'info');
+      return;
+    }
     if (!gymId) return;
     setIsSubmitting(true);
     try {
@@ -115,6 +138,10 @@ export default function MembershipPlans() {
   };
 
   const handleDelete = (plan: any) => {
+    if (isDemoMode) {
+      showToast('Plan deletion is disabled in demo mode.', 'info');
+      return;
+    }
     setConfirmModal({
       isOpen: true,
       title: 'Delete Plan',
@@ -177,14 +204,13 @@ export default function MembershipPlans() {
           <div className="size-10 border-4 border-primary-default border-t-transparent rounded-full animate-spin" />
         </div>
       ) : plans.length === 0 ? (
-        <div className="flex flex-col items-center justify-center py-16 text-center">
-          <span className="material-symbols-outlined text-6xl text-slate-300 mb-4">card_membership</span>
-          <h3 className="text-xl font-bold mb-2 text-neutral-text dark:text-white">No Plans Yet</h3>
-          <p className="text-slate-500 mb-6">Create your first membership plan to get started.</p>
-          <button onClick={openCreateModal} className="flex items-center gap-2 bg-primary-default text-white px-6 py-3 rounded-xl font-bold">
-            <span className="material-symbols-outlined">add</span> Create Plan
-          </button>
-        </div>
+        <EmptyState
+          icon="card_membership"
+          title="No plans yet"
+          description="Create your first membership plan so renewals and payment tracking stay consistent."
+          actionLabel="Create plan"
+          onAction={openCreateModal}
+        />
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
           {plans.map((plan, index) => {

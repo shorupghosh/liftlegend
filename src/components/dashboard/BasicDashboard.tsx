@@ -8,24 +8,31 @@ import { formatBdt } from '../../lib/currency';
 import { PageLoader } from '../ui/PageLoader';
 import { EmptyState } from '../ui/EmptyState';
 
-const StatCard = React.memo(({ label, value, icon, color, onClick }: {
+const StatCard = React.memo(({ label, value, icon, color, onClick, isLoading }: {
   label: string;
   value: string | number;
   icon: string;
   color: string;
   onClick?: () => void;
+  isLoading?: boolean;
 }) => (
   <div 
     onClick={onClick}
-    className={`bg-white dark:bg-slate-900 p-5 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm transition-all ${onClick ? 'cursor-pointer hover:shadow-md' : ''}`}
+    className={`bg-white dark:bg-slate-900 p-5 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm transition-all ${onClick && !isLoading ? 'cursor-pointer hover:shadow-md' : ''} ${isLoading ? 'animate-pulse' : ''}`}
   >
     <div className="flex justify-between items-start mb-2">
       <div className={`p-2 bg-${color}-50 dark:bg-${color}-900/20 rounded-lg text-${color}-600 dark:text-${color}-400`}>
         <span className="material-symbols-outlined">{icon}</span>
       </div>
     </div>
-    <p className="text-slate-500 dark:text-slate-400 text-sm font-medium">{label}</p>
-    <h3 className="text-2xl font-bold mt-1 text-slate-900 dark:text-white">{value}</h3>
+    <div className="space-y-1">
+      <p className="text-slate-500 dark:text-slate-400 text-xs sm:text-sm font-medium">{label}</p>
+      {isLoading ? (
+        <div className="h-8 bg-slate-100 dark:bg-slate-800 rounded w-2/3" />
+      ) : (
+        <h3 className="text-xl sm:text-2xl font-bold text-slate-900 dark:text-white truncate">{value}</h3>
+      )}
+    </div>
   </div>
 ));
 
@@ -73,7 +80,7 @@ export default function BasicDashboard() {
       ] = await Promise.all([
         supabase.from('members').select('id', { count: 'exact', head: true }).eq('gym_id', gymId),
         supabase.from('members').select('id', { count: 'exact', head: true }).eq('gym_id', gymId).eq('status', 'ACTIVE'),
-        supabase.from('members').select('id', { count: 'exact', head: true }).eq('gym_id', gymId).eq('status', 'ACTIVE').lte('end_date', nextWeek.toISOString()),
+        supabase.from('members').select('id', { count: 'exact', head: true }).eq('gym_id', gymId).eq('status', 'ACTIVE').lte('expiry_date', nextWeek.toISOString()),
         supabase.rpc('get_current_month_revenue', { gym_id_input: gymId }),
         supabase.from('members').select('id, full_name, phone, status, join_date').eq('gym_id', gymId).order('join_date', { ascending: false }).limit(5)
       ]);
@@ -97,26 +104,22 @@ export default function BasicDashboard() {
     fetchBasicData();
   }, [fetchBasicData]);
 
-  if (loading) {
-     return <PageLoader label="Loading your overview..." />;
-  }
-
   return (
-    <div className="p-4 sm:p-6 lg:p-8 space-y-8 animate-in fade-in duration-300">
+    <div className="p-4 sm:p-6 lg:p-8 space-y-6 sm:space-y-8 animate-in fade-in duration-300">
       <div>
-        <h1 className="text-2xl sm:text-3xl font-bold text-slate-900 dark:text-white">
-          Basic Dashboard
+        <h1 className="text-2xl sm:text-3xl font-display font-extrabold text-slate-900 dark:text-white tracking-tight">
+          Dashboard
         </h1>
-        <p className="text-slate-500 max-w-lg mt-1">
+        <p className="text-slate-500 dark:text-slate-400 max-w-lg mt-1 text-sm">
           A lightweight view of your core operations and metrics. 
         </p>
       </div>
 
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-        <StatCard label="Total Members" value={metrics.totalMembers.toLocaleString()} icon="group" color="slate" onClick={() => navigate('/admin/members')} />
-        <StatCard label="Active Members" value={metrics.activeMembers.toLocaleString()} icon="how_to_reg" color="emerald" onClick={() => navigate('/admin/members?status=ACTIVE')} />
-        <StatCard label="Expiring Soon" value={metrics.expiringSoon.toLocaleString()} icon="warning" color="amber" onClick={() => navigate('/admin/members?status=EXPIRING_SOON')} />
-        <StatCard label="Revenue (Month)" value={formatBdt(metrics.revenue)} icon="payments" color="blue" onClick={() => navigate('/admin/payments')} />
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-3 sm:gap-4">
+        <StatCard isLoading={loading} label="Total Members" value={metrics.totalMembers.toLocaleString()} icon="group" color="slate" onClick={() => navigate('/admin/members')} />
+        <StatCard isLoading={loading} label="Active Members" value={metrics.activeMembers.toLocaleString()} icon="how_to_reg" color="emerald" onClick={() => navigate('/admin/members?status=ACTIVE')} />
+        <StatCard isLoading={loading} label="Expiring Soon" value={metrics.expiringSoon.toLocaleString()} icon="warning" color="amber" onClick={() => navigate('/admin/members?status=EXPIRING_SOON')} />
+        <StatCard isLoading={loading} label="Revenue (Month)" value={formatBdt(metrics.revenue)} icon="payments" color="blue" onClick={() => navigate('/admin/payments')} />
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">

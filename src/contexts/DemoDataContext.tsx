@@ -1,14 +1,15 @@
 import React, { createContext, useContext, useMemo, useState } from 'react';
 import type { Attendance, Member, Payment } from '../types';
-import {
-  createInitialDemoState,
-  DEMO_GYM,
+import type {
   DemoNotification,
   DemoStaffMember,
   DemoState,
-  getDemoMetrics,
+  DemoMetrics,
 } from '../lib/demoData';
 import { isDemoModeActive } from '../lib/demoUtils';
+
+// Heavy demo seed data is dynamically imported only when demo mode is active
+const loadDemoData = () => import('../lib/demoData');
 
 type InvitePayload = {
   email: string;
@@ -18,7 +19,7 @@ type InvitePayload = {
 type DemoDataContextValue = {
   isDemoMode: boolean;
   state: DemoState;
-  metrics: ReturnType<typeof getDemoMetrics>;
+  metrics: DemoMetrics;
   resetDemoData: () => void;
   addMember: (payload: Pick<Member, 'full_name' | 'email' | 'phone' | 'plan_id'>) => Member;
   updateMember: (memberId: string, payload: Partial<Member>) => Member | null;
@@ -38,12 +39,76 @@ const DemoDataContext = createContext<DemoDataContextValue | null>(null);
 const findPlanForMember = (state: DemoState, planId?: string) =>
   state.plans.find((plan) => plan.id === planId) ?? null;
 
+const DEMO_GYM_ID = 'demo-gym-id';
+
+// Empty state used when NOT in demo mode
+const EMPTY_STATE: DemoState = {
+  gymName: '',
+  plans: [],
+  members: [],
+  payments: [],
+  attendance: [],
+  staff: [],
+  notifications: [],
+};
+
+const emptyMetrics = { totalMembers: 0, activeMembers: 0, expiringSoon: 0, revenue: 0, todayCheckins: 0, retentionRate: 0, churnRisk: 0 };
+
 export function DemoDataProvider({ children }: { children: React.ReactNode }) {
-  const [state, setState] = useState<DemoState>(() => createInitialDemoState());
+  const [state, setState] = useState<DemoState>(EMPTY_STATE);
+  const [metricsCalc, setMetricsCalc] = useState<typeof emptyMetrics>(emptyMetrics);
+  const [dataLoaded, setDataLoaded] = useState(false);
   const isDemoMode = isDemoModeActive();
 
+  // Lazy-load demo seed data only when demo mode is active
+  React.useEffect(() => {
+    if (isDemoMode && !dataLoaded) {
+      const savedState = localStorage.getItem('demo_state');
+      if (savedState) {
+        try {
+          const parsed = JSON.parse(savedState);
+          setState(parsed);
+          loadDemoData().then(({ getDemoMetrics }) => {
+            setMetricsCalc(getDemoMetrics(parsed));
+          });
+          setDataLoaded(true);
+          return;
+        } catch (e) {
+          console.error('Failed to parse demo state from localStorage', e);
+        }
+      }
+
+      loadDemoData().then(({ createInitialDemoState, getDemoMetrics }) => {
+        const initial = createInitialDemoState();
+        setState(initial);
+        setMetricsCalc(getDemoMetrics(initial));
+        setDataLoaded(true);
+      });
+    }
+  }, [isDemoMode, dataLoaded]);
+
+  // Persist demo state to localStorage when it changes
+  React.useEffect(() => {
+    if (isDemoMode && dataLoaded) {
+      localStorage.setItem('demo_state', JSON.stringify(state));
+    }
+  }, [state, isDemoMode, dataLoaded]);
+
+  // Recalculate metrics when state changes (only in demo mode)
+  React.useEffect(() => {
+    if (isDemoMode && dataLoaded) {
+      loadDemoData().then(({ getDemoMetrics }) => {
+        setMetricsCalc(getDemoMetrics(state));
+      });
+    }
+  }, [state, isDemoMode, dataLoaded]);
+
   const resetDemoData = () => {
-    setState(createInitialDemoState());
+    loadDemoData().then(({ createInitialDemoState }) => {
+      const initial = createInitialDemoState();
+      setState(initial);
+      localStorage.removeItem('demo_state');
+    });
   };
 
   const addMember = (payload: Pick<Member, 'full_name' | 'email' | 'phone' | 'plan_id'>) => {
@@ -55,7 +120,7 @@ export function DemoDataProvider({ children }: { children: React.ReactNode }) {
       const today = new Date().toISOString();
       const member: Member = {
         id: memberId,
-        gym_id: DEMO_GYM.id,
+        gym_id: DEMO_GYM_ID,
         full_name: payload.full_name.trim(),
         email: payload.email || undefined,
         phone: payload.phone || undefined,
@@ -66,7 +131,7 @@ export function DemoDataProvider({ children }: { children: React.ReactNode }) {
           : undefined,
         status: 'ACTIVE',
         created_at: today,
-        qr_code_value: `DEMO:${DEMO_GYM.id}:${memberId}`,
+        qr_code_value: `DEMO:${DEMO_GYM_ID}:${memberId}`,
         qr_generated_at: today,
         plans: plan ? { name: plan.name, price: plan.price, duration_days: plan.duration_days } : undefined,
       };
@@ -131,7 +196,7 @@ export function DemoDataProvider({ children }: { children: React.ReactNode }) {
       }
       created = {
         id: `demo-payment-${Date.now()}`,
-        gym_id: DEMO_GYM.id,
+        gym_id: DEMO_GYM_ID,
         member_id: payload.member_id,
         plan_id: payload.plan_id,
         price_paid: payload.price_paid,
@@ -171,7 +236,7 @@ export function DemoDataProvider({ children }: { children: React.ReactNode }) {
       }
       created = {
         id: `demo-attendance-${Date.now()}`,
-        gym_id: DEMO_GYM.id,
+        gym_id: DEMO_GYM_ID,
         member_id: member.id,
         check_in_time: new Date().toISOString(),
         method,
@@ -251,7 +316,7 @@ export function DemoDataProvider({ children }: { children: React.ReactNode }) {
     () => ({
       isDemoMode,
       state,
-      metrics: getDemoMetrics(state),
+      metrics: metricsCalc,
       resetDemoData,
       addMember,
       updateMember,

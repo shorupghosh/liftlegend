@@ -1,10 +1,13 @@
-import React, { useEffect, useState } from 'react';
-import BasicDashboard from '../components/dashboard/BasicDashboard';
-import AdvancedDashboard from '../components/dashboard/AdvancedDashboard';
+import React, { lazy, Suspense, useEffect, useState } from 'react';
 import DashboardModeToggle from '../components/dashboard/DashboardModeToggle';
-import LockedAdvancedPreview from '../components/dashboard/LockedAdvancedPreview';
 import { useAuth } from '../contexts/AuthContext';
 import { usePlan } from '../contexts/PlanContext';
+import DashboardSkeleton from '../components/dashboard/DashboardSkeleton';
+
+// Lazy-load dashboard variants — user only loads the one they're viewing
+const BasicDashboard = lazy(() => import('../components/dashboard/BasicDashboard'));
+const AdvancedDashboard = lazy(() => import('../components/dashboard/AdvancedDashboard'));
+const LockedAdvancedPreview = lazy(() => import('../components/dashboard/LockedAdvancedPreview'));
 
 export default function AdminDashboard() {
   const { dashboardMode, setDashboardMode, onboardingCompleted } = useAuth();
@@ -56,7 +59,11 @@ export default function AdminDashboard() {
         <DashboardModeToggle mode={mode} userPlan={hasAdvanced ? 'pro' : 'basic'} onChange={handleModeChange} />
       </div>
 
-      <div className="max-w-full flex-1 p-4 sm:p-6 lg:p-8">{dashboardContent}</div>
+      <div className="max-w-full flex-1 p-4 sm:p-6 lg:p-8">
+        <Suspense fallback={<DashboardSkeleton />}>
+          {dashboardContent}
+        </Suspense>
+      </div>
     </div>
   );
 }

@@ -9,6 +9,7 @@ import InviteStaffModal from '../components/staff/InviteStaffModal';
 import EditStaffRoleModal from '../components/staff/EditStaffRoleModal';
 import { ConfirmModal } from '../components/ui/ConfirmModal';
 import { EmptyState } from '../components/ui/EmptyState';
+import { StatusBadge, toneFromRole, toneFromStatus } from '../components/ui/StatusBadge';
 import { useDemoData } from '../contexts/DemoDataContext';
 import { useDemoMode } from '../hooks/useDemoMode';
 import UsageLimitBanner, { UsageLimitGuard } from '../components/plan/UsageLimitBanner';
@@ -163,18 +164,6 @@ export default function StaffManagement() {
     ],
     [counts]
   );
-
-  const roleColors: Record<string, string> = {
-    OWNER: 'bg-purple-100 text-purple-700 dark:bg-purple-900/30 dark:text-purple-400',
-    MANAGER: 'bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400',
-    TRAINER: 'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400',
-  };
-
-  const statusColors: Record<string, string> = {
-    ACTIVE: 'bg-emerald-50 text-emerald-600 dark:bg-emerald-950/40 dark:text-emerald-300',
-    INVITED: 'bg-amber-50 text-amber-600 dark:bg-amber-950/40 dark:text-amber-300',
-    PENDING: 'bg-slate-100 text-slate-500 dark:bg-slate-800 dark:text-slate-300',
-  };
 
   const canManageStaffMember = (staff: StaffMember) => {
     if (!canManageTargetRole(userRole, staff.role)) {
@@ -449,13 +438,33 @@ export default function StaffManagement() {
             </thead>
             <tbody className="divide-y divide-slate-100 dark:divide-slate-800">
               {loading ? (
-                <tr>
-                  <td colSpan={5} className="py-12 text-center">
-                    <div className="flex justify-center">
-                      <div className="size-8 animate-spin rounded-full border-4 border-primary-default border-t-transparent" />
-                    </div>
-                  </td>
-                </tr>
+                Array.from({ length: 3 }).map((_, i) => (
+                  <tr key={i} className="animate-pulse">
+                    <td className="px-5 py-4">
+                      <div className="flex items-center gap-3">
+                        <div className="size-9 rounded-full bg-slate-200 dark:bg-slate-800" />
+                        <div className="space-y-2">
+                          <div className="h-3 w-24 rounded bg-slate-200 dark:bg-slate-800" />
+                          <div className="h-2 w-16 rounded bg-slate-100 dark:bg-slate-900" />
+                        </div>
+                      </div>
+                    </td>
+                    <td className="px-5 py-4">
+                      <div className="h-5 w-16 rounded-full bg-slate-200 dark:bg-slate-800" />
+                    </td>
+                    <td className="hidden px-5 py-4 md:table-cell">
+                      <div className="h-5 w-16 rounded-full bg-slate-100 dark:bg-slate-900" />
+                    </td>
+                    <td className="hidden px-5 py-4 md:table-cell">
+                      <div className="h-3 w-16 rounded bg-slate-200 dark:bg-slate-800" />
+                    </td>
+                    <td className="px-5 py-4">
+                      <div className="flex justify-end gap-2">
+                        <div className="h-8 w-20 rounded-lg bg-slate-200 dark:bg-slate-800" />
+                      </div>
+                    </td>
+                  </tr>
+                ))
               ) : staffList.length === 0 ? (
                 <tr>
                   <td colSpan={5} className="p-6">
@@ -489,14 +498,10 @@ export default function StaffManagement() {
                         </div>
                       </td>
                       <td className="px-5 py-4">
-                        <span className={`inline-flex items-center rounded-full px-2.5 py-1 text-xs font-bold ${roleColors[staff.role] || 'bg-slate-100 text-slate-600'}`}>
-                          {staff.role}
-                        </span>
+                        <StatusBadge label={staff.role} tone={toneFromRole(staff.role)} />
                       </td>
                       <td className="hidden px-5 py-4 md:table-cell">
-                        <span className={`inline-flex items-center rounded-full px-2.5 py-1 text-xs font-bold ${statusColors[staff.status] || 'bg-slate-100 text-slate-600'}`}>
-                          {staff.status}
-                        </span>
+                        <StatusBadge label={staff.status} tone={toneFromStatus(staff.status)} />
                       </td>
                       <td className="hidden px-5 py-4 text-sm text-slate-500 md:table-cell">
                         {new Date(staff.joined_at || staff.created_at).toLocaleDateString()}

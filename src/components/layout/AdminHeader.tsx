@@ -26,6 +26,7 @@ export const AdminHeader: React.FC<AdminHeaderProps> = ({
   const { isDemoMode } = useDemoMode();
   const { trialDaysLeft } = usePlan();
   const [notificationsOpen, setNotificationsOpen] = useState(false);
+  const [searchQuery, setSearchQuery] = useState('');
   const notificationsRef = useRef<HTMLDivElement>(null);
   const location = useLocation();
   const navigate = useNavigate();
@@ -67,6 +68,39 @@ export const AdminHeader: React.FC<AdminHeaderProps> = ({
     await markAllRead();
   };
 
+  const handleSearch = (e: React.FormEvent) => {
+    e.preventDefault();
+    const q = searchQuery.trim().toLowerCase();
+    if (!q) return;
+
+    const normalized = q.replace(/\s+/g, '');
+    const quickMap: Array<{ keywords: string[]; path: string }> = [
+      { keywords: ['dashboard', 'home'], path: '/admin' },
+      { keywords: ['member', 'members'], path: '/admin/members' },
+      { keywords: ['payment', 'payments', 'dues', 'cash'], path: '/admin/payments' },
+      { keywords: ['attendance', 'checkin', 'check-in', 'qr'], path: '/admin/attendance' },
+      { keywords: ['plan', 'plans', 'membership'], path: '/admin/plans' },
+      { keywords: ['staff', 'trainer', 'team'], path: '/admin/staff' },
+      { keywords: ['analytics', 'report', 'insight'], path: '/admin/analytics' },
+      { keywords: ['settings', 'subscription', 'billing'], path: '/admin/settings' },
+      { keywords: ['notification', 'notifications', 'alert'], path: '/admin/notifications' },
+    ];
+
+    const mapped = quickMap.find((item) => item.keywords.some((keyword) => normalized.includes(keyword.replace(/\s+/g, ''))));
+    if (mapped) {
+      navigate(mapped.path);
+      return;
+    }
+
+    const navMatch = navItems.find((item) => item.label.toLowerCase().includes(q));
+    if (navMatch) {
+      navigate(navMatch.path);
+      return;
+    }
+
+    navigate('/admin/members');
+  };
+
   return (
     <header className="sticky top-0 z-30 flex h-14 shrink-0 items-center gap-3 border-b border-slate-200 bg-white px-3 dark:border-slate-800 dark:bg-slate-900 sm:h-16 sm:px-4 lg:px-8">
       <button
@@ -78,13 +112,16 @@ export const AdminHeader: React.FC<AdminHeaderProps> = ({
 
       {!location.pathname.startsWith('/admin/members') && (
         <div className="hidden max-w-md flex-1 sm:flex">
-          <div className="flex w-full items-center rounded-xl border border-slate-200 bg-slate-50 px-3 py-2 dark:border-slate-700 dark:bg-slate-800">
+          <form onSubmit={handleSearch} className="flex w-full items-center rounded-xl border border-slate-200 bg-slate-50 px-3 py-2 dark:border-slate-700 dark:bg-slate-800">
             <span className="material-symbols-outlined mr-2 text-lg text-slate-400">search</span>
             <input
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
               className="flex-1 border-none bg-transparent text-sm text-neutral-text outline-none placeholder:text-slate-400 focus:ring-0 dark:text-white"
-              placeholder="Search anything..."
+              placeholder="Search pages, reports, members..."
+              aria-label="Global search"
             />
-          </div>
+          </form>
         </div>
       )}
 

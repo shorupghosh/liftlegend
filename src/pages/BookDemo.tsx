@@ -5,19 +5,51 @@ export default function BookDemo() {
   const [form, setForm] = useState({ name: '', email: '', phone: '', gymName: '', message: '' });
   const [sent, setSent] = useState(false);
   const [sending, setSending] = useState(false);
+  const [leadRef, setLeadRef] = useState<string | null>(null);
+  const [submitError, setSubmitError] = useState<string | null>(null);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     setForm({ ...form, [e.target.name]: e.target.value });
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setSending(true);
-    // Simulate sending
-    setTimeout(() => {
+    setSubmitError(null);
+
+    try {
+      const timestamp = new Date().toISOString();
+      const reference = `LL-${Date.now().toString().slice(-6)}`;
+      const payload = {
+        ...form,
+        reference,
+        submitted_at: timestamp,
+        source: 'book-demo-page',
+      };
+
+      const existingLeads = JSON.parse(window.localStorage.getItem('liftlegend_demo_leads') || '[]');
+      window.localStorage.setItem('liftlegend_demo_leads', JSON.stringify([payload, ...existingLeads]));
+
+      const webhookUrl = import.meta.env.VITE_DEMO_LEAD_WEBHOOK_URL as string | undefined;
+      if (webhookUrl) {
+        const response = await fetch(webhookUrl, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(payload),
+        });
+        if (!response.ok) {
+          throw new Error('Lead webhook request failed.');
+        }
+      }
+
+      setLeadRef(reference);
       setSending(false);
       setSent(true);
-    }, 1500);
+    } catch (error) {
+      console.error('Failed to submit demo lead:', error);
+      setSending(false);
+      setSubmitError('Could not submit the request. Please contact support via phone or WhatsApp.');
+    }
   };
 
   return (
@@ -41,10 +73,10 @@ export default function BookDemo() {
           <div className="flex flex-col gap-6">
             <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-[#1978e5]/10 border border-[#1978e5]/20 text-[#1978e5] text-xs font-bold uppercase tracking-wider w-fit">
               <span className="material-symbols-outlined text-sm">event</span>
-              Free Demo Session
+              30-Minute Demo Session
             </div>
             <h1 className="text-3xl md:text-5xl font-black leading-tight tracking-tight text-slate-900 dark:text-white">
-              Book a <span className="text-[#1978e5]">Free Demo</span>
+              Book a <span className="text-[#1978e5]">30-Minute Demo</span>
             </h1>
             <p className="text-lg text-slate-600 dark:text-slate-400 leading-relaxed">
               See how LiftLegend can transform your gym management. Our team will walk you through every feature and answer all your questions.
@@ -75,8 +107,11 @@ export default function BookDemo() {
                 </div>
                 <h2 className="text-2xl font-bold text-slate-900 dark:text-white mb-3">Demo Request Sent!</h2>
                 <p className="text-slate-500 dark:text-slate-400 mb-8">
-                  We'll contact you within 24 hours to schedule your personalized demo session.
+                  Our team will call or message you to confirm a time.
                 </p>
+                {leadRef && (
+                  <p className="text-xs text-slate-400 mb-6">Reference: {leadRef}</p>
+                )}
                 <Link to="/" className="inline-flex items-center gap-2 px-6 py-3 bg-[#1978e5] text-white font-bold rounded-xl hover:bg-blue-600 transition-all">
                   <span className="material-symbols-outlined text-sm">home</span>
                   Back to Home
@@ -86,6 +121,11 @@ export default function BookDemo() {
               <form onSubmit={handleSubmit} className="p-8 space-y-5">
                 <h2 className="text-xl font-bold text-slate-900 dark:text-white mb-1">Fill in your details</h2>
                 <p className="text-sm text-slate-500 dark:text-slate-400 mb-4">We'll reach out to schedule your demo.</p>
+                {submitError && (
+                  <div className="rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
+                    {submitError}
+                  </div>
+                )}
 
                 <div className="space-y-2">
                   <label htmlFor="demo-name" className="text-sm font-medium text-slate-700 dark:text-slate-300">Your Name *</label>
@@ -129,7 +169,7 @@ export default function BookDemo() {
                   ) : (
                     <>
                       <span className="material-symbols-outlined text-sm">send</span>
-                      Send & Book Demo
+                      Book a 30-Minute Demo for Your Gym
                     </>
                   )}
                 </button>

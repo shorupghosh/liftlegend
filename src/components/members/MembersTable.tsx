@@ -4,6 +4,7 @@ import { Member } from '../../types';
 import { AlertBadge } from '../ui/AlertBadge';
 import { EmptyState } from '../ui/EmptyState';
 import { getMemberExpiryAlert } from '../../lib/memberExpiry';
+import { StatusBadge, toneFromStatus } from '../ui/StatusBadge';
 
 interface MembersTableProps {
   loading: boolean;
@@ -72,7 +73,7 @@ export const MembersTable: React.FC<MembersTableProps> = ({
                         </div>
                         <div>
                           <Link to={`/admin/members/${member.id}`} className="font-semibold text-sm text-primary-default hover:underline block">{member.full_name}</Link>
-                          <span className="text-xs text-slate-500">{member.email || member.phone || '—'}</span>
+                          <span className="text-xs text-slate-500">{member.email || member.phone || '-'}</span>
                         </div>
                       </div>
                     </td>
@@ -91,21 +92,10 @@ export const MembersTable: React.FC<MembersTableProps> = ({
                         : new Date(member.created_at).toLocaleDateString()}
                     </td>
                     <td className="px-5 py-4 text-sm text-slate-500 hidden lg:table-cell">
-                      {member.expiry_date
-                        ? new Date(member.expiry_date).toLocaleDateString()
-                        : <span className="text-xs text-slate-400">—</span>
-                      }
+                      {member.expiry_date ? new Date(member.expiry_date).toLocaleDateString() : <span className="text-xs text-slate-400">-</span>}
                     </td>
                     <td className="px-5 py-4">
-                      {member.status === 'ACTIVE' ? (
-                        <span className="inline-flex items-center gap-1.5 rounded-full bg-emerald-50 dark:bg-emerald-900/20 px-2.5 py-1 text-xs font-semibold text-emerald-700 dark:text-emerald-400">
-                          <span className="size-1.5 rounded-full bg-emerald-500" />Active
-                        </span>
-                      ) : (
-                        <span className="inline-flex items-center gap-1.5 rounded-full bg-red-50 dark:bg-red-900/20 px-2.5 py-1 text-xs font-semibold text-red-700 dark:text-red-400">
-                          <span className="size-1.5 rounded-full bg-red-500" />{member.status}
-                        </span>
-                      )}
+                      <StatusBadge label={member.status || 'UNKNOWN'} tone={toneFromStatus(member.status)} />
                     </td>
                     <td className="px-5 py-4">
                       <AlertBadge variant={alert.variant}>{alert.label}</AlertBadge>
@@ -127,19 +117,19 @@ export const MembersTable: React.FC<MembersTableProps> = ({
           </tbody>
         </table>
       </div>
-      {/* Footer — Pagination */}
       <div className="flex items-center justify-between px-5 py-3 bg-slate-50 dark:bg-slate-800/50 border-t border-slate-200 dark:border-slate-800">
         <span className="text-sm text-slate-500">
           {searchQuery ? `${members.length} results` : `${totalCount} total members`}
         </span>
         {totalPages > 1 && (
           <div className="flex items-center gap-2">
-            <button onClick={() => setPage(p => Math.max(1, p - 1))} disabled={page === 1} className="px-3 py-1.5 text-xs font-bold bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-lg disabled:opacity-40 hover:bg-slate-50 transition-colors">← Prev</button>
+            <button onClick={() => setPage(p => Math.max(1, p - 1))} disabled={page === 1} className="px-3 py-1.5 text-xs font-bold bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-lg disabled:opacity-40 hover:bg-slate-50 transition-colors">Prev</button>
             <span className="text-xs text-slate-500 font-medium">Page {page} of {totalPages}</span>
-            <button onClick={() => setPage(p => Math.min(totalPages, p + 1))} disabled={page === totalPages} className="px-3 py-1.5 text-xs font-bold bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-lg disabled:opacity-40 hover:bg-slate-50 transition-colors">Next →</button>
+            <button onClick={() => setPage(p => Math.min(totalPages, p + 1))} disabled={page === totalPages} className="px-3 py-1.5 text-xs font-bold bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-lg disabled:opacity-40 hover:bg-slate-50 transition-colors">Next</button>
           </div>
         )}
       </div>
     </div>
   );
-}
+};
+

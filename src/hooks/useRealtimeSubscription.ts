@@ -1,4 +1,4 @@
-import { useEffect } from 'react';
+import { useEffect, useRef } from 'react';
 import { supabase } from '../lib/supabase';
 import type { RealtimePostgresChangesPayload } from '@supabase/supabase-js';
 import { isDemoModeActive } from '../lib/demoUtils';
@@ -13,6 +13,8 @@ interface UseRealtimeOptions {
     onDelete?: (payload: RealtimePostgresChangesPayload<any>) => void;
     onChange?: () => void; // Simple refetch callback
     enabled?: boolean;
+    /** Debounce delay in ms for onChange (default 300ms) */
+    debounceMs?: number;
 }
 
 /**
@@ -27,7 +29,10 @@ export function useRealtimeSubscription({
     onDelete,
     onChange,
     enabled = true,
+    debounceMs = 300,
 }: UseRealtimeOptions) {
+    const debounceTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
     useEffect(() => {
         if (!gymId || !enabled || isDemoModeActive()) return;
 
@@ -56,9 +61,15 @@ export function useRealtimeSubscription({
                         onDelete(payload);
                     }
 
-                    // Always call onChange for simple refetch pattern
+                    // Debounced onChange to prevent rapid-fire refetches
                     if (onChange) {
-                        onChange();
+                        if (debounceTimerRef.current) {
+                            clearTimeout(debounceTimerRef.current);
+                        }
+                        debounceTimerRef.current = setTimeout(() => {
+                            onChange();
+                            debounceTimerRef.current = null;
+                        }, debounceMs);
                     }
                 }
             )
@@ -69,7 +80,10 @@ export function useRealtimeSubscription({
             });
 
         return () => {
+            if (debounceTimerRef.current) {
+                clearTimeout(debounceTimerRef.current);
+            }
             supabase.removeChannel(channel);
         };
-    }, [table, gymId, enabled, onInsert, onUpdate, onDelete, onChange]);
+    }, [table, gymId, enabled, onInsert, onUpdate, onDelete, onChange, debounceMs]);
 }
