@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom';
 import { usePlan } from '../../contexts/PlanContext';
 import PlanBadge from '../plan/PlanBadge';
 import type { PlanFeature } from '../../lib/planConfig';
+import { BrandLogo } from '../BrandLogo';
 
 interface AdminSidebarProps {
   sidebarOpen: boolean;
@@ -56,12 +57,10 @@ export const AdminSidebar: React.FC<AdminSidebarProps> = ({
       >
           {/* Logo area */}
           <div className="h-16 flex items-center px-4 border-b border-slate-200 dark:border-slate-800 shrink-0">
-              <div className="flex items-center gap-2">
-                  <img src="/logo.svg" alt="LiftLegend" className="h-9 w-auto" />
+                  <BrandLogo className="h-11 w-auto" variant="auto" />
                   <span className="text-[10px] font-bold text-primary-default uppercase tracking-widest bg-primary-default/10 px-2 py-0.5 rounded-full">
                       {isSuperAdmin ? 'PLATFORM' : 'GYM OS'}
                   </span>
-              </div>
               {/* Close button on mobile */}
               <button
                   onClick={() => setSidebarOpen(false)}
@@ -82,7 +81,8 @@ export const AdminSidebar: React.FC<AdminSidebarProps> = ({
                       <button
                         key={item.path}
                         onClick={() => openUpgradeModal(gatedFeature)}
-                        className="flex items-center gap-3 px-3 py-3 rounded-xl text-sm font-medium transition-all duration-200 group min-h-[44px] w-full text-left text-slate-400 dark:text-slate-600 hover:bg-slate-50 dark:hover:bg-slate-800/50 hover:text-slate-500 dark:hover:text-slate-400"
+                        title="Requires Premium Plan"
+                        className="flex items-center gap-3 px-3 py-3 rounded-xl text-sm font-medium transition-all duration-200 group min-h-[44px] w-full text-left text-slate-400 dark:text-slate-600 opacity-50 cursor-not-allowed"
                       >
                         <span className="material-symbols-outlined text-xl text-slate-300 dark:text-slate-600">{item.icon}</span>
                         <span className="flex-1">{item.label}</span>

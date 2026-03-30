@@ -241,3 +241,10 @@ export async function markAllNotificationsRead(gymId: string) {
     throw error;
   }
 }
+
+export async function toggleNotificationRead(notificationId: string, currentStatus: boolean) {
+  const { error } = await supabase.from('notifications').update({ is_read: !currentStatus }).eq('id', notificationId);
+  if (error) {
+    throw error;
+  }
+}

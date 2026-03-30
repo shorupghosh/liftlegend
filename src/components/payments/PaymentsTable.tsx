@@ -14,6 +14,7 @@ interface PaymentsTableProps {
   ITEMS_PER_PAGE: number;
   getPaymentDueAmount: (payment: Payment) => number;
   onViewReceipt: (payment: Payment) => void;
+  onDownloadReceipt: (payment: Payment) => void;
 }
 
 function methodLabel(method: string) {
@@ -33,6 +34,7 @@ export const PaymentsTable: React.FC<PaymentsTableProps> = ({
   ITEMS_PER_PAGE,
   getPaymentDueAmount,
   onViewReceipt,
+  onDownloadReceipt,
 }) => {
   return (
     <>
@@ -85,15 +87,24 @@ export const PaymentsTable: React.FC<PaymentsTableProps> = ({
                 <div className="mt-2 flex items-center justify-between">
                   <StatusBadge
                     label={dueAmount > 0 ? `Due BDT ${dueAmount.toLocaleString()}` : 'Paid in full'}
-                    variant={dueAmount > 0 ? 'warning' : 'success'}
+                    tone={dueAmount > 0 ? 'warning' : 'success'}
                   />
-                  <button
-                    type="button"
-                    onClick={() => onViewReceipt(payment)}
-                    className="text-xs font-bold text-slate-600 underline decoration-slate-300 underline-offset-2 hover:text-slate-900 dark:text-slate-300 dark:decoration-slate-700 dark:hover:text-white"
-                  >
-                    Receipt
-                  </button>
+                  <div className="flex gap-3">
+                    <button
+                      type="button"
+                      onClick={() => onViewReceipt(payment)}
+                      className="text-xs font-bold text-slate-600 underline decoration-slate-300 underline-offset-2 hover:text-slate-900 dark:text-slate-300 dark:decoration-slate-700 dark:hover:text-white"
+                    >
+                      View
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => onDownloadReceipt(payment)}
+                      className="text-xs font-bold text-slate-600 underline decoration-slate-300 underline-offset-2 hover:text-slate-900 dark:text-slate-300 dark:decoration-slate-700 dark:hover:text-white"
+                    >
+                      Download
+                    </button>
+                  </div>
                 </div>
               </div>
             );
@@ -126,9 +137,9 @@ export const PaymentsTable: React.FC<PaymentsTableProps> = ({
         </div>
       </div>
 
-      <div className="hidden overflow-hidden rounded-xl border border-slate-200 bg-white shadow-sm dark:border-slate-800 dark:bg-slate-900 sm:block">
+      <div className="overflow-hidden rounded-xl border border-slate-200 bg-white shadow-sm dark:border-slate-800 dark:bg-slate-900">
         <div className="overflow-x-auto">
-          <table className="w-full border-collapse text-left">
+          <table className="w-full border-collapse text-left min-w-[800px] whitespace-nowrap">
             <thead>
               <tr className="border-b border-slate-200 bg-slate-50 dark:border-slate-800 dark:bg-slate-800/50">
                 <th className="px-5 py-3.5 text-xs font-bold uppercase tracking-wider text-slate-500">Date/Time</th>
@@ -193,7 +204,7 @@ export const PaymentsTable: React.FC<PaymentsTableProps> = ({
                       <td className="px-5 py-4">
                         <StatusBadge
                           label={dueAmount > 0 ? `Due BDT ${dueAmount.toLocaleString()}` : 'Paid in full'}
-                          variant={dueAmount > 0 ? 'warning' : 'success'}
+                          tone={dueAmount > 0 ? 'warning' : 'success'}
                         />
                       </td>
                       <td className="hidden px-5 py-4 md:table-cell">
@@ -202,13 +213,22 @@ export const PaymentsTable: React.FC<PaymentsTableProps> = ({
                         </span>
                       </td>
                       <td className="px-5 py-4">
-                        <button
-                          type="button"
-                          onClick={() => onViewReceipt(payment)}
-                          className="text-xs font-bold text-slate-600 underline decoration-slate-300 underline-offset-2 hover:text-slate-900 dark:text-slate-300 dark:decoration-slate-700 dark:hover:text-white"
-                        >
-                          View
-                        </button>
+                        <div className="flex gap-3">
+                          <button
+                            type="button"
+                            onClick={() => onViewReceipt(payment)}
+                            className="text-xs font-bold text-slate-600 underline decoration-slate-300 underline-offset-2 hover:text-slate-900 dark:text-slate-300 dark:decoration-slate-700 dark:hover:text-white"
+                          >
+                            View
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => onDownloadReceipt(payment)}
+                            className="text-xs font-bold text-slate-600 underline decoration-slate-300 underline-offset-2 hover:text-slate-900 dark:text-slate-300 dark:decoration-slate-700 dark:hover:text-white"
+                          >
+                            Download
+                          </button>
+                        </div>
                       </td>
                     </tr>
                   );

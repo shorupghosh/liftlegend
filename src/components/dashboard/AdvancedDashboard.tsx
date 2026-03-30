@@ -40,22 +40,22 @@ const StatCard = React.memo(({ label, value, trend, icon, color, onClick }: {
 
 const SmartAlert = React.memo(({ type, title, desc, action, onAction }: { type: 'urgent' | 'opportunity' | 'info'; title: string; desc: string; action: string; onAction?: () => void }) => {
   const colors = {
-    urgent: 'border-red-500/20 bg-red-500/5 text-red-600',
-    opportunity: 'border-blue-500/20 bg-blue-500/5 text-blue-600',
-    info: 'border-slate-500/20 bg-slate-500/5 text-slate-600'
+    urgent: 'border-red-500/40 bg-red-500/10 text-red-700 dark:text-red-400',
+    opportunity: 'border-blue-500/40 bg-blue-500/10 text-blue-700 dark:text-blue-400',
+    info: 'border-slate-500/40 bg-slate-500/10 text-slate-700 dark:text-slate-300'
   };
   return (
     <div className={`p-4 rounded-xl border-l-4 ${colors[type]} flex items-center justify-between gap-4 transition-all hover:brightness-95`}>
       <div className="flex items-center gap-3">
-        <span className="material-symbols-outlined text-xl">
+        <span className="material-symbols-outlined text-2xl">
           {type === 'urgent' ? 'warning' : type === 'opportunity' ? 'rocket_launch' : 'info'}
         </span>
         <div className="min-w-0">
-          <p className="text-sm font-bold truncate">{title}</p>
-          <p className="text-[10px] sm:text-xs opacity-70 truncate">{desc}</p>
+          <p className="text-base font-black truncate">{title}</p>
+          <p className="text-xs sm:text-sm opacity-90 truncate">{desc}</p>
         </div>
       </div>
-      <button onClick={onAction} className="text-[10px] font-black uppercase tracking-widest hover:underline shrink-0 text-primary-default">{action}</button>
+      <button onClick={onAction} className="text-xs font-black uppercase tracking-widest hover:underline shrink-0 text-primary-default dark:text-[#3b93ff]">{action}</button>
     </div>
   );
 });

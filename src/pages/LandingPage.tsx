@@ -4,6 +4,7 @@ import { APP_NAME, COMPANY_NAME, SUPPORT_EMAIL } from '../lib/branding';
 import { LandingPricing } from '../components/landing/LandingPricing';
 import { LandingFeatures } from '../components/landing/LandingFeatures';
 import { enterDemoMode } from '../lib/demoUtils';
+import { BrandLogo } from '../components/BrandLogo';
 
 /** Set page-level SEO meta tags on mount */
 function useLandingSEO() {
@@ -49,7 +50,7 @@ export default function LandingPage() {
         <header className="sticky top-0 z-50 w-full border-b border-slate-200 dark:border-slate-800 bg-white/80 dark:bg-[#111821]/80 backdrop-blur-md px-4 sm:px-6 md:px-20 py-3 sm:py-4">
           <div className="max-w-7xl mx-auto flex items-center justify-between">
             <div className="flex items-center gap-3">
-              <img src="/logo.svg" alt={APP_NAME} className="h-9 w-auto" fetchPriority="high" />
+              <BrandLogo className="h-11 w-auto" variant="auto" />
             </div>
             <nav className="hidden md:flex items-center gap-10">
               <a className="text-sm font-semibold hover:text-[#1978e5] transition-colors" href="#features">Features</a>
@@ -271,14 +272,16 @@ export default function LandingPage() {
           <div className="max-w-7xl mx-auto grid grid-cols-2 md:grid-cols-4 lg:grid-cols-5 gap-12">
             <div className="col-span-2">
               <div className="flex items-center gap-3 text-white mb-6">
-                <img src="/logo.svg" alt={APP_NAME} className="h-9 w-auto brightness-0 invert" />
+                <BrandLogo className="h-11 w-auto" variant="light" />
               </div>
               <h5 className="text-white font-bold mb-4">Powering the next generation of gyms in Bangladesh</h5>
               <p className="max-w-xs mb-8">LiftLegend helps gym owners simplify operations, improve member experience, and grow their business with modern management tools.</p>
               <div className="flex gap-4">
-                <a className="size-10 rounded-full bg-slate-800 flex items-center justify-center hover:bg-[#1978e5] transition-colors" href={`mailto:${SUPPORT_EMAIL}`} aria-label="Email support"><span className="material-symbols-outlined text-sm">mail</span></a>
-                <a className="size-10 rounded-full bg-slate-800 flex items-center justify-center hover:bg-[#1978e5] transition-colors text-sm font-bold" href="tel:+8801700000000" aria-label="Call support"><span className="material-symbols-outlined text-sm">call</span></a>
-                <a className="size-10 rounded-full bg-slate-800 flex items-center justify-center hover:bg-[#1978e5] transition-colors text-sm font-bold" href="https://wa.me/8801700000000" target="_blank" rel="noreferrer" aria-label="WhatsApp support"><span className="material-symbols-outlined text-sm">chat</span></a>
+                <a className="size-10 rounded-full bg-slate-800 flex items-center justify-center hover:bg-[#1978e5] transition-colors" href="https://www.facebook.com/Liftlegendgym/" target="_blank" rel="noreferrer" aria-label="Facebook">
+                  <svg className="w-5 h-5 text-white" fill="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                    <path fillRule="evenodd" d="M22 12c0-5.523-4.477-10-10-10S2 6.477 2 12c0 4.991 3.657 9.128 8.438 9.878v-6.987h-2.54V12h2.54V9.797c0-2.506 1.492-3.89 3.777-3.89 1.094 0 2.238.195 2.238.195v2.46h-1.26c-1.243 0-1.63.771-1.63 1.562V12h2.773l-.443 2.89h-2.33v6.988C18.343 21.128 22 16.991 22 12z" clipRule="evenodd" />
+                  </svg>
+                </a>
               </div>
             </div>
             <div>
@@ -294,8 +297,8 @@ export default function LandingPage() {
               <h5 className="text-white font-bold mb-6">Company</h5>
               <ul className="space-y-4 text-sm">
                 <li><a className="hover:text-[#1978e5] transition-colors" href={`mailto:${SUPPORT_EMAIL}`}>Contact Team</a></li>
-                <li><a className="hover:text-[#1978e5] transition-colors" href="tel:+8801700000000">Call Support</a></li>
-                <li><a className="hover:text-[#1978e5] transition-colors" href="https://wa.me/8801700000000" target="_blank" rel="noreferrer">WhatsApp Support</a></li>
+                <li><a className="hover:text-[#1978e5] transition-colors" href="tel:01756625762">Call Support</a></li>
+                <li><a className="hover:text-[#1978e5] transition-colors" href="https://wa.me/8801756625762" target="_blank" rel="noreferrer">WhatsApp Support</a></li>
                 <li><a className="hover:text-[#1978e5] transition-colors" href={`mailto:${SUPPORT_EMAIL}?subject=LiftLegend%20Privacy%20Question`}>Privacy</a></li>
               </ul>
             </div>
@@ -304,7 +307,7 @@ export default function LandingPage() {
               <ul className="space-y-4 text-sm">
                 <li className="flex items-center gap-2">
                   <span className="material-symbols-outlined text-sm">call</span>
-                  +880 1700-000000
+                  01756625762
                 </li>
                 <li className="flex items-center gap-2">
                   <span className="material-symbols-outlined text-sm">mail</span>
@@ -312,7 +315,7 @@ export default function LandingPage() {
                 </li>
                 <li className="flex items-center gap-2">
                   <span className="material-symbols-outlined text-sm">location_on</span>
-                  Gulshan-2, Dhaka
+                  Dhanmondi, Dhaka, Bangladesh, 1205
                 </li>
               </ul>
             </div>

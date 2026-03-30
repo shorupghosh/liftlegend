@@ -98,7 +98,8 @@ export const AdminHeader: React.FC<AdminHeaderProps> = ({
       return;
     }
 
-    navigate('/admin/members');
+    // If not a specific page, treat as a member search
+    navigate(`/admin/members?q=${encodeURIComponent(q)}`);
   };
 
   return (
@@ -110,7 +111,7 @@ export const AdminHeader: React.FC<AdminHeaderProps> = ({
         <span className="material-symbols-outlined">menu</span>
       </button>
 
-      {!location.pathname.startsWith('/admin/members') && (
+      {!['/admin/members', '/admin/staff', '/admin/attendance', '/admin/payments', '/admin/plans'].some(path => location.pathname.startsWith(path)) && (
         <div className="hidden max-w-md flex-1 sm:flex">
           <form onSubmit={handleSearch} className="flex w-full items-center rounded-xl border border-slate-200 bg-slate-50 px-3 py-2 dark:border-slate-700 dark:bg-slate-800">
             <span className="material-symbols-outlined mr-2 text-lg text-slate-400">search</span>
@@ -118,8 +119,8 @@ export const AdminHeader: React.FC<AdminHeaderProps> = ({
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               className="flex-1 border-none bg-transparent text-sm text-neutral-text outline-none placeholder:text-slate-400 focus:ring-0 dark:text-white"
-              placeholder="Search pages, reports, members..."
-              aria-label="Global search"
+              placeholder="Search or jump to... (Press Enter)"
+              aria-label="Global navigation search"
             />
           </form>
         </div>

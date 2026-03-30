@@ -450,6 +450,15 @@ export default function PaymentManagement() {
 
       if (error) throw error;
 
+      await supabase.from('notifications').insert([{
+        gym_id: gymId,
+        type: 'payment_due',
+        title: 'Payment Recorded',
+        message: `A payment of BDT ${formData.price_paid} was recorded.`,
+        related_member_id: formData.member_id,
+        is_read: false
+      }]);
+
       const newPayment = data as Payment;
       setPayments((current) => [newPayment, ...current]);
 
@@ -586,35 +595,82 @@ export default function PaymentManagement() {
         ITEMS_PER_PAGE={ITEMS_PER_PAGE}
         getPaymentDueAmount={getPaymentDueAmount}
         onViewReceipt={handleViewReceipt}
+        onDownloadReceipt={(payment) => downloadReceipt(prepareReceipt(payment))}
       />
 
       {latestReceipt && (
-        <div className="rounded-xl border border-slate-200 bg-white p-4 shadow-sm dark:border-slate-800 dark:bg-slate-900">
-          <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-            <div>
-              <p className="text-xs font-black uppercase tracking-widest text-slate-500">Latest receipt</p>
-              <p className="mt-1 text-sm font-bold text-neutral-text dark:text-white">
-                {latestReceipt.member_name} | {latestReceipt.plan_name}
-              </p>
-              <p className="text-xs text-slate-500">
-                Paid {formatCurrency(latestReceipt.amount_paid)} | Due {formatCurrency(latestReceipt.amount_due)}
-              </p>
+        <div className="fixed inset-0 z-[100] flex items-center justify-center bg-slate-900/50 p-4 backdrop-blur-sm">
+          <div className="w-full max-w-md rounded-2xl bg-white p-6 shadow-2xl dark:bg-slate-900">
+            <div className="flex items-center justify-between mb-4">
+              <h3 className="text-lg font-bold text-neutral-text dark:text-white">Receipt Details</h3>
+              <button
+                type="button"
+                onClick={() => setLatestReceipt(null)}
+                className="rounded-lg p-2 text-slate-400 hover:bg-slate-100 hover:text-slate-600 dark:hover:bg-slate-800 dark:hover:text-slate-300"
+              >
+                <span className="material-symbols-outlined">close</span>
+              </button>
             </div>
-            <div className="flex gap-2">
-              <button
-                type="button"
-                onClick={() => downloadReceipt(latestReceipt)}
-                className="inline-flex h-10 items-center rounded-xl border border-slate-200 px-3 text-xs font-bold text-slate-600 transition-colors hover:bg-slate-100 dark:border-slate-700 dark:text-slate-300 dark:hover:bg-slate-800"
-              >
-                Download Receipt
-              </button>
-              <button
-                type="button"
-                onClick={handleShareReceipt}
-                className="inline-flex h-10 items-center rounded-xl bg-emerald-600 px-3 text-xs font-bold text-white transition-colors hover:bg-emerald-500"
-              >
-                Share on WhatsApp
-              </button>
+            
+            <div className="space-y-4">
+              <div className="rounded-xl border border-slate-200 bg-slate-50 p-4 dark:border-slate-800 dark:bg-slate-800/50">
+                <p className="text-xs font-black uppercase tracking-widest text-slate-500 mb-2">Member Information</p>
+                <p className="text-base font-bold text-neutral-text dark:text-white">
+                  {latestReceipt.member_name}
+                </p>
+                <p className="text-sm text-slate-500">
+                  {latestReceipt.member_phone || 'No phone number'}
+                </p>
+              </div>
+
+              <div className="rounded-xl border border-slate-200 bg-slate-50 p-4 dark:border-slate-800 dark:bg-slate-800/50">
+                <p className="text-xs font-black uppercase tracking-widest text-slate-500 mb-2">Payment Details</p>
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <p className="text-xs text-slate-500">Plan</p>
+                    <p className="font-semibold text-neutral-text dark:text-white">{latestReceipt.plan_name}</p>
+                  </div>
+                  <div>
+                    <p className="text-xs text-slate-500">Method</p>
+                    <p className="font-semibold text-neutral-text dark:text-white">{paymentMethodLabel(latestReceipt.payment_method)}</p>
+                  </div>
+                  <div>
+                    <p className="text-xs text-slate-500">Paid Amount</p>
+                    <p className="font-bold text-emerald-600 dark:text-emerald-400">{formatCurrency(latestReceipt.amount_paid)}</p>
+                  </div>
+                  <div>
+                    <p className="text-xs text-slate-500">Remaining Due</p>
+                    <p className="font-bold text-amber-600 dark:text-amber-400">{formatCurrency(latestReceipt.amount_due)}</p>
+                  </div>
+                  <div>
+                    <p className="text-xs text-slate-500">Start Date</p>
+                    <p className="font-semibold text-neutral-text dark:text-white">{new Date(latestReceipt.start_date).toLocaleDateString()}</p>
+                  </div>
+                  <div>
+                    <p className="text-xs text-slate-500">End Date</p>
+                    <p className="font-semibold text-neutral-text dark:text-white">{new Date(latestReceipt.end_date).toLocaleDateString()}</p>
+                  </div>
+                </div>
+              </div>
+
+              <div className="flex flex-col sm:flex-row gap-3 pt-4">
+                <button
+                  type="button"
+                  onClick={() => downloadReceipt(latestReceipt)}
+                  className="flex-1 inline-flex h-11 items-center justify-center gap-2 rounded-xl border border-slate-200 bg-white px-4 text-sm font-bold text-slate-600 transition-colors hover:bg-slate-50 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-300 dark:hover:bg-slate-700"
+                >
+                  <span className="material-symbols-outlined text-lg">download</span>
+                  Download
+                </button>
+                <button
+                  type="button"
+                  onClick={handleShareReceipt}
+                  className="flex-1 inline-flex h-11 items-center justify-center gap-2 rounded-xl bg-emerald-600 px-4 text-sm font-bold text-white transition-colors hover:bg-emerald-500 shadow-lg shadow-emerald-600/20 active:scale-95"
+                >
+                  <span className="material-symbols-outlined text-lg">send</span>
+                  WhatsApp
+                </button>
+              </div>
             </div>
           </div>
         </div>

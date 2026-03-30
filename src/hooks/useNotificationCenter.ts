@@ -4,10 +4,12 @@ import {
   generateDynamicNotifications,
   markAllNotificationsRead as markAllNotificationsReadApi,
   markNotificationRead as markNotificationReadApi,
+  toggleNotificationRead as toggleNotificationReadApi,
   NotificationItem,
 } from '../lib/notificationCenter';
 import { useDemoData } from '../contexts/DemoDataContext';
 import { useDemoMode } from './useDemoMode';
+import { useRealtimeSubscription } from './useRealtimeSubscription';
 
 export function useNotificationCenter(gymId: string | null, limit = 6) {
   const { isDemoMode } = useDemoMode();
@@ -57,6 +59,13 @@ export function useNotificationCenter(gymId: string | null, limit = 6) {
     loadNotifications();
   }, [loadNotifications]);
 
+  useRealtimeSubscription({
+    table: 'notifications',
+    gymId,
+    onChange: loadNotifications,
+    enabled: !!gymId && !isDemoMode
+  });
+
   useEffect(() => {
     if (!gymId) {
       return undefined;
@@ -91,6 +100,19 @@ export function useNotificationCenter(gymId: string | null, limit = 6) {
     await loadNotifications();
   }, [gymId, isDemoMode, loadNotifications, markAllNotificationsRead]);
 
+  const handleToggleRead = useCallback(
+    async (notificationId: string, currentStatus: boolean) => {
+      if (isDemoMode) {
+        // Quick toggle in demo mode could just mark as read if it was unread
+        if (!currentStatus) markNotificationRead(notificationId);
+        return;
+      }
+      await toggleNotificationReadApi(notificationId, currentStatus);
+      await loadNotifications();
+    },
+    [isDemoMode, loadNotifications, markNotificationRead]
+  );
+
   return {
     notifications,
     unreadCount,
@@ -98,5 +120,6 @@ export function useNotificationCenter(gymId: string | null, limit = 6) {
     refresh: loadNotifications,
     markRead: handleMarkRead,
     markAllRead: handleMarkAllRead,
+    toggleRead: handleToggleRead,
   };
 }

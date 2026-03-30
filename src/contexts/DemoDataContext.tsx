@@ -7,8 +7,8 @@ import type {
   DemoMetrics,
 } from '../lib/demoData';
 import { isDemoModeActive } from '../lib/demoUtils';
+import { formatBdt } from '../lib/currency';
 
-// Heavy demo seed data is dynamically imported only when demo mode is active
 const loadDemoData = () => import('../lib/demoData');
 
 type InvitePayload = {
@@ -41,7 +41,6 @@ const findPlanForMember = (state: DemoState, planId?: string) =>
 
 const DEMO_GYM_ID = 'demo-gym-id';
 
-// Empty state used when NOT in demo mode
 const EMPTY_STATE: DemoState = {
   gymName: '',
   plans: [],
@@ -60,7 +59,6 @@ export function DemoDataProvider({ children }: { children: React.ReactNode }) {
   const [dataLoaded, setDataLoaded] = useState(false);
   const isDemoMode = isDemoModeActive();
 
-  // Lazy-load demo seed data only when demo mode is active
   React.useEffect(() => {
     if (isDemoMode && !dataLoaded) {
       const savedState = localStorage.getItem('demo_state');
@@ -87,14 +85,12 @@ export function DemoDataProvider({ children }: { children: React.ReactNode }) {
     }
   }, [isDemoMode, dataLoaded]);
 
-  // Persist demo state to localStorage when it changes
   React.useEffect(() => {
     if (isDemoMode && dataLoaded) {
       localStorage.setItem('demo_state', JSON.stringify(state));
     }
   }, [state, isDemoMode, dataLoaded]);
 
-  // Recalculate metrics when state changes (only in demo mode)
   React.useEffect(() => {
     if (isDemoMode && dataLoaded) {
       loadDemoData().then(({ getDemoMetrics }) => {
@@ -102,6 +98,23 @@ export function DemoDataProvider({ children }: { children: React.ReactNode }) {
       });
     }
   }, [state, isDemoMode, dataLoaded]);
+
+  const pushNotification = (title: string, body: string, memberId?: string) => {
+    setState((current) => {
+      const notification: DemoNotification = {
+        id: `demo-note-${Date.now()}-${Math.random().toString(36).substr(2, 5)}`,
+        title,
+        body,
+        created_at: new Date().toISOString(),
+        read: false,
+        related_member_id: memberId,
+      };
+      return {
+        ...current,
+        notifications: [notification, ...current.notifications].slice(0, 50),
+      };
+    });
+  };
 
   const resetDemoData = () => {
     loadDemoData().then(({ createInitialDemoState }) => {
@@ -114,7 +127,6 @@ export function DemoDataProvider({ children }: { children: React.ReactNode }) {
   const addMember = (payload: Pick<Member, 'full_name' | 'email' | 'phone' | 'plan_id'>) => {
     const memberId = `demo-member-${Date.now()}`;
     let createdMember: Member | null = null;
-
     setState((current) => {
       const plan = findPlanForMember(current, payload.plan_id);
       const today = new Date().toISOString();
@@ -138,7 +150,7 @@ export function DemoDataProvider({ children }: { children: React.ReactNode }) {
       createdMember = member;
       return { ...current, members: [member, ...current.members] };
     });
-
+    pushNotification('New Member Joined', `${payload.full_name} is now part of the gym.`, memberId);
     return createdMember!;
   };
 
@@ -157,6 +169,9 @@ export function DemoDataProvider({ children }: { children: React.ReactNode }) {
       });
       return { ...current, members: nextMembers };
     });
+    if (updated) {
+      pushNotification('Profile Updated', `${(updated as Member).full_name}'s info has been updated.`, memberId);
+    }
     return updated;
   };
 
@@ -188,12 +203,12 @@ export function DemoDataProvider({ children }: { children: React.ReactNode }) {
 
   const addPayment = (payload: Pick<Payment, 'member_id' | 'plan_id' | 'price_paid' | 'payment_method' | 'start_date' | 'end_date'>) => {
     let created: Payment | null = null;
+    let memName = '';
     setState((current) => {
       const member = current.members.find((item) => item.id === payload.member_id);
       const plan = current.plans.find((item) => item.id === payload.plan_id);
-      if (!member || !plan) {
-        return current;
-      }
+      if (!member || !plan) return current;
+      memName = member.full_name;
       created = {
         id: `demo-payment-${Date.now()}`,
         gym_id: DEMO_GYM_ID,
@@ -224,16 +239,17 @@ export function DemoDataProvider({ children }: { children: React.ReactNode }) {
         payments: [created!, ...current.payments],
       };
     });
+    if (created) pushNotification('Payment Received', `Collected ${formatBdt(payload.price_paid)} from ${memName}.`, payload.member_id);
     return created;
   };
 
   const addAttendance = (memberId: string, method: Attendance['method'] = 'MANUAL') => {
     let created: Attendance | null = null;
+    let memName = '';
     setState((current) => {
       const member = current.members.find((item) => item.id === memberId);
-      if (!member) {
-        return current;
-      }
+      if (!member) return current;
+      memName = member.full_name;
       created = {
         id: `demo-attendance-${Date.now()}`,
         gym_id: DEMO_GYM_ID,
@@ -252,6 +268,7 @@ export function DemoDataProvider({ children }: { children: React.ReactNode }) {
         attendance: [created!, ...current.attendance],
       };
     });
+    if (created) pushNotification('Member Check-in', `${memName} checked in via ${method}.`, memberId);
     return created;
   };
 
@@ -267,12 +284,11 @@ export function DemoDataProvider({ children }: { children: React.ReactNode }) {
       invited_at: new Date().toISOString(),
       created_at: new Date().toISOString(),
     };
-
     setState((current) => ({
       ...current,
       staff: [...current.staff, created],
     }));
-
+    pushNotification('Staff Invited', `${payload.email} was invited as ${payload.role}.`);
     return created;
   };
 
@@ -286,6 +302,7 @@ export function DemoDataProvider({ children }: { children: React.ReactNode }) {
         return updated!;
       }),
     }));
+    if (updated) pushNotification('Role Changed', `Staff ${(updated as DemoStaffMember).email} is now an ${role}.`);
     return updated;
   };
 
@@ -294,6 +311,7 @@ export function DemoDataProvider({ children }: { children: React.ReactNode }) {
       ...current,
       staff: current.staff.filter((member) => member.id !== staffId),
     }));
+    pushNotification('Staff Removed', 'A staff member has been removed from the platform.');
   };
 
   const markNotificationRead = (notificationId: string) => {
@@ -330,7 +348,7 @@ export function DemoDataProvider({ children }: { children: React.ReactNode }) {
       markNotificationRead,
       markAllNotificationsRead,
     }),
-    [isDemoMode, state]
+    [isDemoMode, state, metricsCalc]
   );
 
   return <DemoDataContext.Provider value={value}>{children}</DemoDataContext.Provider>;
@@ -338,8 +356,6 @@ export function DemoDataProvider({ children }: { children: React.ReactNode }) {
 
 export function useDemoData() {
   const context = useContext(DemoDataContext);
-  if (!context) {
-    throw new Error('useDemoData must be used within a DemoDataProvider.');
-  }
+  if (!context) throw new Error('useDemoData must be used within a DemoDataProvider.');
   return context;
 }

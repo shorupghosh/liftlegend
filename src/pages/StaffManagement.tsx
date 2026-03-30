@@ -71,15 +71,13 @@ export default function StaffManagement() {
   const [isRoleSubmitting, setIsRoleSubmitting] = useState(false);
   const [removingStaff, setRemovingStaff] = useState<StaffMember | null>(null);
   const [isRemoving, setIsRemoving] = useState(false);
+  const [searchQuery, setSearchQuery] = useState('');
 
   const canViewPage = canAccessStaffManagement(userRole);
   const roleOptions = getAssignableRoles(userRole);
 
   const fetchStaff = useCallback(async () => {
-    if (!gymId || !canViewPage) {
-      return;
-    }
-
+    if (!gymId || !canViewPage) return;
     setLoading(true);
     try {
       if (isDemoMode) {
@@ -94,25 +92,17 @@ export default function StaffManagement() {
         return;
       }
 
-      const { data, error } = await supabase.rpc('get_staff_management', {
-        target_gym_id: gymId,
-      });
+      const { data, error } = await supabase.rpc('get_staff_management', { target_gym_id: gymId });
 
       if (error) {
-        if (!missingFunctionPattern.test(error.message || '')) {
-          throw error;
-        }
-
+        if (!missingFunctionPattern.test(error.message || '')) throw error;
         const { data: fallbackData, error: fallbackError } = await supabase
           .from('user_roles')
           .select('id, user_id, invited_email, display_name, role, status, joined_at, invited_at, created_at')
           .eq('gym_id', gymId)
           .in('role', ['OWNER', 'MANAGER', 'TRAINER'])
           .order('created_at', { ascending: true });
-
-        if (fallbackError) {
-          throw fallbackError;
-        }
+        if (fallbackError) throw fallbackError;
 
         const staff = (fallbackData || []).map((item) => ({
           id: item.id,
@@ -125,7 +115,6 @@ export default function StaffManagement() {
           invited_at: item.invited_at || null,
           created_at: item.created_at,
         }));
-
         setStaffList(staff);
         setCounts({
           total: staff.length,
@@ -147,272 +136,158 @@ export default function StaffManagement() {
     }
   }, [canViewPage, demoState.staff, gymId, isDemoMode, showToast]);
 
-  useEffect(() => {
-    fetchStaff();
-  }, [fetchStaff]);
-
+  useEffect(() => { fetchStaff(); }, [fetchStaff]);
   useRealtimeSubscription({ table: 'user_roles', gymId, onChange: fetchStaff, enabled: canViewPage });
 
   const ownerCount = counts.owners;
 
-  const statCards = useMemo(
-    () => [
-      { label: 'Total Staff', value: counts.total, accent: 'text-neutral-text dark:text-white' },
-      { label: 'Owners', value: counts.owners, accent: 'text-purple-500' },
-      { label: 'Managers', value: counts.managers, accent: 'text-blue-500' },
-      { label: 'Trainers', value: counts.trainers, accent: 'text-emerald-500' },
-    ],
-    [counts]
-  );
+  const statCards = useMemo(() => [
+    { label: 'Total Staff', value: counts.total, accent: 'text-neutral-text dark:text-white' },
+    { label: 'Owners', value: counts.owners, accent: 'text-purple-500' },
+    { label: 'Managers', value: counts.managers, accent: 'text-blue-500' },
+    { label: 'Trainers', value: counts.trainers, accent: 'text-emerald-500' },
+  ], [counts]);
 
-  const canManageStaffMember = (staff: StaffMember) => {
-    if (!canManageTargetRole(userRole, staff.role)) {
-      return false;
-    }
-
-    if (staff.user_id && user?.id === staff.user_id) {
-      return false;
-    }
-
-    if (staff.role === 'OWNER' && ownerCount <= 1) {
-      return userRole === 'OWNER';
-    }
-
+  const canManageMember = (staff: StaffMember) => {
+    if (!canManageTargetRole(userRole, staff.role)) return false;
+    if (staff.user_id && user?.id === staff.user_id) return false;
+    if (staff.role === 'OWNER' && ownerCount <= 1) return userRole === 'OWNER';
     return true;
   };
 
-  const canEditStaffMember = (staff: StaffMember) => {
-    if (!canManageStaffMember(staff)) {
-      return false;
-    }
-
-    return roleOptions.length > 0;
-  };
-
-  const canRemoveStaffMember = (staff: StaffMember) => {
-    if (!canManageStaffMember(staff)) {
-      return false;
-    }
-
-    if (staff.role === 'OWNER' && ownerCount <= 1) {
-      return false;
-    }
-
-    return true;
-  };
-
-  const resetInviteForm = () => {
-    setInviteData({
-      email: '',
-      role: roleOptions[0] || 'TRAINER',
-    });
-  };
+  const resetInviteForm = () => { setInviteData({ email: '', role: roleOptions[0] || 'TRAINER' }); };
 
   const handleInviteStaff = async () => {
-    if (!gymId) {
-      return;
-    }
-
+    if (!gymId) return;
     const normalizedEmail = inviteData.email.trim().toLowerCase();
     if (!emailPattern.test(normalizedEmail)) {
       showToast('Enter a valid email address.', 'error');
       return;
     }
-
     setIsInviteSubmitting(true);
     try {
       if (isDemoMode) {
-        inviteStaff({
-          email: normalizedEmail,
-          role: inviteData.role as DemoStaffMember['role'],
-        });
-        showToast('Staff invite created. This is demo mode. Changes are not saved.', 'info');
+        inviteStaff({ email: normalizedEmail, role: inviteData.role as DemoStaffMember['role'] });
+        showToast('Staff invited in demo.', 'info');
         setShowInviteModal(false);
         resetInviteForm();
         return;
       }
-
       const { error } = await supabase.rpc('invite_staff_member', {
-        target_gym_id: gymId,
-        invite_email: normalizedEmail,
-        invite_role: inviteData.role,
+        target_gym_id: gymId, invite_email: normalizedEmail, invite_role: inviteData.role,
       });
-
       if (error) {
-        if (!missingFunctionPattern.test(error.message || '')) {
-          throw error;
-        }
-
-        const { data: existingUser } = await supabase.auth.getUser();
-        const existingRecord = staffList.find((member) => member.email.toLowerCase() === normalizedEmail);
-        if (existingRecord) {
-          throw new Error('A staff record already exists for this email');
-        }
-
-        const { error: insertError } = await supabase.from('user_roles').insert([
-          {
-            gym_id: gymId,
-            user_id: null,
-            invited_email: normalizedEmail,
-            display_name: normalizedEmail,
-            role: inviteData.role,
-            status: 'INVITED',
-            invited_at: new Date().toISOString(),
-            joined_at: new Date().toISOString(),
-          },
-        ]);
-
-        if (insertError) {
-          throw insertError;
-        }
+        if (!missingFunctionPattern.test(error.message || '')) throw error;
+        const { error: insertError } = await supabase.from('user_roles').insert([{
+          gym_id: gymId, invited_email: normalizedEmail, display_name: normalizedEmail,
+          role: inviteData.role, status: 'INVITED', invited_at: new Date().toISOString(),
+          joined_at: new Date().toISOString(),
+        }]);
+        if (insertError) throw insertError;
       }
-
-      showToast('Staff invite created successfully.', 'success');
+      await supabase.from('notifications').insert([{
+        gym_id: gymId, type: 'general', title: 'Staff Invited', message: `${normalizedEmail} was invited as ${inviteData.role}.`
+      }]);
+      showToast('Staff invite sent!', 'success');
       setShowInviteModal(false);
       resetInviteForm();
       fetchStaff();
       refreshUsage();
     } catch (error: any) {
-      console.error('Error inviting staff:', error);
-      showToast(error.message || 'Failed to invite staff member.', 'error');
+      showToast(error.message || 'Invite failed.', 'error');
     } finally {
       setIsInviteSubmitting(false);
     }
   };
 
   const handleUpdateRole = async (role: StaffRole) => {
-    if (!editingStaff) {
-      return;
-    }
-
+    if (!editingStaff) return;
     setIsRoleSubmitting(true);
     try {
       if (isDemoMode) {
         updateStaffRole(editingStaff.id, role as DemoStaffMember['role']);
-        showToast('Staff role updated. This is demo mode. Changes are not saved.', 'info');
+        showToast('Role updated in demo.', 'info');
         setEditingStaff(null);
         return;
       }
-
-      const { error } = await supabase.rpc('update_staff_role', {
-        target_role_id: editingStaff.id,
-        next_role: role,
-      });
-
+      const { error } = await supabase.rpc('update_staff_role', { target_role_id: editingStaff.id, next_role: role });
       if (error) {
-        if (!missingFunctionPattern.test(error.message || '')) {
-          throw error;
-        }
-
-        if (editingStaff.role === 'OWNER' && role !== 'OWNER' && ownerCount <= 1) {
-          throw new Error('Cannot demote the last owner');
-        }
-
-        const { error: updateError } = await supabase
-          .from('user_roles')
-          .update({ role })
-          .eq('id', editingStaff.id)
-          .eq('gym_id', gymId);
-
-        if (updateError) {
-          throw updateError;
-        }
+        if (!missingFunctionPattern.test(error.message || '')) throw error;
+        const { error: updateError } = await supabase.from('user_roles').update({ role }).eq('id', editingStaff.id).eq('gym_id', gymId);
+        if (updateError) throw updateError;
       }
-
+      await supabase.from('notifications').insert([{
+        gym_id: gymId, type: 'general', title: 'Role Changed', message: `Staff ${editingStaff.email} is now a(n) ${role}.`
+      }]);
       showToast('Staff role updated.', 'success');
       setEditingStaff(null);
       fetchStaff();
     } catch (error: any) {
-      console.error('Error updating staff role:', error);
-      showToast(error.message || 'Failed to update staff role.', 'error');
+      showToast(error.message || 'Update failed.', 'error');
     } finally {
       setIsRoleSubmitting(false);
     }
   };
 
   const handleRemoveStaff = async () => {
-    if (!removingStaff) {
-      return;
-    }
-
+    if (!removingStaff) return;
     setIsRemoving(true);
     try {
       if (isDemoMode) {
         removeStaff(removingStaff.id);
-        showToast('Staff member removed. This is demo mode. Changes are not saved.', 'info');
+        showToast('Staff removed from demo.', 'info');
         setRemovingStaff(null);
         return;
       }
-
-      const { error } = await supabase.rpc('remove_staff_member', {
-        target_role_id: removingStaff.id,
-      });
-
+      const { error } = await supabase.rpc('remove_staff_member', { target_role_id: removingStaff.id });
       if (error) {
-        if (!missingFunctionPattern.test(error.message || '')) {
-          throw error;
-        }
-
-        if (removingStaff.role === 'OWNER' && ownerCount <= 1) {
-          throw new Error('Cannot remove the last owner');
-        }
-
-        const { error: deleteError } = await supabase
-          .from('user_roles')
-          .delete()
-          .eq('id', removingStaff.id)
-          .eq('gym_id', gymId);
-
-        if (deleteError) {
-          throw deleteError;
-        }
+        if (!missingFunctionPattern.test(error.message || '')) throw error;
+        const { error: deleteError } = await supabase.from('user_roles').delete().eq('id', removingStaff.id).eq('gym_id', gymId);
+        if (deleteError) throw deleteError;
       }
-
-      showToast('Staff member removed.', 'success');
+      await supabase.from('notifications').insert([{
+        gym_id: gymId, type: 'general', title: 'Staff Removed', message: `Staff member ${removingStaff.email} was removed.`
+      }]);
+      showToast('Staff removed successfully.', 'success');
       setRemovingStaff(null);
       fetchStaff();
       refreshUsage();
     } catch (error: any) {
-      console.error('Error removing staff:', error);
-      showToast(error.message || 'Failed to remove staff member.', 'error');
+      showToast(error.message || 'Remove failed.', 'error');
     } finally {
       setIsRemoving(false);
     }
   };
 
-  if (!canViewPage) {
-    return <Navigate to="/admin" replace />;
-  }
+  const filteredStaff = staffList.filter(s => {
+    const q = searchQuery.toLowerCase().trim();
+    if (!q) return true;
+    return (s.display_name?.toLowerCase().includes(q) || s.email.toLowerCase().includes(q));
+  });
+
+  if (!canViewPage) return <Navigate to="/admin" replace />;
 
   return (
     <div className="space-y-6 p-6 lg:p-8">
-      {/* Staff Usage Limit Banner */}
       <UsageLimitBanner resource="staff" />
-
       <div className="flex flex-col justify-between gap-4 md:flex-row md:items-end">
         <div>
-          <h1 className="text-2xl font-display font-extrabold tracking-tight text-neutral-text dark:text-white lg:text-3xl">
-            Staff Management
-          </h1>
-          <p className="mt-1 text-sm text-slate-500 dark:text-slate-400">
-            Central hub for team roles, invites, and permissions.
-          </p>
+          <h1 className="text-2xl font-display font-extrabold tracking-tight text-neutral-text dark:text-white lg:text-3xl">Staff Management</h1>
+          <p className="mt-1 text-sm text-slate-500 dark:text-slate-400">Team roles, invites, and permissions.</p>
         </div>
-
-        {canInviteStaff(userRole) && (
-          <UsageLimitGuard resource="staff">
-            <button
-              onClick={() => {
-                resetInviteForm();
-                setShowInviteModal(true);
-              }}
-              className="inline-flex items-center gap-2 rounded-xl bg-primary-default px-5 py-2.5 font-bold text-white shadow-lg shadow-primary-default/20 transition-all hover:brightness-110 active:scale-95"
-            >
-              <span className="material-symbols-outlined">person_add</span>
-              Invite Staff
-            </button>
-          </UsageLimitGuard>
-        )}
+        <div className="flex flex-col sm:flex-row gap-3 w-full md:w-auto">
+          <div className="relative flex-1 sm:w-64">
+            <span className="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-lg">search</span>
+            <input type="text" value={searchQuery} onChange={(e) => setSearchQuery(e.target.value)} placeholder="Search staff..." className="w-full h-11 pl-10 pr-4 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl text-sm focus:ring-2 focus:ring-primary-default/20 outline-none transition-all dark:text-white" />
+          </div>
+          {canInviteStaff(userRole) && (
+            <UsageLimitGuard resource="staff">
+              <button onClick={() => { resetInviteForm(); setShowInviteModal(true); }} className="inline-flex h-11 items-center justify-center gap-2 rounded-xl bg-primary-default px-5 font-bold text-white shadow-lg shadow-primary-default/20 transition-all hover:brightness-110 active:scale-95">
+                <span className="material-symbols-outlined">person_add</span> Invite Staff
+              </button>
+            </UsageLimitGuard>
+          )}
+        </div>
       </div>
 
       <div className="grid grid-cols-2 gap-4 lg:grid-cols-4">
@@ -426,160 +301,61 @@ export default function StaffManagement() {
 
       <div className="overflow-hidden rounded-xl border border-slate-200 bg-white shadow-sm dark:border-slate-800 dark:bg-slate-900">
         <div className="overflow-x-auto">
-          <table className="w-full border-collapse text-left">
+          <table className="w-full border-collapse text-left min-w-[600px]">
             <thead>
               <tr className="border-b border-slate-200 bg-slate-50 text-xs font-bold uppercase tracking-wider text-slate-500 dark:border-slate-800 dark:bg-slate-800/50">
                 <th className="px-5 py-3.5">User</th>
                 <th className="px-5 py-3.5">Role</th>
                 <th className="px-5 py-3.5 hidden md:table-cell">Status</th>
-                <th className="px-5 py-3.5 hidden md:table-cell">Joined</th>
-                <th className="px-5 py-3.5 text-right">Actions</th>
+                <th className="px-5 py-3.5 hidden md:table-cell text-right">Actions</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-100 dark:divide-slate-800">
-              {loading ? (
-                Array.from({ length: 3 }).map((_, i) => (
-                  <tr key={i} className="animate-pulse">
+              {loading ? Array.from({ length: 3 }).map((_, i) => (
+                <tr key={i} className="animate-pulse">
+                  <td className="px-5 py-4"><div className="flex items-center gap-3"><div className="size-9 rounded-full bg-slate-100" /><div className="h-3 w-20 bg-slate-100" /></div></td>
+                  <td className="px-5 py-4"><div className="h-5 w-16 bg-slate-100 rounded-full" /></td>
+                  <td className="px-5 py-4 hidden md:table-cell"><div className="h-5 w-16 bg-slate-50 rounded-full" /></td>
+                  <td className="px-5 py-4 text-right"><div className="h-8 w-20 bg-slate-100 ml-auto rounded-lg" /></td>
+                </tr>
+              )) : staffList.length === 0 ? (
+                <tr><td colSpan={4} className="p-12"><EmptyState icon="badge" title="No staff yet" description="Invite someone to help manage." /></td></tr>
+              ) : filteredStaff.length === 0 ? (
+                <tr><td colSpan={4} className="p-12"><EmptyState icon="search_off" title="No match" description="Try a different name." /></td></tr>
+              ) : (
+                filteredStaff.map((staff) => (
+                  <tr key={staff.id} className="transition-colors hover:bg-slate-50/50 dark:hover:bg-slate-800/30">
                     <td className="px-5 py-4">
                       <div className="flex items-center gap-3">
-                        <div className="size-9 rounded-full bg-slate-200 dark:bg-slate-800" />
-                        <div className="space-y-2">
-                          <div className="h-3 w-24 rounded bg-slate-200 dark:bg-slate-800" />
-                          <div className="h-2 w-16 rounded bg-slate-100 dark:bg-slate-900" />
+                        <div className="flex size-9 items-center justify-center rounded-full bg-primary-default/10 text-sm font-bold text-primary-default">{(staff.display_name?.[0] || 'S').toUpperCase()}</div>
+                        <div>
+                          <p className="text-sm font-bold text-neutral-text dark:text-white">{staff.display_name || staff.email}</p>
+                          <p className="text-xs text-slate-500">{staff.email}</p>
                         </div>
                       </div>
                     </td>
-                    <td className="px-5 py-4">
-                      <div className="h-5 w-16 rounded-full bg-slate-200 dark:bg-slate-800" />
-                    </td>
-                    <td className="hidden px-5 py-4 md:table-cell">
-                      <div className="h-5 w-16 rounded-full bg-slate-100 dark:bg-slate-900" />
-                    </td>
-                    <td className="hidden px-5 py-4 md:table-cell">
-                      <div className="h-3 w-16 rounded bg-slate-200 dark:bg-slate-800" />
-                    </td>
-                    <td className="px-5 py-4">
+                    <td className="px-5 py-4"><StatusBadge label={staff.role} tone={toneFromRole(staff.role)} /></td>
+                    <td className="hidden px-5 py-4 md:table-cell"><StatusBadge label={staff.status} tone={toneFromStatus(staff.status)} /></td>
+                    <td className="px-5 py-4 text-right">
                       <div className="flex justify-end gap-2">
-                        <div className="h-8 w-20 rounded-lg bg-slate-200 dark:bg-slate-800" />
+                        <button disabled={!canManageMember(staff)} onClick={() => setEditingStaff(staff)} className="h-9 px-3 rounded-lg border border-slate-200 text-xs font-bold uppercase tracking-wider text-slate-600 hover:bg-slate-100 disabled:opacity-40 transition-colors dark:border-slate-700 dark:text-slate-400">Edit Role</button>
+                        <button disabled={!canManageMember(staff)} onClick={() => setRemovingStaff(staff)} className="h-9 px-3 rounded-lg border border-red-100 text-xs font-bold uppercase tracking-wider text-red-500 hover:bg-red-50 disabled:opacity-40 transition-colors dark:border-red-900/50">Remove</button>
                       </div>
                     </td>
                   </tr>
                 ))
-              ) : staffList.length === 0 ? (
-                <tr>
-                  <td colSpan={5} className="p-6">
-                    <EmptyState
-                      icon="badge"
-                      title="No staff yet"
-                      description="Invite your first manager or trainer to help run daily operations."
-                      actionLabel={canInviteStaff(userRole) ? 'Invite staff' : undefined}
-                      onAction={canInviteStaff(userRole) ? () => setShowInviteModal(true) : undefined}
-                    />
-                  </td>
-                </tr>
-              ) : (
-                staffList.map((staff) => {
-                  const assignableOptions =
-                    userRole === 'OWNER' && staff.role === 'OWNER' && ownerCount > 1
-                      ? ['OWNER', 'MANAGER', 'TRAINER']
-                      : roleOptions;
-
-                  return (
-                    <tr key={staff.id} className="transition-colors hover:bg-slate-50/50 dark:hover:bg-slate-800/30">
-                      <td className="px-5 py-4">
-                        <div className="flex items-center gap-3">
-                          <div className="flex size-9 items-center justify-center rounded-full bg-primary-default/10 text-sm font-bold text-primary-default">
-                            {(staff.display_name || staff.email || staff.role).charAt(0).toUpperCase()}
-                          </div>
-                          <div>
-                            <p className="text-sm font-bold text-neutral-text dark:text-white">{staff.display_name || staff.email}</p>
-                            <p className="text-xs text-slate-500">{staff.email}</p>
-                          </div>
-                        </div>
-                      </td>
-                      <td className="px-5 py-4">
-                        <StatusBadge label={staff.role} tone={toneFromRole(staff.role)} />
-                      </td>
-                      <td className="hidden px-5 py-4 md:table-cell">
-                        <StatusBadge label={staff.status} tone={toneFromStatus(staff.status)} />
-                      </td>
-                      <td className="hidden px-5 py-4 text-sm text-slate-500 md:table-cell">
-                        {new Date(staff.joined_at || staff.created_at).toLocaleDateString()}
-                      </td>
-                      <td className="px-5 py-4">
-                        <div className="flex justify-end gap-2">
-                          <button
-                            type="button"
-                            disabled={!canEditStaffMember(staff)}
-                            onClick={() => setEditingStaff(staff)}
-                            className="inline-flex h-9 items-center justify-center rounded-lg border border-slate-200 px-3 text-xs font-bold uppercase tracking-wider text-slate-600 transition-colors hover:bg-slate-100 disabled:cursor-not-allowed disabled:opacity-40 dark:border-slate-700 dark:text-slate-300 dark:hover:bg-slate-800"
-                          >
-                            Edit Role
-                          </button>
-                          <button
-                            type="button"
-                            disabled={!canRemoveStaffMember(staff)}
-                            onClick={() => setRemovingStaff(staff)}
-                            className="inline-flex h-9 items-center justify-center rounded-lg border border-red-200 px-3 text-xs font-bold uppercase tracking-wider text-red-500 transition-colors hover:bg-red-50 disabled:cursor-not-allowed disabled:opacity-40 dark:border-red-900/50 dark:hover:bg-red-950/40"
-                          >
-                            Remove
-                          </button>
-                        </div>
-                      </td>
-                    </tr>
-                  );
-                })
               )}
             </tbody>
           </table>
         </div>
-
         <div className="border-t border-slate-200 bg-slate-50 px-5 py-3 dark:border-slate-800 dark:bg-slate-800/50">
-          <p className="text-sm text-slate-500">
-            Showing <span className="font-bold">{staffList.length}</span> staff members
-          </p>
+          <p className="text-sm text-slate-500">Showing <span className="font-bold">{filteredStaff.length}</span> staff members</p>
         </div>
       </div>
 
-      <InviteStaffModal
-        isOpen={showInviteModal}
-        email={inviteData.email}
-        role={inviteData.role}
-        roleOptions={roleOptions.length ? roleOptions : ['TRAINER']}
-        isSubmitting={isInviteSubmitting}
-        onClose={() => setShowInviteModal(false)}
-        onEmailChange={(value) => setInviteData((current) => ({ ...current, email: value }))}
-        onRoleChange={(value) => setInviteData((current) => ({ ...current, role: value }))}
-        onSubmit={handleInviteStaff}
-      />
-
-      <EditStaffRoleModal
-        isOpen={Boolean(editingStaff)}
-        currentRole={(editingStaff?.role || 'TRAINER') as StaffRole}
-        roleOptions={
-          editingStaff?.role === 'OWNER' && ownerCount > 1 && userRole === 'OWNER'
-            ? ['OWNER', 'MANAGER', 'TRAINER']
-            : roleOptions.length
-              ? roleOptions
-              : ['TRAINER']
-        }
-        isSubmitting={isRoleSubmitting}
-        memberName={editingStaff?.display_name || editingStaff?.email || 'Staff Member'}
-        onClose={() => setEditingStaff(null)}
-        onSubmit={handleUpdateRole}
-      />
-
-      <ConfirmModal
-        isOpen={Boolean(removingStaff)}
-        title="Remove Staff"
-        message={
-          removingStaff
-            ? `Remove ${removingStaff.display_name || removingStaff.email} from this gym team?`
-            : ''
-        }
-        onConfirm={handleRemoveStaff}
-        onCancel={() => setRemovingStaff(null)}
-      />
+      <InviteStaffModal isOpen={showInviteModal} email={inviteData.email} role={inviteData.role} roleOptions={roleOptions.length ? roleOptions : ['TRAINER']} isSubmitting={isInviteSubmitting} onClose={() => setShowInviteModal(false)} onEmailChange={(v) => setInviteData(c => ({ ...c, email: v }))} onRoleChange={(v) => setInviteData(c => ({ ...c, role: v }))} onSubmit={handleInviteStaff} />
+      <EditStaffRoleModal isOpen={Boolean(editingStaff)} currentRole={(editingStaff?.role || 'TRAINER') as StaffRole} roleOptions={roleOptions.length ? roleOptions : ['TRAINER']} isSubmitting={isRoleSubmitting} memberName={editingStaff?.display_name || 'Staff Member'} onClose={() => setEditingStaff(null)} onSubmit={handleUpdateRole} />
+      <ConfirmModal isOpen={Boolean(removingStaff)} title="Remove Staff" message={`Remove ${removingStaff?.display_name || removingStaff?.email} from the team?`} onConfirm={handleRemoveStaff} onCancel={() => setRemovingStaff(null)} />
     </div>
   );
 }

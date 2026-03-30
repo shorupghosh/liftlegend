@@ -4,6 +4,8 @@ import { Lock, Mail, Eye, EyeOff } from 'lucide-react';
 import { supabase } from '../lib/supabase';
 import { useAuth } from '../contexts/AuthContext';
 import { APP_NAME, APP_SUITE_NAME } from '../lib/branding';
+import { BrandLogo } from '../components/BrandLogo';
+
 
 const Login: React.FC = () => {
     const { user, userRole, gymStatus, loading: authLoading, onboardingCompleted } = useAuth();
@@ -32,6 +34,17 @@ const Login: React.FC = () => {
             }
         }
     }, [user, userRole, gymStatus, authLoading, navigate, onboardingCompleted]);
+
+    useEffect(() => {
+        document.title = isSignUp ? 'Start Free Trial | LiftLegend Gym Software Bangladesh' : 'Sign In | LiftLegend Gym Software';
+        let meta = document.querySelector('meta[name="description"]');
+        if (!meta) {
+            meta = document.createElement('meta');
+            meta.setAttribute('name', 'description');
+            document.head.appendChild(meta);
+        }
+        meta.setAttribute('content', isSignUp ? 'Start your 30-day free trial of LiftLegend, the most reliable gym management software for Bangladesh. Get started in 2 minutes.' : 'Sign in to access your LiftLegend gym management dashboard.');
+    }, [isSignUp]);
 
     if (authLoading) {
         return (
@@ -141,7 +154,7 @@ const Login: React.FC = () => {
                 <div className="p-8">
                     <div className="flex flex-col items-center justify-center mb-8">
                         <div className="mb-6">
-                            <img src="/logo.svg" alt={APP_NAME} className="h-9 w-auto" />
+                            <BrandLogo className="h-9 w-auto" variant="auto" />
                         </div>
                         <h2 className="text-2xl font-display font-bold text-slate-900 dark:text-white">
                             {isSignUp ? 'Create an Account' : 'Welcome Back'}
@@ -347,3 +360,4 @@ const Login: React.FC = () => {
 };
 
 export default Login;
+

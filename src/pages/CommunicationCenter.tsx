@@ -27,6 +27,7 @@ export default function CommunicationCenter() {
     loading,
     markRead,
     markAllRead,
+    toggleRead,
   } = useNotificationCenter(gymId, 50);
 
   const filteredNotifications = useMemo(() => {
@@ -199,6 +200,13 @@ export default function CommunicationCenter() {
                       className="inline-flex h-9 items-center rounded-lg bg-slate-900 px-3 text-[11px] font-black uppercase tracking-widest text-white transition-colors hover:bg-slate-800 dark:bg-white dark:text-slate-900 dark:hover:bg-slate-100"
                     >
                       Copy Reminder
+                    </button>
+                    <button
+                      type="button"
+                      onClick={(e) => { e.stopPropagation(); toggleRead(notification.id, notification.is_read); }}
+                      className="inline-flex h-9 items-center rounded-lg border border-slate-200 px-3 text-[11px] font-black uppercase tracking-widest text-slate-600 transition-colors hover:bg-slate-100 dark:border-slate-700 dark:text-slate-300 dark:hover:bg-slate-800"
+                    >
+                      Mark as {notification.is_read ? 'unread' : 'read'}
                     </button>
                   </div>
                 </div>

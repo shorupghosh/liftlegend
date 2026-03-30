@@ -1,7 +1,19 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
+import { BrandLogo } from '../components/BrandLogo';
 
 export default function BookDemo() {
+  useEffect(() => {
+    document.title = 'Book a Demo | LiftLegend Gym Management Software Bangladesh';
+    let meta = document.querySelector('meta[name="description"]');
+    if (!meta) {
+      meta = document.createElement('meta');
+      meta.setAttribute('name', 'description');
+      document.head.appendChild(meta);
+    }
+    meta.setAttribute('content', 'Schedule a 30-minute personalized demo of LiftLegend, the top gym management software in Bangladesh. See features like QR attendance and payment tracking.');
+  }, []);
+
   const [form, setForm] = useState({ name: '', email: '', phone: '', gymName: '', message: '' });
   const [sent, setSent] = useState(false);
   const [sending, setSending] = useState(false);
@@ -58,7 +70,7 @@ export default function BookDemo() {
       <header className="sticky top-0 z-50 w-full border-b border-slate-200 dark:border-slate-800 bg-white/80 dark:bg-[#111821]/80 backdrop-blur-md px-6 md:px-20 py-4">
         <div className="max-w-7xl mx-auto flex items-center justify-between">
           <Link to="/" className="flex items-center gap-3">
-            <img src="/logo.svg" alt="LiftLegend" className="h-9 w-auto" />
+            <BrandLogo className="h-11 w-auto" variant="auto" />
           </Link>
           <Link to="/" className="text-sm font-semibold text-slate-600 dark:text-slate-300 hover:text-[#1978e5] transition-colors flex items-center gap-1">
             <span className="material-symbols-outlined text-sm">arrow_back</span>
