@@ -28,13 +28,14 @@ export default defineConfig(({ mode }) => {
       chunkSizeWarningLimit: 500,
       rollupOptions: {
         output: {
-          // Code-split large vendor libraries for better caching
-          manualChunks: {
-            'react-vendor': ['react', 'react-dom', 'react-router-dom'],
-            'supabase-vendor': ['@supabase/supabase-js'],
-            'ui-vendor': ['lucide-react'],
-            // QR code libraries in their own chunk — only loaded by AttendanceScanner
-            'qr-vendor': ['html5-qrcode', 'qrcode'],
+          manualChunks(id) {
+            if (id.includes('node_modules')) {
+              if (id.includes('/react/') || id.includes('/react-dom/') || id.includes('/react-router-dom/')) return 'react-vendor';
+              if (id.includes('@supabase/supabase-js')) return 'supabase-vendor';
+              if (id.includes('lucide-react')) return 'ui-vendor';
+              if (id.includes('html5-qrcode') || id.includes('/qrcode/')) return 'qr-vendor';
+              return 'vendor';
+            }
           },
         },
       },
