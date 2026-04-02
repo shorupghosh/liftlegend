@@ -1,4 +1,4 @@
-export type RetentionStatus = 'Inactive' | 'At Risk' | 'Missing This Week';
+export type RetentionStatus = 'Inactive' | 'At Risk' | 'Missing This Week' | 'Never Visited';
 
 export type RetentionMember = {
   id: string;
@@ -18,11 +18,12 @@ export const RETENTION_LOOKBACK_DAYS = 35;
 const reminderTemplates = [
   'Hey {{name}}, we miss you at the gym. Come back today and stay on track.',
   'Hi {{name}}, it looks like you have not checked in recently. Let us get back to training.',
+  'Hi {{name}}, welcome to the gym! We notice you haven\'t had your first workout yet. See you soon!',
 ];
 
 export function formatDisplayDate(value: string | null): string {
   if (!value) {
-    return 'No visit yet';
+    return 'No check-in yet';
   }
 
   return new Date(value).toLocaleDateString('en-US', {
@@ -33,7 +34,10 @@ export function formatDisplayDate(value: string | null): string {
 }
 
 export function buildReminderMessage(member: Pick<RetentionMember, 'name' | 'status'>): string {
-  const template = member.status === 'Inactive' ? reminderTemplates[0] : reminderTemplates[1];
+  let template = reminderTemplates[1];
+  if (member.status === 'Inactive') template = reminderTemplates[0];
+  if (member.status === 'Never Visited') template = reminderTemplates[2];
+  
   return template.replace('{{name}}', member.name);
 }
 
@@ -50,9 +54,13 @@ export function getMembershipState(
   return expiry < today ? 'expired-plan' : 'active-plan';
 }
 
-export function getInactivityDays(lastCheckIn: string | null, today: Date): number {
+export function getInactivityDays(lastCheckIn: string | null, today: Date, joinDateRaw?: string | null): number {
   if (!lastCheckIn) {
-    return RETENTION_LOOKBACK_DAYS;
+    if (!joinDateRaw) return RETENTION_LOOKBACK_DAYS;
+    const joined = new Date(joinDateRaw);
+    joined.setHours(0, 0, 0, 0);
+    const diffMs = today.getTime() - joined.getTime();
+    return Math.max(0, Math.floor(diffMs / (24 * 60 * 60 * 1000)));
   }
 
   const lastVisit = new Date(lastCheckIn);
@@ -66,7 +74,14 @@ export function classifyRetentionStatus(
   inactivityDays: number,
   weekStart: Date
 ): RetentionStatus | null {
-  if (!lastCheckIn || inactivityDays >= INACTIVITY_THRESHOLD_DAYS) {
+  if (!lastCheckIn) {
+    if (inactivityDays >= INACTIVITY_THRESHOLD_DAYS) {
+      return 'Never Visited';
+    }
+    return null; // Too new to be marked as inactive
+  }
+
+  if (inactivityDays >= INACTIVITY_THRESHOLD_DAYS) {
     return 'Inactive';
   }
 

@@ -43,7 +43,7 @@ interface ConfirmModalState {
 export default function MembersManagement() {
   const [searchParams, setSearchParams] = useSearchParams();
   const initialQuery = searchParams.get('q') || '';
-  const { gymId } = useAuth();
+  const { gymId, loading: authLoading } = useAuth();
   const { isDemoMode } = useDemoMode();
   const { state: demoState, addMember, updateMember, deleteMember } = useDemoData();
   const { showToast } = useToast();
@@ -51,6 +51,7 @@ export default function MembersManagement() {
   const [members, setMembers] = useState<Member[]>([]);
   const [plans, setPlans] = useState<Partial<Plan>[]>([]);
   const [loading, setLoading] = useState(true);
+  const [tableError, setTableError] = useState<string | null>(null);
   const [showAddModal, setShowAddModal] = useState(false);
   const [editingMember, setEditingMember] = useState<Member | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -73,8 +74,13 @@ export default function MembersManagement() {
   });
 
   const fetchMembers = useCallback(async () => {
-    if (!gymId && !isDemoMode) return;
+    if (authLoading) return;
+    if (!gymId && !isDemoMode) {
+      setLoading(false);
+      return;
+    }
     setLoading(true);
+    setTableError(null);
     try {
       if (isDemoMode) {
         let filtered = [...demoState.members];
@@ -137,13 +143,14 @@ export default function MembersManagement() {
       setMembers((membersRes.data as any) || []);
       setTotalCount(membersRes.count || 0);
       setPlans(plansRes.data || []);
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error fetching data:', error);
       showToast('Failed to load members.', 'error');
+      setTableError(error.message || 'Error communicating with database.');
     } finally {
       setLoading(false);
     }
-  }, [debouncedSearch, demoState.members, demoState.plans, gymId, isDemoMode, page, showToast, sortConfig, filterPlan, filterStatus, plans]);
+  }, [debouncedSearch, demoState.members, demoState.plans, gymId, isDemoMode, page, showToast, sortConfig, filterPlan, filterStatus, authLoading]);
 
   useEffect(() => {
     fetchMembers();
@@ -497,11 +504,18 @@ export default function MembersManagement() {
 
 
 
-      <MembersTable
-        loading={loading} members={filteredMembers} searchQuery={searchQuery} sortConfig={sortConfig}
-        onSort={(key) => setSortConfig(prev => ({ key, direction: prev.key === key && prev.direction === 'desc' ? 'asc' : 'desc' }))}
-        onEdit={openEditModal} onDelete={handleDelete} page={page} totalPages={totalPages} totalCount={totalCount} setPage={setPage}
-      />
+      {tableError ? (
+        <div className="bg-white dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-800 shadow-sm p-8 flex flex-col items-center justify-center min-h-[400px]">
+          <EmptyState icon="error" title="Data Load Failed" description={tableError} />
+          <button onClick={() => { setTableError(null); fetchMembers(); }} className="mt-4 px-4 py-2 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 rounded-lg text-sm font-bold text-slate-700 dark:text-slate-300 transition-colors">Try Again</button>
+        </div>
+      ) : (
+        <MembersTable
+          loading={loading} members={filteredMembers} searchQuery={searchQuery} sortConfig={sortConfig}
+          onSort={(key) => setSortConfig(prev => ({ key, direction: prev.key === key && prev.direction === 'desc' ? 'asc' : 'desc' }))}
+          onEdit={openEditModal} onDelete={handleDelete} page={page} totalPages={totalPages} totalCount={totalCount} setPage={setPage}
+        />
+      )}
 
       <MemberModal isOpen={showAddModal} isEditing={!!editingMember} formData={formData} setFormData={setFormData} plans={plans} isSubmitting={isSubmitting} onSubmit={handleSubmit} onClose={handleCloseModal} />
       <ConfirmModal isOpen={confirmModal.isOpen} title={confirmModal.title} message={confirmModal.message} onConfirm={confirmModal.onConfirm} onCancel={() => setConfirmModal(prev => ({ ...prev, isOpen: false }))} />

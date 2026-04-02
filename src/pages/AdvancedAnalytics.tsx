@@ -785,7 +785,8 @@ export default function AdvancedAnalytics() {
       }>)
         .map((member) => {
           const lastCheckIn = lastCheckInMap.get(member.id) || null;
-          const inactivityDays = getInactivityDays(lastCheckIn, today);
+          const joinDate = member.join_date || member.created_at;
+          const inactivityDays = getInactivityDays(lastCheckIn, today, joinDate);
           const retentionStatus = classifyRetentionStatus(lastCheckIn, inactivityDays, weekStart);
 
           if (!retentionStatus) {

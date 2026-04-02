@@ -450,6 +450,22 @@ export default function PaymentManagement() {
 
       if (error) throw error;
 
+      // Update the member's current plan, expiry, and due amount
+      const { error: memberUpdateError } = await supabase
+        .from('members')
+        .update({
+          plan_id: formData.plan_id,
+          expiry_date: formData.end_date,
+          due_amount: modalDueAmount,
+          status: 'ACTIVE'
+        })
+        .eq('id', formData.member_id)
+        .eq('gym_id', gymId);
+
+      if (memberUpdateError) {
+        console.error('Failed to update member status:', memberUpdateError);
+      }
+
       await supabase.from('notifications').insert([{
         gym_id: gymId,
         type: 'payment_due',

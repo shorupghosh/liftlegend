@@ -8,7 +8,7 @@ import { AdminHeader } from './AdminHeader';
 import { useDemoMode } from '../../hooks/useDemoMode';
 import { DemoBanner } from '../demo/DemoBanner';
 import { getTenantNavVisibility } from '../../lib/staffPermissions';
-import { PlanFeature } from '../../lib/planConfig';
+import { PlanFeature, canAccessFeature } from '../../lib/planConfig';
 
 const tenantNavItems = [
     { label: 'Dashboard', icon: 'dashboard', path: '/admin' },
@@ -52,7 +52,7 @@ interface AdminLayoutProps {
 }
 
 export default function AdminLayout({ children }: AdminLayoutProps) {
-    const { userRole, signOut, user, subscriptionTier, isImpersonating, impersonatedGymName, stopImpersonation } = useAuth();
+    const { userRole, signOut, user, subscriptionTier, isImpersonating, impersonatedGymName, gymName, stopImpersonation } = useAuth();
     const { isDemoMode } = useDemoMode();
     const location = useLocation();
     const [sidebarOpen, setSidebarOpen] = useState(false);
@@ -92,8 +92,12 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
                 : location.pathname === item.path
         );
         const pageTitle = currentItem ? currentItem.label : 'Dashboard';
-        document.title = `${pageTitle} | ${APP_NAME}`;
-    }, [location.pathname, navItems]);
+        
+        const hasWhiteLabel = canAccessFeature(subscriptionTier, 'whiteLabel');
+        const brandName = hasWhiteLabel && gymName ? gymName : APP_NAME;
+        
+        document.title = `${pageTitle} | ${brandName}`;
+    }, [location.pathname, navItems, gymName, subscriptionTier]);
 
     // Close more menu on route change
     useEffect(() => {

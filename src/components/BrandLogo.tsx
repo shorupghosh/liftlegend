@@ -1,5 +1,7 @@
 import React from 'react';
 import { APP_NAME } from '../lib/branding';
+import { useAuth } from '../contexts/AuthContext';
+import { canAccessFeature } from '../lib/planConfig';
 
 interface BrandLogoProps {
   variant?: 'dark' | 'light' | 'auto';
@@ -7,45 +9,61 @@ interface BrandLogoProps {
   showText?: boolean;
 }
 
-/**
- * A reusable BrandLogo component that handles theme-based visibility.
- * 'dark' variant: Best for light backgrounds (original dark logo)
- * 'light' variant: Best for dark backgrounds (uses CSS filter to invert/brighten if needed)
- * 'auto' variant: Uses Tailwind's dark mode classes to switch automatically
- */
 export const BrandLogo: React.FC<BrandLogoProps> = ({
   variant = 'auto',
   className = 'h-11 w-auto',
   showText = false,
 }) => {
+  const { gymLogoUrl, gymName, subscriptionTier } = useAuth();
+  const hasWhiteLabel = canAccessFeature(subscriptionTier, 'whiteLabel');
+  const displayName = hasWhiteLabel && gymName ? gymName : APP_NAME;
+  
+  if (hasWhiteLabel && gymLogoUrl) {
+    return (
+      <div className="flex items-center gap-2">
+        <img
+          src={gymLogoUrl}
+          alt={displayName}
+          className={`${className} object-contain`}
+          fetchPriority="high"
+        />
+        {showText && (
+          <span className="text-xl font-bold text-slate-900 dark:text-white">
+            {displayName}
+          </span>
+        )}
+      </div>
+    );
+  }
+
   return (
     <div className="flex items-center gap-2">
       {variant === 'auto' ? (
         <>
           <img
             src="/logo.png"
-            alt={APP_NAME}
-            className={`${className} dark:hidden block`}
+            alt={displayName}
+            className={`${className} dark:hidden block object-contain`}
             fetchPriority="high"
           />
           <img
             src="/logo-dark.png"
-            alt={APP_NAME}
-            className={`${className} hidden dark:block`}
+            alt={displayName}
+            className={`${className} hidden dark:block object-contain`}
             fetchPriority="high"
           />
         </>
       ) : (
         <img
           src={variant === 'light' ? '/logo-dark.png' : '/logo.png'}
-          alt={APP_NAME}
-          className={`${className}`}
+          alt={displayName}
+          className={`${className} object-contain`}
           fetchPriority="high"
         />
       )}
       {showText && (
         <span className="text-xl font-bold text-slate-900 dark:text-white">
-          {APP_NAME}
+          {displayName}
         </span>
       )}
     </div>

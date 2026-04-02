@@ -11,6 +11,7 @@ import { EmptyState } from '../components/ui/EmptyState';
 import { useDemoData } from '../contexts/DemoDataContext';
 import { useDemoMode } from '../hooks/useDemoMode';
 import { useDebounce } from '../hooks/useDebounce';
+import { usePlan } from '../contexts/PlanContext';
 
 const CheckinSkeleton = () => (
   <div className="bg-white dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-800 p-4 animate-pulse">
@@ -30,6 +31,7 @@ export default function AttendanceScanner() {
   const { isDemoMode } = useDemoMode();
   const { state: demoState, addAttendance } = useDemoData();
   const { showToast } = useToast();
+  const { canAccess, openUpgradeModal } = usePlan();
   const [members, setMembers] = useState<Partial<Member>[]>([]);
   const [recentCheckins, setRecentCheckins] = useState<Partial<Attendance>[]>([]);
   const [loading, setLoading] = useState(true);
@@ -399,11 +401,23 @@ export default function AttendanceScanner() {
         </div>
         <div className="flex items-center gap-3">
           <button
-            onClick={() => setShowQrModal(true)}
+            onClick={() => {
+              if (!canAccess('qrCheckin')) {
+                openUpgradeModal('qrCheckin');
+                return;
+              }
+              setShowQrModal(true);
+            }}
             className="flex items-center gap-2 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 px-5 py-2.5 rounded-xl font-bold transition-colors active:scale-95"
           >
             <span className="material-symbols-outlined">qr_code_scanner</span>
             Scan QR
+            {!canAccess('qrCheckin') && (
+              <span className="ml-1 text-[10px] font-bold text-amber-500 bg-amber-50 dark:bg-amber-500/10 px-1.5 py-0.5 rounded flex items-center gap-1">
+                <span className="material-symbols-outlined text-[12px]" style={{ fontVariationSettings: "'FILL' 1" }}>lock</span>
+                PREMIUM
+              </span>
+            )}
           </button>
           <button
             onClick={() => setShowManualModal(true)}

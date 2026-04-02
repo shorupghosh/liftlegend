@@ -10,8 +10,11 @@ interface AuthContextType {
     userRole: string | null;
     gymId: string | null;
     gymStatus: string | null;
+    trialEndsAt: string | null;
     subscriptionTier: string | null;
     dashboardMode: 'basic' | 'advanced' | null;
+    gymName: string | null;
+    gymLogoUrl: string | null;
     setDashboardMode: (mode: 'basic' | 'advanced') => void;
     onboardingCompleted: boolean;
     setOnboardingCompleted: (completed: boolean) => void;
@@ -29,8 +32,11 @@ const AuthContext = createContext<AuthContextType>({
     userRole: null,
     gymId: null,
     gymStatus: null,
+    trialEndsAt: null,
     subscriptionTier: null,
     dashboardMode: null,
+    gymName: null,
+    gymLogoUrl: null,
     setDashboardMode: () => {},
     onboardingCompleted: true, // Default true to prevent locking existing users temporarily
     setOnboardingCompleted: () => {},
@@ -50,8 +56,11 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     const [userRole, setUserRole] = useState<string | null>(null);
     const [gymId, setGymId] = useState<string | null>(null);
     const [gymStatus, setGymStatus] = useState<string | null>(null);
+    const [trialEndsAt, setTrialEndsAt] = useState<string | null>(null);
     const [subscriptionTier, setSubscriptionTier] = useState<string | null>(null);
     const [dashboardMode, setDashboardModeState] = useState<'basic' | 'advanced' | null>(null);
+    const [gymName, setGymName] = useState<string | null>(null);
+    const [gymLogoUrl, setGymLogoUrl] = useState<string | null>(null);
     const [isImpersonating, setIsImpersonating] = useState(false);
     const [impersonatedGymId, setImpersonatedGymId] = useState<string | null>(null);
     const [impersonatedGymName, setImpersonatedGymName] = useState<string | null>(null);
@@ -81,6 +90,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
             setUserRole('OWNER');
             setGymId('demo-gym-id');
             setGymStatus('ACTIVE');
+            setTrialEndsAt(null);
             setSubscriptionTier('PREMIUM');
             setDashboardModeState((window.sessionStorage.getItem('liftlegend_demo_dashboard_mode') as 'basic' | 'advanced') || 'advanced');
             setOnboardingCompleted(true);
@@ -115,8 +125,11 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
                 setUserRole(null);
                 setGymId(null);
                 setGymStatus(null);
+                setTrialEndsAt(null);
                 setSubscriptionTier(null);
                 setDashboardModeState(null);
+                setGymName(null);
+                setGymLogoUrl(null);
                 setOnboardingCompleted(true);
                 setLoading(false);
             }
@@ -142,8 +155,11 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
                 setUserRole(null);
                 setGymId(null);
                 setGymStatus(null);
+                setTrialEndsAt(null);
                 setSubscriptionTier(null);
                 setDashboardModeState(null);
+                setGymName(null);
+                setGymLogoUrl(null);
                 setOnboardingCompleted(true);
                 return;
             }
@@ -159,6 +175,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
             setUserRole(activeImpersonation ? 'OWNER' : selectedRole.role);
             setGymId(activeImpersonation?.gymId || selectedRole.gym_id);
             setGymStatus(null);
+            setTrialEndsAt(null);
             setSubscriptionTier(activeImpersonation?.subscriptionTier || null);
 
             // Auto-populate display_name if missing
@@ -176,27 +193,33 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
                 try {
                     const { data: gymData, error: gymError } = await supabase
                         .from('gyms')
-                        .select('status, subscription_tier, onboarding_completed, dashboard_mode')
+                        .select('status, trial_ends_at, subscription_tier, onboarding_completed, dashboard_mode, name, branding')
                         .eq('id', activeImpersonation?.gymId || selectedRole.gym_id)
                         .maybeSingle();
 
                     if (gymError) throw gymError;
 
                     setGymStatus(gymData?.status || null);
+                    setTrialEndsAt(gymData?.trial_ends_at || null);
                     setSubscriptionTier(gymData?.subscription_tier || 'BASIC');
                     setOnboardingCompleted(gymData?.onboarding_completed !== false);
                     setDashboardModeState(gymData?.dashboard_mode || 'advanced');
+                    setGymName(gymData?.name || null);
+                    setGymLogoUrl((gymData?.branding as any)?.logo_url || null);
                 } catch (err) {
                     // Graceful fallback if some columns don't exist yet
                     console.error('Failed to fetch gym data:', err);
                     try {
                         const { data: fallbackData } = await supabase
                             .from('gyms')
-                            .select('status, subscription_tier')
+                            .select('status, trial_ends_at, subscription_tier, name, branding')
                             .eq('id', activeImpersonation?.gymId || selectedRole.gym_id)
                             .maybeSingle();
                         setGymStatus(fallbackData?.status || null);
+                        setTrialEndsAt(fallbackData?.trial_ends_at || null);
                         setSubscriptionTier(fallbackData?.subscription_tier || 'BASIC');
+                        setGymName(fallbackData?.name || null);
+                        setGymLogoUrl((fallbackData?.branding as any)?.logo_url || null);
                     } catch {
                         // Ultimate fallback
                     }
@@ -211,8 +234,11 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
             setUserRole(null);
             setGymId(null);
             setGymStatus(null);
+            setTrialEndsAt(null);
             setSubscriptionTier(null);
             setDashboardModeState(null);
+            setGymName(null);
+            setGymLogoUrl(null);
             setOnboardingCompleted(true);
             setIsImpersonating(false);
             setImpersonatedGymId(null);
@@ -236,8 +262,11 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         setUserRole(null);
         setGymId(null);
         setGymStatus(null);
+        setTrialEndsAt(null);
         setSubscriptionTier(null);
         setDashboardModeState(null);
+        setGymName(null);
+        setGymLogoUrl(null);
         setOnboardingCompleted(true);
         setIsImpersonating(false);
         setImpersonatedGymId(null);
@@ -250,7 +279,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     };
 
     return (
-        <AuthContext.Provider value={{ session, user, userRole, gymId, gymStatus, subscriptionTier, dashboardMode, setDashboardMode, onboardingCompleted, setOnboardingCompleted, isImpersonating, impersonatedGymId, impersonatedGymName, stopImpersonation, loading, signOut }}>
+        <AuthContext.Provider value={{ session, user, userRole, gymId, gymStatus, trialEndsAt, subscriptionTier, dashboardMode, gymName, gymLogoUrl, setDashboardMode, onboardingCompleted, setOnboardingCompleted, isImpersonating, impersonatedGymId, impersonatedGymName, stopImpersonation, loading, signOut }}>
             {children}
         </AuthContext.Provider>
     );

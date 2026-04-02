@@ -60,7 +60,9 @@ function RetentionStatusBadge({ status }: { status: RetentionStatus }) {
       ? 'bg-rose-50 text-rose-600 dark:bg-rose-950/40 dark:text-rose-300'
       : status === 'At Risk'
         ? 'bg-amber-50 text-amber-600 dark:bg-amber-950/40 dark:text-amber-300'
-        : 'bg-blue-50 text-blue-600 dark:bg-blue-950/40 dark:text-blue-300';
+        : status === 'Never Visited'
+          ? 'bg-emerald-50 text-emerald-600 dark:bg-emerald-950/40 dark:text-emerald-300'
+          : 'bg-blue-50 text-blue-600 dark:bg-blue-950/40 dark:text-blue-300';
 
   return (
     <span className={`inline-flex rounded-full px-2.5 py-1 text-[10px] font-black uppercase tracking-widest ${styles}`}>

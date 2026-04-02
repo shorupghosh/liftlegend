@@ -4,7 +4,7 @@ import { isDemoModeActive } from '../../lib/demoUtils';
 import { PageLoader } from '../ui/PageLoader';
 
 export const ProtectedRoute = ({ allowedRoles }: { allowedRoles?: string[] }) => {
-    const { session, userRole, gymStatus, loading } = useAuth();
+    const { session, userRole, gymStatus, trialEndsAt, loading } = useAuth();
     const isDemo = isDemoModeActive();
 
     if (loading) {
@@ -45,8 +45,13 @@ export const ProtectedRoute = ({ allowedRoles }: { allowedRoles?: string[] }) =>
     }
 
     // Check if gym is locked (only for tenant staff, not super admins)
-    if (userRole !== 'SUPER_ADMIN' && ['LOCKED', 'SUSPENDED', 'PAST_DUE', 'EXPIRED', 'DELETED'].includes(gymStatus || '')) {
-        return <Navigate to="/subscription-locked" replace />;
+    if (userRole !== 'SUPER_ADMIN') {
+        const isStatusLocked = ['LOCKED', 'SUSPENDED', 'PAST_DUE', 'EXPIRED', 'DELETED'].includes(gymStatus || '');
+        const isTrialExpired = gymStatus === 'TRIAL' && trialEndsAt ? new Date(trialEndsAt).getTime() < Date.now() : false;
+        
+        if (isStatusLocked || isTrialExpired) {
+            return <Navigate to="/subscription-locked" replace />;
+        }
     }
 
     return <Outlet />;

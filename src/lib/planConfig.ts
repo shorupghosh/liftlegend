@@ -23,7 +23,8 @@ export type PlanFeature =
   | 'staffManagement'
   | 'multiGym'
   | 'notifications'
-  | 'payments';
+  | 'payments'
+  | 'whiteLabel';
 
 /**
  * Subscription tiers as stored in the database.
@@ -59,6 +60,7 @@ export const PLAN_FEATURES: Record<SubscriptionTier, Record<PlanFeature, boolean
     staffManagement: false,
     multiGym: false,
     notifications: false,
+    whiteLabel: true,
   },
   FREE: {
     basicDashboard: true,
@@ -78,6 +80,7 @@ export const PLAN_FEATURES: Record<SubscriptionTier, Record<PlanFeature, boolean
     staffManagement: false,
     multiGym: false,
     notifications: false,
+    whiteLabel: false,
   },
   BASIC: {
     basicDashboard: true,
@@ -97,6 +100,7 @@ export const PLAN_FEATURES: Record<SubscriptionTier, Record<PlanFeature, boolean
     staffManagement: false,
     multiGym: false,
     notifications: false,
+    whiteLabel: false,
   },
   ADVANCED: {
     basicDashboard: true,
@@ -116,6 +120,7 @@ export const PLAN_FEATURES: Record<SubscriptionTier, Record<PlanFeature, boolean
     staffManagement: false,
     multiGym: false,
     notifications: false,
+    whiteLabel: false,
   },
   PREMIUM: {
     basicDashboard: true,
@@ -135,6 +140,7 @@ export const PLAN_FEATURES: Record<SubscriptionTier, Record<PlanFeature, boolean
     staffManagement: true,
     multiGym: true,
     notifications: true,
+    whiteLabel: true,
   },
 };
 
@@ -372,6 +378,12 @@ export const FEATURE_META: Record<PlanFeature, FeatureMeta> = {
     label: 'Multi-Gym / Multi-Branch',
     description: 'Manage multiple gym locations from one account',
     icon: 'apartment',
+    requiredPlan: 'PREMIUM',
+  },
+  whiteLabel: {
+    label: 'White Labeling',
+    description: 'Use your own gym name and custom logo',
+    icon: 'branding_watermark',
     requiredPlan: 'PREMIUM',
   },
 };

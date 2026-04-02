@@ -92,8 +92,8 @@ export default function AdvancedDashboard({ previewUnlocked = false }: AdvancedD
     activeMembers: 0,
     todayCheckins: 0,
     revenue: 0,
-    retentionRate: 88, // BI Mock
-    churnRisk: 12,    // BI Mock
+    retentionRate: 100, // BI Mock
+    churnRisk: 0,    // BI Mock
   });
   const [recentCheckins, setRecentCheckins] = useState<any[]>([]);
   const [weeklyCheckins, setWeeklyCheckins] = useState<number[]>([0, 0, 0, 0, 0, 0, 0]);
@@ -289,8 +289,8 @@ export default function AdvancedDashboard({ previewUnlocked = false }: AdvancedD
             {isBasicPlan && <LockedOverlay message="Smart Action Center" plan="ADVANCED" />}
              <h4 className="text-lg font-bold text-slate-900 dark:text-white mb-4">Action Center</h4>
              <div className="space-y-4">
-                <SmartAlert type="urgent" title="Expiry Alert" desc="12 members expiring in 48h." action="Review Members" onAction={() => navigate('/admin/members')} />
-                <SmartAlert type="opportunity" title="Retention Win" desc="5 members reached 30 sessions." action="Open Campaigns" onAction={() => navigate('/admin/notifications')} />
+                <SmartAlert type="urgent" title="Expiry Alert" desc="Members are expiring soon." action="Review Members" onAction={() => navigate('/admin/members')} />
+                <SmartAlert type="opportunity" title="Retention Win" desc="Members are highly active." action="Open Campaigns" onAction={() => navigate('/admin/notifications')} />
                 <SmartAlert type="info" title="Revenue Insight" desc="New Advanced plan is converting at 15%." action="See Data" onAction={() => navigate('/admin/analytics')} />
              </div>
           </div>

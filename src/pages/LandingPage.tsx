@@ -50,7 +50,7 @@ export default function LandingPage() {
         <header className="sticky top-0 z-50 w-full border-b border-slate-200 dark:border-slate-800 bg-white/80 dark:bg-[#111821]/80 backdrop-blur-md px-4 sm:px-6 md:px-20 py-3 sm:py-4">
           <div className="max-w-7xl mx-auto flex items-center justify-between">
             <div className="flex items-center gap-3">
-              <BrandLogo className="h-11 w-auto" variant="auto" />
+              <BrandLogo className="h-14 sm:h-16 w-auto" variant="auto" />
             </div>
             <nav className="hidden md:flex items-center gap-10">
               <a className="text-sm font-semibold hover:text-[#1978e5] transition-colors" href="#features">Features</a>
@@ -272,7 +272,7 @@ export default function LandingPage() {
           <div className="max-w-7xl mx-auto grid grid-cols-2 md:grid-cols-4 lg:grid-cols-5 gap-12">
             <div className="col-span-2">
               <div className="flex items-center gap-3 text-white mb-6">
-                <BrandLogo className="h-11 w-auto" variant="light" />
+                <BrandLogo className="h-14 sm:h-16 w-auto object-contain" variant="light" />
               </div>
               <h5 className="text-white font-bold mb-4">Powering the next generation of gyms in Bangladesh</h5>
               <p className="max-w-xs mb-8">LiftLegend helps gym owners simplify operations, improve member experience, and grow their business with modern management tools.</p>

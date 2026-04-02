@@ -4,6 +4,7 @@ import { useAuth } from '../contexts/AuthContext';
 import { useToast } from '../components/ToastProvider';
 import { useDemoMode } from '../hooks/useDemoMode';
 import { useDemoData } from '../contexts/DemoDataContext';
+import { usePlan } from '../contexts/PlanContext';
 import { PLAN_DISPLAY, normalizeTier } from '../lib/planConfig';
 import { StatusBadge, toneFromStatus } from '../components/ui/StatusBadge';
 
@@ -11,6 +12,7 @@ export default function GymSettings() {
   const { gymId, user } = useAuth();
   const { showToast } = useToast();
   const { isDemoMode } = useDemoMode();
+  const { canAccess, openUpgradeModal } = usePlan();
   const { state: demoState } = useDemoData();
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
@@ -156,7 +158,15 @@ export default function GymSettings() {
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
             <div className="flex flex-col gap-1.5 md:col-span-2">
-              <label htmlFor="gym-logo" className="text-sm font-medium text-slate-700 dark:text-slate-300">Logo URL (Optional)</label>
+              <div className="flex items-center gap-2">
+                <label htmlFor="gym-logo" className="text-sm font-medium text-slate-700 dark:text-slate-300">Logo URL (Optional)</label>
+                {!canAccess('whiteLabel') && (
+                  <button onClick={() => openUpgradeModal('whiteLabel')} className="text-[10px] font-bold text-amber-500 bg-amber-50 dark:bg-amber-500/10 px-1.5 py-0.5 rounded flex items-center gap-1 hover:bg-amber-100 transition-colors">
+                    <span className="material-symbols-outlined text-[12px]" style={{ fontVariationSettings: "'FILL' 1" }}>lock</span>
+                    PREMIUM
+                  </button>
+                )}
+              </div>
               <div className="flex gap-4 items-center">
                 <div className="size-16 rounded-xl bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 flex items-center justify-center overflow-hidden shrink-0">
                   {formData.logo_url ? (
@@ -166,15 +176,29 @@ export default function GymSettings() {
                   )}
                 </div>
                 <input id="gym-logo" value={formData.logo_url} onChange={(e) => setFormData({ ...formData, logo_url: e.target.value })}
-                  className="w-full rounded-xl border border-slate-300 dark:border-slate-700 dark:bg-slate-800 px-4 py-3 text-sm focus:border-primary-default focus:ring-2 focus:ring-primary-default/20 outline-none transition-all"
+                  disabled={!canAccess('whiteLabel')}
+                  className="w-full rounded-xl border border-slate-300 dark:border-slate-700 dark:bg-slate-800 px-4 py-3 text-sm focus:border-primary-default focus:ring-2 focus:ring-primary-default/20 outline-none transition-all disabled:opacity-50 disabled:bg-slate-50 dark:disabled:bg-slate-900 cursor-not-allowed"
                   placeholder="https://example.com/logo.png" type="url" />
+
+
               </div>
             </div>
             <div className="flex flex-col gap-1.5">
-              <label htmlFor="gym-name" className="text-sm font-medium text-slate-700 dark:text-slate-300">Gym Name</label>
+              <div className="flex items-center gap-2">
+                <label htmlFor="gym-name" className="text-sm font-medium text-slate-700 dark:text-slate-300">Gym Name</label>
+                {!canAccess('whiteLabel') && (
+                  <button onClick={() => openUpgradeModal('whiteLabel')} className="text-[10px] font-bold text-amber-500 bg-amber-50 dark:bg-amber-500/10 px-1.5 py-0.5 rounded flex items-center gap-1 hover:bg-amber-100 transition-colors">
+                    <span className="material-symbols-outlined text-[12px]" style={{ fontVariationSettings: "'FILL' 1" }}>lock</span>
+                    PREMIUM
+                  </button>
+                )}
+              </div>
               <input id="gym-name" value={formData.name} onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                className="w-full rounded-xl border border-slate-300 dark:border-slate-700 dark:bg-slate-800 px-4 py-3 text-sm focus:border-primary-default focus:ring-2 focus:ring-primary-default/20 outline-none transition-all"
+                disabled={!canAccess('whiteLabel')}
+                className="w-full rounded-xl border border-slate-300 dark:border-slate-700 dark:bg-slate-800 px-4 py-3 text-sm focus:border-primary-default focus:ring-2 focus:ring-primary-default/20 outline-none transition-all disabled:opacity-50 disabled:bg-slate-50 dark:disabled:bg-slate-900 cursor-not-allowed"
                 placeholder="Your Gym Name" type="text" />
+
+
             </div>
             <div className="flex flex-col gap-1.5">
               <label htmlFor="gym-phone" className="text-sm font-medium text-slate-700 dark:text-slate-300">Phone Number</label>

@@ -140,7 +140,7 @@ export const AdminHeader: React.FC<AdminHeaderProps> = ({
         </div>
       )}
 
-      {trialDaysLeft !== null && trialDaysLeft > 0 && !isDemoMode && (
+      {trialDaysLeft !== null && trialDaysLeft > 0 && !isDemoMode && !isSuperAdmin && (
         <button 
            onClick={() => navigate('/admin/settings/subscription')}
            className="hidden sm:flex items-center gap-1.5 rounded-full border border-amber-300 bg-amber-50 px-3 py-1 text-[11px] font-black uppercase tracking-widest text-amber-700 hover:bg-amber-100 transition-colors dark:border-amber-800 dark:bg-amber-950/40 dark:text-amber-200 dark:hover:bg-amber-900/60"
@@ -150,7 +150,7 @@ export const AdminHeader: React.FC<AdminHeaderProps> = ({
         </button>
       )}
 
-      {trialDaysLeft === 0 && !isDemoMode && (
+      {trialDaysLeft === 0 && !isDemoMode && !isSuperAdmin && (
         <button 
            onClick={() => navigate('/admin/settings/subscription')}
            className="hidden sm:flex items-center gap-1.5 rounded-full border border-red-300 bg-red-50 px-3 py-1 text-[11px] font-black uppercase tracking-widest text-red-700 hover:bg-red-100 transition-colors dark:border-red-800 dark:bg-red-950/40 dark:text-red-200 dark:hover:bg-red-900/60"

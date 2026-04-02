@@ -163,28 +163,35 @@ export async function fetchNotificationPayload(gymId: string, limit = 6): Promis
     };
   }
 
-  if (!missingFunctionPattern.test(rpcResult.error.message || '')) {
-    throw rpcResult.error;
+  if (!missingFunctionPattern.test(rpcResult.error.message || '') && !rpcResult.error.message.includes('relation "notifications" does not exist') && !rpcResult.error.message.includes('404')) {
+    console.warn('Notification RPC error:', rpcResult.error.message);
   }
 
-  const { data, error } = await supabase
-    .from('notifications')
-    .select('id, gym_id, type, title, message, related_member_id, is_read, created_at')
-    .eq('gym_id', gymId)
-    .order('created_at', { ascending: false })
-    .limit(limit);
-
-  if (error) {
-    const fallback = await supabase
+  try {
+    const { data, error } = await supabase
       .from('notifications')
-      .select('id, gym_id, title, message, is_read, created_at')
+      .select('id, gym_id, type, title, message, related_member_id, is_read, created_at')
       .eq('gym_id', gymId)
       .order('created_at', { ascending: false })
       .limit(limit);
 
-    if (fallback.error) {
-      throw fallback.error;
-    }
+    if (error) {
+      if (error.code === '42P01' || error.message.includes('relation') || error.message.includes('404')) {
+        return { items: [], unreadCount: 0 };
+      }
+      const fallback = await supabase
+        .from('notifications')
+        .select('id, gym_id, title, message, is_read, created_at')
+        .eq('gym_id', gymId)
+        .order('created_at', { ascending: false })
+        .limit(limit);
+
+      if (fallback.error) {
+         if (fallback.error.code === '42P01' || fallback.error.message.includes('relation')) {
+            return { items: [], unreadCount: 0 };
+         }
+         return { items: [], unreadCount: 0 };
+      }
 
     const items = (fallback.data || []).map((item) => ({
       ...item,
@@ -202,6 +209,9 @@ export async function fetchNotificationPayload(gymId: string, limit = 6): Promis
     items: (data || []) as NotificationItem[],
     unreadCount: (data || []).filter((item) => !item.is_read).length,
   };
+  } catch (err) {
+    return { items: [], unreadCount: 0 };
+  }
 }
 
 export async function markNotificationRead(notificationId: string) {
