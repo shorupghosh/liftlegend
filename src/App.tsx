@@ -90,7 +90,7 @@ export default function App() {
                 <Route path="/admin" element={<AdminLayout><AdminDashboard /></AdminLayout>} />
                 <Route path="/admin/members" element={<AdminLayout><MembersManagement /></AdminLayout>} />
                 <Route path="/admin/members/:memberId" element={<AdminLayout><MemberDetail /></AdminLayout>} />
-                <Route path="/admin/attendance" element={<AdminLayout><FeatureRoute feature="qrCheckin"><AttendanceScanner /></FeatureRoute></AdminLayout>} />
+                <Route path="/admin/attendance" element={<AdminLayout><FeatureRoute feature="attendanceTracking"><AttendanceScanner /></FeatureRoute></AdminLayout>} />
               </Route>
               <Route element={<ProtectedRoute allowedRoles={['OWNER', 'MANAGER']} />}>
                 <Route path="/admin/plans" element={<AdminLayout><MembershipPlans /></AdminLayout>} />
