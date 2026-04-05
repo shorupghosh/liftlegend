@@ -134,7 +134,7 @@ export default function SuperAdminDashboard() {
   ];
 
   return (
-    <div className="space-y-8 p-6 lg:p-8">
+    <div className="space-y-8 p-4 sm:p-6 lg:p-8">
       <div>
         <h1 className="text-2xl lg:text-3xl font-display font-extrabold text-neutral-text dark:text-white tracking-tight">Platform Control Center</h1>
         <p className="text-slate-500 dark:text-slate-400 text-sm mt-1">Monitor, support, and control all gym tenants from one operational dashboard.</p>
@@ -227,7 +227,7 @@ export default function SuperAdminDashboard() {
                       <td className="px-5 py-4">
                         <div className="flex items-center gap-3">
                           <div className="flex size-10 items-center justify-center rounded-xl bg-primary-default/10 font-bold text-primary-default">
-                            {gym.name.charAt(0)}
+                            {gym.name?.charAt(0) || '?'}
                           </div>
                           <div>
                             <Link to={`/super-admin/gyms/${gym.id}`} className="text-sm font-bold text-neutral-text hover:text-primary-default dark:text-white">

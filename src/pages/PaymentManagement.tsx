@@ -6,9 +6,11 @@ import { useRealtimeSubscription } from '../hooks/useRealtimeSubscription';
 import { useToast } from '../components/ToastProvider';
 import { PaymentModal } from '../components/payments/PaymentModal';
 import { PaymentsTable } from '../components/payments/PaymentsTable';
+import { ErrorState } from '../components/ui/ErrorState';
 import { useDemoData } from '../contexts/DemoDataContext';
 import { useDemoMode } from '../hooks/useDemoMode';
 import { useDebounce } from '../hooks/useDebounce';
+import { formatBdt } from '../lib/currency';
 import { Payment, Member, Plan } from '../types';
 
 const PaymentSkeleton = () => (
@@ -54,22 +56,31 @@ function methodSortValue(method: string) {
   return 3;
 }
 
-function formatCurrency(amount: number) {
-  return `BDT ${Math.max(0, Math.round(amount)).toLocaleString()}`;
-}
+
 
 function downloadReceipt(receipt: ReceiptRecord) {
   const lines = [
-    `Receipt ID: ${receipt.id}`,
-    `Date: ${new Date(receipt.created_at).toLocaleString()}`,
-    `Member: ${receipt.member_name}`,
-    `Phone: ${receipt.member_phone || 'N/A'}`,
-    `Plan: ${receipt.plan_name}`,
-    `Amount Paid: ${formatCurrency(receipt.amount_paid)}`,
-    `Remaining Due: ${formatCurrency(receipt.amount_due)}`,
-    `Method: ${paymentMethodLabel(receipt.payment_method)}`,
-    `Start Date: ${new Date(receipt.start_date).toLocaleDateString()}`,
-    `End Date: ${new Date(receipt.end_date).toLocaleDateString()}`,
+    `==============================`,
+    `     GYM PAYMENT RECEIPT`,
+    `==============================`,
+    ``,
+    `Receipt ID : ${receipt.id}`,
+    `Date       : ${new Date(receipt.created_at).toLocaleString('en-GB')}`,
+    `------------------------------`,
+    `Member     : ${receipt.member_name}`,
+    `Phone      : ${receipt.member_phone || 'N/A'}`,
+    `Plan       : ${receipt.plan_name}`,
+    `------------------------------`,
+    `Paid       : ${formatBdt(receipt.amount_paid)}`,
+    `Due        : ${formatBdt(receipt.amount_due)}`,
+    `Method     : ${paymentMethodLabel(receipt.payment_method)}`,
+    `------------------------------`,
+    `Valid From : ${new Date(receipt.start_date).toLocaleDateString('en-GB')}`,
+    `Valid To   : ${new Date(receipt.end_date).toLocaleDateString('en-GB')}`,
+    ``,
+    `==============================`,
+    `         THANK YOU!`,
+    `==============================`
   ];
 
   const blob = new Blob([lines.join('\n')], { type: 'text/plain;charset=utf-8' });
@@ -85,14 +96,20 @@ function downloadReceipt(receipt: ReceiptRecord) {
 
 function buildWhatsAppReceiptMessage(receipt: ReceiptRecord) {
   return [
-    `Receipt ${receipt.id}`,
-    `Member: ${receipt.member_name}`,
-    `Plan: ${receipt.plan_name}`,
-    `Paid: ${formatCurrency(receipt.amount_paid)}`,
-    `Due: ${formatCurrency(receipt.amount_due)}`,
-    `Method: ${paymentMethodLabel(receipt.payment_method)}`,
-    `Valid: ${new Date(receipt.start_date).toLocaleDateString()} to ${new Date(receipt.end_date).toLocaleDateString()}`,
-  ].join('\n');
+    `🏋️ Gym Payment Receipt`,
+    `-------------------------`,
+    `🔖 Receipt No: ${receipt.id}`,
+    `👤 Member: ${receipt.member_name}`,
+    receipt.member_phone ? `📞 Phone: ${receipt.member_phone}` : '',
+    `📋 Plan: ${receipt.plan_name}`,
+    `-------------------------`,
+    `✅ Paid: ${formatBdt(receipt.amount_paid)}`,
+    receipt.amount_due > 0 ? `⚠️ Due: ${formatBdt(receipt.amount_due)}` : `🌟 Due: Fully Paid`,
+    `💳 Method: ${paymentMethodLabel(receipt.payment_method)}`,
+    `📅 Valid: ${new Date(receipt.start_date).toLocaleDateString('en-GB')} to ${new Date(receipt.end_date).toLocaleDateString('en-GB')}`,
+    `-------------------------`,
+    `Thank you for your payment!`
+  ].filter(Boolean).join('\n');
 }
 
 export default function PaymentManagement() {
@@ -107,6 +124,7 @@ export default function PaymentManagement() {
   const [plans, setPlans] = useState<Partial<Plan>[]>([]);
   const [loading, setLoading] = useState(true);
   const [showAddModal, setShowAddModal] = useState(false);
+  const [tableError, setTableError] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
   const debouncedSearch = useDebounce(searchQuery, 400);
@@ -209,6 +227,7 @@ export default function PaymentManagement() {
   const fetchPayments = useCallback(async () => {
     if (!gymId && !isDemoMode) return;
     setLoading(true);
+    setTableError(null);
     try {
       if (isDemoMode) {
         let filtered = demoState.payments;
@@ -262,6 +281,7 @@ export default function PaymentManagement() {
       setTotalCount(count || 0);
     } catch (error) {
       console.error('Error fetching payments:', error);
+      setTableError((error as any).message || 'Failed to load payments.');
       showToast('Failed to load payments.', 'error');
     } finally {
       setLoading(false);
@@ -420,7 +440,7 @@ export default function PaymentManagement() {
       setLatestReceipt(receipt);
       showToast(
         receipt.amount_due > 0
-          ? `Partial payment recorded. Remaining due: ${formatCurrency(receipt.amount_due)}`
+          ? `Partial payment recorded. Remaining due: ${formatBdt(receipt.amount_due)}`
           : 'Payment recorded. This is demo mode and changes are not persisted.',
         'info'
       );
@@ -483,7 +503,7 @@ export default function PaymentManagement() {
 
       showToast(
         receipt.amount_due > 0
-          ? `Payment recorded. Remaining due: ${formatCurrency(receipt.amount_due)}`
+          ? `Payment recorded. Remaining due: ${formatBdt(receipt.amount_due)}`
           : 'Payment recorded successfully.',
         'success'
       );
@@ -554,11 +574,11 @@ export default function PaymentManagement() {
       <div className="grid grid-cols-1 gap-3 md:grid-cols-3">
         <div className="rounded-xl border border-slate-200 bg-white p-4 shadow-sm dark:border-slate-800 dark:bg-slate-900">
           <p className="text-xs font-bold uppercase tracking-wider text-slate-500">Outstanding dues</p>
-          <p className="mt-2 text-2xl font-black text-amber-600 dark:text-amber-300">{formatCurrency(totalOutstandingDue)}</p>
+          <p className="mt-2 text-2xl font-black text-amber-600 dark:text-amber-300">{formatBdt(totalOutstandingDue)}</p>
         </div>
         <div className="rounded-xl border border-slate-200 bg-white p-4 shadow-sm dark:border-slate-800 dark:bg-slate-900">
           <p className="text-xs font-bold uppercase tracking-wider text-slate-500">Today&apos;s collections</p>
-          <p className="mt-2 text-2xl font-black text-emerald-600 dark:text-emerald-300">{formatCurrency(collectionSummary.total)}</p>
+          <p className="mt-2 text-2xl font-black text-emerald-600 dark:text-emerald-300">{formatBdt(collectionSummary.total)}</p>
         </div>
         <div className="rounded-xl border border-slate-200 bg-white p-4 shadow-sm dark:border-slate-800 dark:bg-slate-900">
           <p className="text-xs font-bold uppercase tracking-wider text-slate-500">Payment methods today</p>
@@ -569,7 +589,7 @@ export default function PaymentManagement() {
               {collectionSummary.items.map((entry) => (
                 <div key={entry.method} className="flex items-center justify-between text-xs">
                   <span className="font-semibold text-slate-500 dark:text-slate-400">{paymentMethodLabel(entry.method)}</span>
-                  <span className="font-bold text-neutral-text dark:text-white">{formatCurrency(entry.amount)}</span>
+                  <span className="font-bold text-neutral-text dark:text-white">{formatBdt(entry.amount)}</span>
                 </div>
               ))}
             </div>
@@ -600,19 +620,25 @@ export default function PaymentManagement() {
         </select>
       </div>
 
-      <PaymentsTable
-        loading={loading}
-        filteredPayments={filteredPayments}
-        paymentsLength={payments.length}
-        totalCount={totalCount}
-        totalPages={totalPages}
-        page={page}
-        setPage={setPage}
-        ITEMS_PER_PAGE={ITEMS_PER_PAGE}
-        getPaymentDueAmount={getPaymentDueAmount}
-        onViewReceipt={handleViewReceipt}
-        onDownloadReceipt={(payment) => downloadReceipt(prepareReceipt(payment))}
-      />
+      {tableError ? (
+        <div className="bg-white dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-800 shadow-sm p-8 flex flex-col items-center justify-center min-h-[400px]">
+          <ErrorState title="Payments Load Failed" message={tableError} onRetry={fetchPayments} />
+        </div>
+      ) : (
+        <PaymentsTable
+          loading={loading}
+          filteredPayments={filteredPayments}
+          paymentsLength={payments.length}
+          totalCount={totalCount}
+          totalPages={totalPages}
+          page={page}
+          setPage={setPage}
+          ITEMS_PER_PAGE={ITEMS_PER_PAGE}
+          getPaymentDueAmount={getPaymentDueAmount}
+          onViewReceipt={handleViewReceipt}
+          onDownloadReceipt={(payment) => downloadReceipt(prepareReceipt(payment))}
+        />
+      )}
 
       {latestReceipt && (
         <div className="fixed inset-0 z-[100] flex items-center justify-center bg-slate-900/50 p-4 backdrop-blur-sm">
@@ -652,11 +678,11 @@ export default function PaymentManagement() {
                   </div>
                   <div>
                     <p className="text-xs text-slate-500">Paid Amount</p>
-                    <p className="font-bold text-emerald-600 dark:text-emerald-400">{formatCurrency(latestReceipt.amount_paid)}</p>
+                    <p className="font-bold text-emerald-600 dark:text-emerald-400">{formatBdt(latestReceipt.amount_paid)}</p>
                   </div>
                   <div>
                     <p className="text-xs text-slate-500">Remaining Due</p>
-                    <p className="font-bold text-amber-600 dark:text-amber-400">{formatCurrency(latestReceipt.amount_due)}</p>
+                    <p className="font-bold text-amber-600 dark:text-amber-400">{formatBdt(latestReceipt.amount_due)}</p>
                   </div>
                   <div>
                     <p className="text-xs text-slate-500">Start Date</p>

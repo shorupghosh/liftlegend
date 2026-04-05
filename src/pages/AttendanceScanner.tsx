@@ -390,7 +390,7 @@ export default function AttendanceScanner() {
   const formatTime = (ts: string) => new Date(ts).toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
 
   return (
-    <div className="p-6 lg:p-8 space-y-6">
+    <div className="p-4 sm:p-6 lg:p-8 space-y-6">
       {/* Page Header */}
       <div className="flex flex-wrap justify-between items-center gap-4">
         <div>
@@ -399,7 +399,7 @@ export default function AttendanceScanner() {
           </h1>
           <p className="text-slate-500 dark:text-slate-400 text-sm mt-1">Log member check-ins and track daily attendance</p>
         </div>
-        <div className="flex items-center gap-3">
+        <div className="flex flex-wrap items-center gap-3">
           <button
             onClick={() => {
               if (!canAccess('qrCheckin')) {
@@ -505,7 +505,7 @@ export default function AttendanceScanner() {
                   <p className="text-xs text-slate-500">{checkin.members?.plans?.name || 'No Plan'}</p>
                 </div>
                 <div className="text-right">
-                  <p className="text-xs font-medium text-slate-400">{formatTime(checkin.check_in_time!)}</p>
+                  <p className="text-xs font-medium text-slate-400">{checkin.check_in_time ? formatTime(checkin.check_in_time) : '—'}</p>
                   <span className={`text-[10px] font-bold uppercase ${checkin.method === 'QR_CODE' ? 'text-blue-600' : checkin.members?.status === 'ACTIVE' ? 'text-emerald-600' : 'text-rose-600'}`}>
                     {checkin.method === 'QR_CODE' ? '📷 QR' : checkin.method || 'MANUAL'}
                   </span>
@@ -572,7 +572,7 @@ export default function AttendanceScanner() {
                     className="w-full p-4 flex items-center gap-3 hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors text-left disabled:opacity-50 group"
                   >
                     <div className="size-10 rounded-full bg-primary-default/10 flex items-center justify-center text-primary-default font-bold group-hover:scale-110 transition-transform">
-                      {member.full_name!.charAt(0)}
+                      {member.full_name?.charAt(0) || '?'}
                     </div>
                     <div className="flex-1">
                       <p className="text-sm font-bold text-neutral-text dark:text-white">{member.full_name}</p>

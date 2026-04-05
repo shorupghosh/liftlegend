@@ -198,7 +198,7 @@ export default function MemberDetail() {
     if (loading) return <PageLoader label="Loading member profile..." />;
 
     if (!member) return (
-        <div className="p-6 lg:p-8">
+        <div className="p-4 sm:p-6 lg:p-8">
             <EmptyState
                 icon="person_search"
                 title="Member not found"

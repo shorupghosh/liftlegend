@@ -203,14 +203,7 @@ export default function SubscriptionManagement() {
         </div>
       )}
 
-      <ConfirmModal
-        isOpen={confirmState.open}
-        title={confirmState.title}
-        message={confirmState.message}
-        confirmLabel="Confirm"
-        onConfirm={() => void confirmState.onConfirm()}
-        onCancel={() => setConfirmState((current) => ({ ...current, open: false }))}
-      />
+      <ConfirmModal isOpen={confirmState.open} title={confirmState.title} message={confirmState.message} confirmLabel="Confirm" requireVerification="CONFIRM" isDestructive={true} onConfirm={() => void confirmState.onConfirm()} onCancel={() => setConfirmState((current) => ({ ...current, open: false }))} />
     </div>
   );
 }

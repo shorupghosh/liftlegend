@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { safeLocalGet, safeLocalSet } from '../lib/safeStorage';
 import { Link } from 'react-router-dom';
 import { BrandLogo } from '../components/BrandLogo';
 
@@ -39,8 +40,8 @@ export default function BookDemo() {
         source: 'book-demo-page',
       };
 
-      const existingLeads = JSON.parse(window.localStorage.getItem('liftlegend_demo_leads') || '[]');
-      window.localStorage.setItem('liftlegend_demo_leads', JSON.stringify([payload, ...existingLeads]));
+      const existingLeads = JSON.parse(safeLocalGet('liftlegend_demo_leads') || '[]');
+      safeLocalSet('liftlegend_demo_leads', JSON.stringify([payload, ...existingLeads]));
 
       const webhookUrl = import.meta.env.VITE_DEMO_LEAD_WEBHOOK_URL as string | undefined;
       if (webhookUrl) {

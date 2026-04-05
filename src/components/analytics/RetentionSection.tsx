@@ -13,7 +13,9 @@ type ReminderModalState = {
   message: string;
 };
 
-function EmptyState({ title, message }: { title: string; message: string }) {
+import { EmptyState } from '../ui/EmptyState';
+
+function EmptyStateLocal({ title, message }: { title: string; message: string }) {
   return (
     <div className="flex flex-col items-center justify-center rounded-2xl border border-dashed border-slate-700 bg-slate-950/40 px-6 py-10 text-center">
       <div className="mb-3 flex size-12 items-center justify-center rounded-2xl bg-slate-800 text-slate-400">
@@ -253,7 +255,7 @@ export default function RetentionSection({
             <p className="mb-5 text-xs text-slate-400">Rule-based alerts from attendance behavior</p>
 
             {!hasAnyData ? (
-              <EmptyState title="No data yet" message="Start by adding members or recording attendance" />
+              <EmptyState icon="insights" title="No data yet" description="Start by adding members or recording attendance" />
             ) : (
               <div className="space-y-3">
                 {insights.map((insight) => (
@@ -274,7 +276,7 @@ export default function RetentionSection({
 
             {!members.length ? (
               <div className="p-5">
-                <EmptyState title="No retention alerts" message="Everyone has checked in recently or there is not enough data yet" />
+                <EmptyState icon="insights" title="No retention alerts" description="Everyone has checked in recently or there is not enough data yet" />
               </div>
             ) : (
               <div className="overflow-x-auto">

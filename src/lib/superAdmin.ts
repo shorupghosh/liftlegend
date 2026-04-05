@@ -1,4 +1,5 @@
 import { supabase } from './supabase';
+import { safeSessionGet, safeSessionSet, safeSessionRemove } from './safeStorage';
 import type {
   AuditLogEntry,
   GymDetailsPayload,
@@ -137,7 +138,7 @@ function buildTenantUsage(
 
 export function getImpersonationSession(): ImpersonationSession | null {
   if (typeof window === 'undefined') return null;
-  const raw = window.sessionStorage.getItem(IMPERSONATION_KEY);
+  const raw = safeSessionGet(IMPERSONATION_KEY);
   if (!raw) return null;
   try {
     return JSON.parse(raw) as ImpersonationSession;
@@ -149,10 +150,10 @@ export function getImpersonationSession(): ImpersonationSession | null {
 function setImpersonationSession(session: ImpersonationSession | null) {
   if (typeof window === 'undefined') return;
   if (!session) {
-    window.sessionStorage.removeItem(IMPERSONATION_KEY);
+    safeSessionRemove(IMPERSONATION_KEY);
     return;
   }
-  window.sessionStorage.setItem(IMPERSONATION_KEY, JSON.stringify(session));
+  safeSessionSet(IMPERSONATION_KEY, JSON.stringify(session));
 }
 
 export async function fetchTenantSummaries() {

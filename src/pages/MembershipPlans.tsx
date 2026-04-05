@@ -7,8 +7,10 @@ import { formatBdt } from '../lib/currency';
 import { useDemoMode } from '../hooks/useDemoMode';
 import { useDemoData } from '../contexts/DemoDataContext';
 import { EmptyState } from '../components/ui/EmptyState';
+import { ErrorState } from '../components/ui/ErrorState';
+import { ConfirmModal } from '../components/ui/ConfirmModal';
 
-interface ConfirmModal {
+interface ConfirmModalState {
   isOpen: boolean;
   title: string;
   message: string;
@@ -22,10 +24,11 @@ export default function MembershipPlans() {
   const { state: demoState } = useDemoData();
   const [plans, setPlans] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
+  const [tableError, setTableError] = useState<string | null>(null);
   const [showModal, setShowModal] = useState(false);
   const [editingPlan, setEditingPlan] = useState<any>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [confirmModal, setConfirmModal] = useState<ConfirmModal>({ isOpen: false, title: '', message: '', onConfirm: () => { } });
+  const [confirmModal, setConfirmModal] = useState<ConfirmModalState>({ isOpen: false, title: '', message: '', onConfirm: () => { } });
   const [formData, setFormData] = useState({
     name: '',
     price: '',
@@ -38,6 +41,7 @@ export default function MembershipPlans() {
   const fetchPlans = useCallback(async () => {
     if (!gymId && !isDemoMode) return;
     setLoading(true);
+    setTableError(null);
     try {
       if (isDemoMode) {
         setPlans(demoState.plans);
@@ -54,6 +58,7 @@ export default function MembershipPlans() {
       setPlans(data || []);
     } catch (error) {
       console.error('Error fetching plans:', error);
+      setTableError((error && error.message) || 'Failed to load plans.');
       showToast('Failed to load plans.', 'error');
     } finally {
       setLoading(false);
@@ -180,7 +185,7 @@ export default function MembershipPlans() {
   ];
 
   return (
-    <div className="p-6 lg:p-8 space-y-6">
+    <div className="p-4 sm:p-6 lg:p-8 space-y-6">
       {/* Page Header */}
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
         <div>
@@ -199,7 +204,11 @@ export default function MembershipPlans() {
       </div>
 
       {/* Plans Grid */}
-      {loading ? (
+      {tableError ? (
+        <div className="bg-white dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-800 shadow-sm p-8 flex flex-col items-center justify-center min-h-[400px]">
+          <ErrorState title="Plans Load Failed" message={tableError} onRetry={fetchPlans} />
+        </div>
+      ) : loading ? (
         <div className="flex justify-center items-center h-64">
           <div className="size-10 border-4 border-primary-default border-t-transparent rounded-full animate-spin" />
         </div>
@@ -341,30 +350,8 @@ export default function MembershipPlans() {
         </div>
       )}
 
-      {/* Styled Confirm Modal — BUG-20 FIXED */}
-      {confirmModal.isOpen && (
-        <div
-          className="fixed inset-0 z-[200] flex items-center justify-center bg-black/60 backdrop-blur-sm p-4"
-          onClick={() => setConfirmModal(prev => ({ ...prev, isOpen: false }))}
-        >
-          <div
-            className="bg-white dark:bg-slate-900 rounded-2xl w-full max-w-sm shadow-2xl border border-slate-200 dark:border-slate-800 p-6"
-            onClick={e => e.stopPropagation()}
-            role="dialog"
-            aria-modal="true"
-          >
-            <div className="size-12 rounded-full bg-red-100 dark:bg-red-900/30 flex items-center justify-center mx-auto mb-4">
-              <span className="material-symbols-outlined text-red-600 text-2xl">delete_forever</span>
-            </div>
-            <h3 className="text-lg font-bold text-center text-neutral-text dark:text-white mb-2">{confirmModal.title}</h3>
-            <p className="text-sm text-slate-500 text-center mb-6">{confirmModal.message}</p>
-            <div className="flex gap-3">
-              <button onClick={() => setConfirmModal(prev => ({ ...prev, isOpen: false }))} className="flex-1 h-11 rounded-xl font-bold text-slate-600 dark:text-slate-300 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 transition-colors">Cancel</button>
-              <button onClick={confirmModal.onConfirm} className="flex-1 h-11 rounded-xl font-bold text-white bg-red-500 hover:bg-red-600 transition-colors">Delete</button>
-            </div>
-          </div>
-        </div>
-      )}
+      {/* Styled Confirm Modal */}
+      <ConfirmModal isOpen={confirmModal.isOpen} title={confirmModal.title} message={confirmModal.message} requireVerification="DELETE" isDestructive={true} onConfirm={confirmModal.onConfirm} onCancel={() => setConfirmModal(prev => ({ ...prev, isOpen: false }))} />
     </div>
   );
 }

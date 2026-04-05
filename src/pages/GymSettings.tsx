@@ -126,7 +126,7 @@ export default function GymSettings() {
   );
 
   return (
-    <div className="p-6 lg:p-8 space-y-6">
+    <div className="p-4 sm:p-6 lg:p-8 space-y-6">
       <div>
         <h1 className="text-2xl lg:text-3xl font-display font-extrabold text-neutral-text dark:text-white tracking-tight">Settings</h1>
         <p className="text-slate-500 dark:text-slate-400 text-sm mt-1">Manage your gym profile, subscription, and account settings.</p>

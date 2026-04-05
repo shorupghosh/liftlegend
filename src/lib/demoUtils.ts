@@ -1,17 +1,19 @@
+import { safeSessionGet, safeSessionSet, safeSessionRemove } from './safeStorage';
+
 const DEMO_MODE_KEY = 'liftlegend_demo_mode';
 const DEMO_MODE_EVENT = 'liftlegend:demo-mode-change';
 
 export const isDemoModeActive = (): boolean => {
   if (typeof window === 'undefined') return false;
-  return window.sessionStorage.getItem(DEMO_MODE_KEY) === 'true' || window.location.pathname.startsWith('/demo');
+  return safeSessionGet(DEMO_MODE_KEY) === 'true' || window.location.pathname.startsWith('/demo');
 };
 
 export const setDemoMode = (active: boolean): void => {
   if (typeof window === 'undefined') return;
   if (active) {
-    window.sessionStorage.setItem(DEMO_MODE_KEY, 'true');
+    safeSessionSet(DEMO_MODE_KEY, 'true');
   } else {
-    window.sessionStorage.removeItem(DEMO_MODE_KEY);
+    safeSessionRemove(DEMO_MODE_KEY);
   }
   window.dispatchEvent(new CustomEvent(DEMO_MODE_EVENT, { detail: active }));
 };

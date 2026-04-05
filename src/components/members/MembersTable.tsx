@@ -63,11 +63,40 @@ export const MembersTable: React.FC<MembersTableProps> = ({
           </thead>
           <tbody className="divide-y divide-slate-100 dark:divide-slate-800">
             {loading ? (
-              <tr>
-                <td colSpan={7} className="py-12 text-center">
-                  <div className="flex justify-center"><div className="size-8 border-4 border-primary-default border-t-transparent rounded-full animate-spin" /></div>
-                </td>
-              </tr>
+              Array.from({ length: 5 }).map((_, i) => (
+                <tr key={`skeleton-${i}`} className="animate-pulse">
+                  <td className="px-5 py-4">
+                    <div className="flex items-center gap-3">
+                      <div className="size-9 rounded-full bg-slate-200 dark:bg-slate-800 shrink-0" />
+                      <div className="min-w-0 flex-1 space-y-2">
+                        <div className="h-4 bg-slate-200 dark:bg-slate-800 rounded w-24" />
+                        <div className="h-3 bg-slate-100 dark:bg-slate-800/50 rounded w-16" />
+                      </div>
+                    </div>
+                  </td>
+                  <td className="px-5 py-4">
+                    <div className="h-6 w-20 bg-slate-200 dark:bg-slate-800 rounded-lg" />
+                  </td>
+                  <td className="px-5 py-4 hidden md:table-cell">
+                    <div className="h-4 w-20 bg-slate-100 dark:bg-slate-800/50 rounded" />
+                  </td>
+                  <td className="px-5 py-4 hidden lg:table-cell">
+                    <div className="h-4 w-20 bg-slate-100 dark:bg-slate-800/50 rounded" />
+                  </td>
+                  <td className="px-5 py-4">
+                    <div className="h-6 w-16 bg-slate-200 dark:bg-slate-800 rounded-full" />
+                  </td>
+                  <td className="px-5 py-4">
+                    <div className="h-6 w-24 bg-slate-200 dark:bg-slate-800 rounded-full" />
+                  </td>
+                  <td className="px-5 py-4">
+                    <div className="flex gap-2">
+                      <div className="size-8 bg-slate-200 dark:bg-slate-800 rounded-lg" />
+                      <div className="size-8 bg-slate-200 dark:bg-slate-800 rounded-lg" />
+                    </div>
+                  </td>
+                </tr>
+              ))
             ) : members.length === 0 ? (
               <tr>
                 <td colSpan={7} className="p-12">
@@ -105,14 +134,38 @@ export const MembersTable: React.FC<MembersTableProps> = ({
                     </td>
                     <td className="px-5 py-4 text-sm text-slate-500 hidden md:table-cell">
                       {member.join_date
-                        ? new Date(member.join_date).toLocaleDateString()
-                        : new Date(member.created_at).toLocaleDateString()}
+                        ? new Date(member.join_date).toLocaleDateString('en-GB')
+                        : new Date(member.created_at).toLocaleDateString('en-GB')}
                     </td>
                     <td className="px-5 py-4 text-sm text-slate-500 hidden lg:table-cell font-medium">
-                      {member.expiry_date ? new Date(member.expiry_date).toLocaleDateString() : <span className="text-xs text-slate-400">-</span>}
+                      {member.expiry_date ? new Date(member.expiry_date).toLocaleDateString('en-GB') : <span className="text-xs text-slate-400">-</span>}
                     </td>
                     <td className="px-5 py-4">
-                      <StatusBadge label={member.status || 'UNKNOWN'} tone={toneFromStatus(member.status)} />
+                      <div className="flex flex-col gap-1 items-start">
+                        {(() => {
+                           const today = new Date();
+                           today.setHours(0,0,0,0);
+                           const expiry = member.expiry_date ? new Date(member.expiry_date) : null;
+                           if (expiry) expiry.setHours(0,0,0,0);
+                           let mainStatus = member.status || 'ACTIVE';
+                           let tone = toneFromStatus(member.status);
+
+                           if (!member.plan_id && !member.plans) {
+                             mainStatus = 'No Plan';
+                             tone = 'neutral';
+                           } else if (expiry && expiry < today) {
+                             mainStatus = 'Expired';
+                             tone = 'danger';
+                           }
+
+                           return <StatusBadge label={mainStatus} tone={tone} />;
+                        })()}
+                        {((member as any).due_amount || 0) > 0 && (
+                          <span className="text-[10px] bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400 px-2 py-0.5 rounded-full font-bold uppercase tracking-wider">
+                            Payment Due
+                          </span>
+                        )}
+                      </div>
                     </td>
                     <td className="px-5 py-4">
                       <AlertBadge variant={alert.variant}>{alert.label}</AlertBadge>

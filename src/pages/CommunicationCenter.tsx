@@ -69,7 +69,7 @@ export default function CommunicationCenter() {
   };
 
   return (
-    <div className="space-y-6 p-6 lg:p-8">
+    <div className="space-y-6 p-4 sm:p-6 lg:p-8">
       <div className="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
         <div>
           <h1 className="text-2xl font-display font-extrabold tracking-tight text-neutral-text dark:text-white lg:text-3xl">

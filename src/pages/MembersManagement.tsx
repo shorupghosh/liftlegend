@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useCallback, useRef } from 'react';
+import React, { useEffect, useState, useCallback, useRef, useMemo } from 'react';
 import { Link, useSearchParams } from 'react-router-dom';
 import { supabase } from '../lib/supabase';
 import { useAuth } from '../contexts/AuthContext';
@@ -9,9 +9,11 @@ import { Member, Plan } from '../types';
 import { formatBdt } from '../lib/currency';
 import { ConfirmModal } from '../components/ui/ConfirmModal';
 import { MemberModal } from '../components/members/MemberModal';
+import { ImportSummaryModal } from '../components/members/ImportSummaryModal';
 import { MembersTable } from '../components/members/MembersTable';
 import { AlertBadge } from '../components/ui/AlertBadge';
 import { EmptyState } from '../components/ui/EmptyState';
+import { ErrorState } from '../components/ui/ErrorState';
 import { getMemberExpiryAlert, calculateExpiryDate, getDaysLeft } from '../lib/memberExpiry';
 import { useDemoData } from '../contexts/DemoDataContext';
 import { useDemoMode } from '../hooks/useDemoMode';
@@ -20,23 +22,13 @@ import UsageLimitBanner, { UsageLimitGuard } from '../components/plan/UsageLimit
 
 const PAGE_SIZE = 50;
 
-const MemberSkeleton = () => (
-  <div className="bg-white dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-800 p-4 animate-pulse">
-    <div className="flex items-center gap-3">
-      <div className="size-11 rounded-full bg-slate-100 dark:bg-slate-800 shrink-0" />
-      <div className="flex-1 space-y-2">
-        <div className="h-4 bg-slate-100 dark:bg-slate-800 rounded w-1/2" />
-        <div className="h-3 bg-slate-50 dark:bg-slate-800/50 rounded w-1/3" />
-      </div>
-      <div className="h-6 w-16 bg-slate-100 dark:bg-slate-800 rounded-full" />
-    </div>
-  </div>
-);
+
 
 interface ConfirmModalState {
   isOpen: boolean;
   title: string;
   message: string;
+  requireVerification?: string;
   onConfirm: () => void;
 }
 
@@ -65,6 +57,7 @@ export default function MembersManagement() {
   const [confirmModal, setConfirmModal] = useState<ConfirmModalState>({ isOpen: false, title: '', message: '', onConfirm: () => { } });
   const [isExporting, setIsExporting] = useState(false);
   const [isImporting, setIsImporting] = useState(false);
+  const [importSummary, setImportSummary] = useState<any>(null);
   const csvInputRef = useRef<HTMLInputElement>(null);
   const [formData, setFormData] = useState({
     full_name: '',
@@ -113,8 +106,12 @@ export default function MembersManagement() {
       }
 
       if (filterPlan !== 'All Plans') {
-        const planMatch = plans.find(p => p.name === filterPlan);
-        if (planMatch) query = query.eq('plan_id', planMatch.id);
+        if (filterPlan === 'No Plan') {
+          query = query.is('plan_id', null);
+        } else {
+          const planMatch = plans.find(p => p.name === filterPlan);
+          if (planMatch) query = query.eq('plan_id', planMatch.id);
+        }
       }
 
       const todayString = new Date().toISOString().split('T')[0];
@@ -127,7 +124,13 @@ export default function MembersManagement() {
       } else if (filterStatus === 'Expiring Soon') {
          query = query.gte('expiry_date', todayString).lte('expiry_date', nextWeekString);
       } else if (filterStatus === 'Payment Due') {
-         query = query.gt('due_amount', 0);
+         const { data: unpaidMembers } = await supabase.rpc('get_unpaid_member_ids', { gym_id_input: gymId });
+         const unpaidIds = unpaidMembers?.map((r: any) => r.member_id) || [];
+         if (unpaidIds.length > 0) {
+           query = query.in('id', unpaidIds);
+         } else {
+           query = query.eq('id', '00000000-0000-0000-0000-000000000000'); // Force no results
+         }
       }
 
       query = query.range(from, to);
@@ -300,30 +303,23 @@ export default function MembersManagement() {
     }
 
     try {
+      const { generateCSVContent, triggerCSVDownload } = await import('../utils/csv');
       const headers = ['Full Name', 'Email', 'Phone', 'Plan', 'Status', 'Joined Date', 'Expiry Date', 'Alert'];
       const rows = dataToExport.map((m: any) => {
         const alert = getMemberExpiryAlert(m.expiry_date);
         return [
-          `"${(m.full_name || '').replace(/"/g, '""')}"`,
-          `"${(m.email || '').replace(/"/g, '""')}"`,
-          `"${(m.phone || '').replace(/"/g, '""')}"`,
-          `"${(m.plans?.name || 'No Plan').replace(/"/g, '""')}"`,
+          m.full_name || '',
+          m.email || '',
+          m.phone || '',
+          m.plans?.name || 'No Plan',
           m.status || 'ACTIVE',
-          new Date(m.created_at).toLocaleDateString(),
-          m.expiry_date ? new Date(m.expiry_date).toLocaleDateString() : 'N/A',
+          new Date(m.created_at).toLocaleDateString('en-GB'),
+          m.expiry_date ? new Date(m.expiry_date).toLocaleDateString('en-GB') : 'N/A',
           alert.label,
         ];
       });
-      const csvContent = [headers.join(','), ...rows.map(r => r.join(','))].join('\n');
-      const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
-      const url = URL.createObjectURL(blob);
-      const link = document.createElement('a');
-      link.href = url;
-      link.download = `members_${new Date().toISOString().slice(0, 10)}.csv`;
-      document.body.appendChild(link);
-      link.click();
-      document.body.removeChild(link);
-      URL.revokeObjectURL(url);
+      const csvContent = generateCSVContent(headers, rows);
+      triggerCSVDownload(csvContent, `members_${new Date().toISOString().slice(0, 10)}.csv`);
       showToast(`Exported ${dataToExport.length} members.`, 'success');
     } catch (err) {
       showToast('CSV generation failed.', 'error');
@@ -342,6 +338,7 @@ export default function MembersManagement() {
     if (!file || !gymId) return;
     setIsImporting(true);
     try {
+      const { parseCSVLine } = await import('../utils/csv');
       const text = await file.text();
       const lines = text.split(/\r?\n/).filter(line => line.trim());
       if (lines.length < 2) {
@@ -361,31 +358,83 @@ export default function MembersManagement() {
       const planMap: Record<string, string> = {};
       plans.forEach(p => { if (p.name && p.id) planMap[p.name.toLowerCase()] = p.id; });
 
+      const emailRegex = /^\S+@\S+\.\S+$/;
+      const phoneSet = new Set(members.map(m => m.phone).filter(Boolean));
+      const emailSet = new Set(members.map(m => m.email).filter(Boolean));
+
+      const stats = { total: lines.length - 1, imported: 0, skipped: 0, failed: 0, errors: [] as string[] };
       const newMembers: any[] = [];
+
       for (let i = 1; i < lines.length; i++) {
         const row = parseCSVLine(lines[i]);
         const fullName = row[nameIdx]?.trim();
-        if (!fullName || fullName.length < 2) continue;
+        const email = emailIdx >= 0 ? (row[emailIdx]?.trim() || null) : null;
+        let phone = phoneIdx >= 0 ? (row[phoneIdx]?.trim() || null) : null;
         const planName = planIdx >= 0 ? row[planIdx]?.trim() : '';
-        const matchedPlanId = planName ? (planMap[planName.toLowerCase()] || null) : null;
+
+        if (!fullName || fullName.length < 2) {
+          stats.failed++;
+          stats.errors.push(`Row ${i + 1}: Missing or invalid full name`);
+          continue;
+        }
+
+        if (email && !emailRegex.test(email)) {
+          stats.failed++;
+          stats.errors.push(`Row ${i + 1} (${fullName}): Invalid email format`);
+          continue;
+        }
+
+        // Basic phone cleanup
+        if (phone) phone = phone.replace(/[^0-9+]/g, '');
+
+        if (phone && phone.length < 8) {
+          stats.failed++;
+          stats.errors.push(`Row ${i + 1} (${fullName}): Invalid phone format`);
+          continue;
+        }
+
+        if (phone && phoneSet.has(phone)) {
+          stats.skipped++;
+          stats.errors.push(`Row ${i + 1} (${fullName}): Duplicate phone number`);
+          continue;
+        }
+
+        if (email && emailSet.has(email)) {
+          stats.skipped++;
+          stats.errors.push(`Row ${i + 1} (${fullName}): Duplicate email`);
+          continue;
+        }
+
+        if (planName && !planMap[planName.toLowerCase()]) {
+          stats.failed++;
+          stats.errors.push(`Row ${i + 1} (${fullName}): Unknown plan name "${planName}"`);
+          continue;
+        }
+
+        const matchedPlanId = planName ? planMap[planName.toLowerCase()] : null;
         const status = statusIdx >= 0 ? row[statusIdx]?.trim().toUpperCase() : 'ACTIVE';
+
+        if (phone) phoneSet.add(phone);
+        if (email) emailSet.add(email);
+        stats.imported++;
+
         newMembers.push({
-          gym_id: gymId, full_name: fullName, email: emailIdx >= 0 ? (row[emailIdx]?.trim() || null) : null,
-          phone: phoneIdx >= 0 ? (row[phoneIdx]?.trim() || null) : null, plan_id: matchedPlanId,
+          gym_id: gymId, full_name: fullName, email,
+          phone, plan_id: matchedPlanId,
           status: ['ACTIVE', 'INACTIVE', 'FROZEN'].includes(status) ? status : 'ACTIVE',
         });
       }
-      if (newMembers.length === 0) {
-        showToast('No valid members found.', 'error');
-        return;
+
+      if (newMembers.length > 0) {
+        for (let i = 0; i < newMembers.length; i += 50) {
+          const batch = newMembers.slice(i, i + 50);
+          const { error } = await supabase.from('members').insert(batch);
+          if (error) throw error;
+        }
+        fetchMembers();
       }
-      for (let i = 0; i < newMembers.length; i += 50) {
-        const batch = newMembers.slice(i, i + 50);
-        const { error } = await supabase.from('members').insert(batch);
-        if (error) throw error;
-      }
-      showToast(`Imported ${newMembers.length} members!`, 'success');
-      fetchMembers();
+      setImportSummary(stats);
+
     } catch (error: any) {
       showToast(error.message || 'Import failed.', 'error');
     } finally {
@@ -394,49 +443,40 @@ export default function MembersManagement() {
     }
   };
 
-  const parseCSVLine = (line: string): string[] => {
-    const result: string[] = [];
-    let current = '';
-    let inQuotes = false;
-    for (let i = 0; i < line.length; i++) {
-      const char = line[i];
-      if (char === '"') {
-        if (inQuotes && line[i + 1] === '"') { current += '"'; i++; } else { inQuotes = !inQuotes; }
-      } else if (char === ',' && !inQuotes) {
-        result.push(current);
-        current = '';
-      } else { current += char; }
-    }
-    result.push(current);
-    return result;
-  };
-
-  const filteredMembers = members.filter(m => {
-    if (filterPlan !== 'All Plans' && m.plans?.name !== filterPlan) return false;
-    if (filterStatus === 'All Status') return true;
-    const daysLeft = getDaysLeft(m.expiry_date);
-    const hasExpiry = daysLeft !== null;
-    switch (filterStatus) {
-      case 'Active': return m.status === 'ACTIVE' && (!hasExpiry || daysLeft >= 0);
-      case 'Expired': return hasExpiry && daysLeft < 0;
-      case 'Expiring Soon': return hasExpiry && daysLeft >= 0 && daysLeft <= 7;
-      case 'Payment Due': return ((m as any).due_amount || 0) > 0;
-      default: return true;
-    }
-  }).sort((a, b) => {
-    if (isDemoMode) {
-      const { key, direction } = sortConfig;
-      let valA: any = (a as any)[key] || '';
-      let valB: any = (b as any)[key] || '';
-      if (key === 'expiry_date' || key === 'join_date' || key === 'created_at') {
-        valA = new Date(valA).getTime();
-        valB = new Date(valB).getTime();
+  const filteredMembers = useMemo(() => {
+    return members.filter((m) => {
+      if (filterPlan !== 'All Plans') {
+        if (filterPlan === 'No Plan') {
+          if (m.plans?.name || m.plan_id) return false;
+        } else {
+          if (m.plans?.name !== filterPlan) return false;
+        }
       }
-      if (valA < valB) return direction === 'asc' ? -1 : 1;
-      if (valA > valB) return direction === 'asc' ? 1 : -1;
-    }
-    return 0;
-  });
+      if (filterStatus === 'All Status') return true;
+      const daysLeft = getDaysLeft(m.expiry_date);
+      const hasExpiry = daysLeft !== null;
+      switch (filterStatus) {
+        case 'Active': return m.status === 'ACTIVE' && (!hasExpiry || daysLeft >= 0);
+        case 'Expired': return hasExpiry && daysLeft < 0;
+        case 'Expiring Soon': return hasExpiry && daysLeft >= 0 && daysLeft <= 7;
+        case 'Payment Due': return ((m as any).due_amount || 0) > 0;
+        default: return true;
+      }
+    }).sort((a, b) => {
+      if (isDemoMode) {
+        const { key, direction } = sortConfig;
+        let valA: any = (a as any)[key] || '';
+        let valB: any = (b as any)[key] || '';
+        if (key === 'expiry_date' || key === 'join_date' || key === 'created_at') {
+          valA = new Date(valA).getTime();
+          valB = new Date(valB).getTime();
+        }
+        if (valA < valB) return direction === 'asc' ? -1 : 1;
+        if (valA > valB) return direction === 'asc' ? 1 : -1;
+      }
+      return 0;
+    });
+  }, [members, filterPlan, filterStatus, isDemoMode, sortConfig]);
 
   const totalPages = Math.ceil(totalCount / PAGE_SIZE);
 
@@ -481,11 +521,21 @@ export default function MembersManagement() {
             }} 
             className="w-full bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl h-11 pl-10 pr-4 text-sm focus:ring-2 focus:ring-primary-default/20 focus:border-primary-default outline-none transition-all text-neutral-text dark:text-white placeholder:text-slate-400" placeholder="Search by name, email or phone..." />
         </form>
+        {(filterPlan !== 'All Plans' || filterStatus !== 'All Status' || searchQuery !== '') && (
+          <button 
+            onClick={() => { setFilterPlan('All Plans'); setFilterStatus('All Status'); setSearchQuery(''); setPage(1); setSearchParams({}, { replace: true }); }}
+            className="flex items-center justify-center h-11 px-4 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-600 font-bold transition-colors dark:bg-slate-800 dark:hover:bg-slate-700 dark:text-slate-300"
+          >
+            <span className="material-symbols-outlined mr-2">restart_alt</span>
+            Reset
+          </button>
+        )}
         <div className="flex gap-3">
           <div className="flex-1 sm:flex-none relative">
             <span className="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-lg pointer-events-none">package</span>
             <select value={filterPlan} onChange={(e) => { setFilterPlan(e.target.value); setPage(1); }} className="w-full sm:w-44 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl h-11 pl-10 pr-10 text-sm focus:ring-2 focus:ring-primary-default/20 focus:border-primary-default outline-none transition-all appearance-none cursor-pointer text-neutral-text dark:text-white" style={{ backgroundImage: 'url("data:image/svg+xml,%3Csvg xmlns=\'http://www.w3.org/2000/svg\' fill=\'none\' viewBox=\'0 0 24 24\' stroke=\'%2364748b\'%3E%3Cpath stroke-linecap=\'round\' stroke-linejoin=\'round\' stroke-width=\'2\' d=\'M19 9l-7 7-7-7\'%3E%3C/path%3E%3C/svg%3E")', backgroundPosition: 'right 12px center', backgroundRepeat: 'no-repeat', backgroundSize: '16px' }}>
               <option value="All Plans">All Plans</option>
+              <option value="No Plan">No Plan</option>
               {plans.map(p => <option key={p.id} value={p.name}>{p.name}</option>)}
             </select>
           </div>
@@ -506,8 +556,8 @@ export default function MembersManagement() {
 
       {tableError ? (
         <div className="bg-white dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-800 shadow-sm p-8 flex flex-col items-center justify-center min-h-[400px]">
-          <EmptyState icon="error" title="Data Load Failed" description={tableError} />
-          <button onClick={() => { setTableError(null); fetchMembers(); }} className="mt-4 px-4 py-2 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 rounded-lg text-sm font-bold text-slate-700 dark:text-slate-300 transition-colors">Try Again</button>
+          <ErrorState title="Data Load Failed" message={tableError} onRetry={() => { setTableError(null); fetchMembers(); }} />
+
         </div>
       ) : (
         <MembersTable
@@ -518,7 +568,20 @@ export default function MembersManagement() {
       )}
 
       <MemberModal isOpen={showAddModal} isEditing={!!editingMember} formData={formData} setFormData={setFormData} plans={plans} isSubmitting={isSubmitting} onSubmit={handleSubmit} onClose={handleCloseModal} />
-      <ConfirmModal isOpen={confirmModal.isOpen} title={confirmModal.title} message={confirmModal.message} onConfirm={confirmModal.onConfirm} onCancel={() => setConfirmModal(prev => ({ ...prev, isOpen: false }))} />
+      <ImportSummaryModal
+        isOpen={!!importSummary}
+        summary={importSummary}
+        onClose={() => setImportSummary(null)}
+        onDownloadErrors={() => {
+          const blob = new Blob([importSummary.errors.join('\n')], { type: 'text/plain' });
+          const url = URL.createObjectURL(blob);
+          const a = document.createElement('a');
+          a.href = url;
+          a.download = 'import-errors.txt';
+          a.click();
+        }}
+      />
+      <ConfirmModal isOpen={confirmModal.isOpen} title={confirmModal.title} message={confirmModal.message} requireVerification={confirmModal.requireVerification} isDestructive={true} onConfirm={confirmModal.onConfirm} onCancel={() => setConfirmModal(prev => ({ ...prev, isOpen: false }))} />
     </div>
   );
 }

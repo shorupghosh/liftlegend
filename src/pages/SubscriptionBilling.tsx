@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useCallback } from 'react';
+import { safeLocalGet, safeLocalSet } from '../lib/safeStorage';
 import { supabase } from '../lib/supabase';
 import { useAuth } from '../contexts/AuthContext';
 import { usePlan } from '../contexts/PlanContext';
@@ -102,8 +103,8 @@ export default function SubscriptionBilling() {
 
       if (error) {
         if (error.code === '42P01') {
-          const existingRequests = JSON.parse(window.localStorage.getItem('liftlegend_plan_change_requests') || '[]');
-          window.localStorage.setItem('liftlegend_plan_change_requests', JSON.stringify([
+          const existingRequests = JSON.parse(safeLocalGet('liftlegend_plan_change_requests') || '[]');
+          safeLocalSet('liftlegend_plan_change_requests', JSON.stringify([
             {
               gym_id: gymId,
               subject: requestSubject,
@@ -130,14 +131,14 @@ export default function SubscriptionBilling() {
 
   if (loading) {
     return (
-      <div className="p-6 lg:p-8 flex justify-center items-center h-64">
+      <div className="p-4 sm:p-6 lg:p-8 flex justify-center items-center h-64">
         <div className="size-10 border-4 border-primary-default border-t-transparent rounded-full animate-spin" />
       </div>
     );
   }
 
   return (
-    <div className="p-6 lg:p-8 space-y-8">
+    <div className="p-4 sm:p-6 lg:p-8 space-y-8">
       {/* Page Header */}
       <div>
         <h1 className="text-2xl lg:text-3xl font-display font-extrabold text-neutral-text dark:text-white tracking-tight">

@@ -1,4 +1,5 @@
 import React, { createContext, useContext, useMemo, useState } from 'react';
+import { safeLocalGet, safeLocalSet, safeLocalRemove } from '../lib/safeStorage';
 import type { Attendance, Member, Payment } from '../types';
 import type {
   DemoNotification,
@@ -61,7 +62,7 @@ export function DemoDataProvider({ children }: { children: React.ReactNode }) {
 
   React.useEffect(() => {
     if (isDemoMode && !dataLoaded) {
-      const savedState = localStorage.getItem('demo_state');
+      const savedState = safeLocalGet('demo_state');
       if (savedState) {
         try {
           const parsed = JSON.parse(savedState);
@@ -72,7 +73,7 @@ export function DemoDataProvider({ children }: { children: React.ReactNode }) {
           setDataLoaded(true);
           return;
         } catch (e) {
-          console.error('Failed to parse demo state from localStorage', e);
+          console.error('Failed to parse demo state from storage', e);
         }
       }
 
@@ -87,7 +88,7 @@ export function DemoDataProvider({ children }: { children: React.ReactNode }) {
 
   React.useEffect(() => {
     if (isDemoMode && dataLoaded) {
-      localStorage.setItem('demo_state', JSON.stringify(state));
+      safeLocalSet('demo_state', JSON.stringify(state));
     }
   }, [state, isDemoMode, dataLoaded]);
 
@@ -120,7 +121,7 @@ export function DemoDataProvider({ children }: { children: React.ReactNode }) {
     loadDemoData().then(({ createInitialDemoState }) => {
       const initial = createInitialDemoState();
       setState(initial);
-      localStorage.removeItem('demo_state');
+      safeLocalRemove('demo_state');
     });
   };
 

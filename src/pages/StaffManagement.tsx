@@ -268,7 +268,7 @@ export default function StaffManagement() {
   if (!canViewPage) return <Navigate to="/admin" replace />;
 
   return (
-    <div className="space-y-6 p-6 lg:p-8">
+    <div className="space-y-6 p-4 sm:p-6 lg:p-8">
       <UsageLimitBanner resource="staff" />
       <div className="flex flex-col justify-between gap-4 md:flex-row md:items-end">
         <div>
@@ -355,7 +355,9 @@ export default function StaffManagement() {
 
       <InviteStaffModal isOpen={showInviteModal} email={inviteData.email} role={inviteData.role} roleOptions={roleOptions.length ? roleOptions : ['TRAINER']} isSubmitting={isInviteSubmitting} onClose={() => setShowInviteModal(false)} onEmailChange={(v) => setInviteData(c => ({ ...c, email: v }))} onRoleChange={(v) => setInviteData(c => ({ ...c, role: v }))} onSubmit={handleInviteStaff} />
       <EditStaffRoleModal isOpen={Boolean(editingStaff)} currentRole={(editingStaff?.role || 'TRAINER') as StaffRole} roleOptions={roleOptions.length ? roleOptions : ['TRAINER']} isSubmitting={isRoleSubmitting} memberName={editingStaff?.display_name || 'Staff Member'} onClose={() => setEditingStaff(null)} onSubmit={handleUpdateRole} />
-      <ConfirmModal isOpen={Boolean(removingStaff)} title="Remove Staff" message={`Remove ${removingStaff?.display_name || removingStaff?.email} from the team?`} onConfirm={handleRemoveStaff} onCancel={() => setRemovingStaff(null)} />
+      <ConfirmModal isOpen={Boolean(removingStaff)} title="Remove Staff" message={`Remove ${removingStaff?.display_name || removingStaff?.email} from the team?`}
+        requireVerification={removingStaff?.display_name || removingStaff?.email || "REMOVE"}
+        isDestructive={true} onConfirm={handleRemoveStaff} onCancel={() => setRemovingStaff(null)} />
     </div>
   );
 }

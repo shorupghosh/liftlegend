@@ -2,6 +2,7 @@ import React from 'react';
 import { Payment } from '../../types';
 import { EmptyState } from '../ui/EmptyState';
 import { StatusBadge } from '../ui/StatusBadge';
+import { formatBdt } from '../../lib/currency';
 
 interface PaymentsTableProps {
   loading: boolean;
@@ -72,12 +73,12 @@ export const PaymentsTable: React.FC<PaymentsTableProps> = ({
                     <p className="mt-0.5 text-xs text-slate-500">{payment.plans?.name || 'Custom Plan'}</p>
                   </div>
                   <span className="shrink-0 text-sm font-bold text-emerald-600 dark:text-emerald-400">
-                    BDT {Number(payment.price_paid).toLocaleString()}
+                    {formatBdt(Number(payment.price_paid || 0))}
                   </span>
                 </div>
                 <div className="mt-3 flex items-center justify-between border-t border-slate-100 pt-3 dark:border-slate-800">
                   <span className="text-xs text-slate-500">
-                    {new Date(payment.created_at).toLocaleDateString()} at{' '}
+                    {new Date(payment.created_at).toLocaleDateString('en-GB')} at{' '}
                     {new Date(payment.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
                   </span>
                   <span className="inline-flex items-center rounded-lg bg-slate-100 px-2 py-0.5 text-[11px] font-medium text-slate-600 dark:bg-slate-800 dark:text-slate-300">
@@ -181,7 +182,7 @@ export const PaymentsTable: React.FC<PaymentsTableProps> = ({
                     <tr key={payment.id} className="transition-colors hover:bg-slate-50/80 dark:hover:bg-slate-800/30">
                       <td className="px-5 py-4">
                         <div className="text-sm font-medium text-neutral-text dark:text-white">
-                          {new Date(payment.created_at).toLocaleDateString()}
+                          {new Date(payment.created_at).toLocaleDateString('en-GB')}
                         </div>
                         <div className="text-xs text-slate-500">
                           {new Date(payment.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
@@ -193,12 +194,12 @@ export const PaymentsTable: React.FC<PaymentsTableProps> = ({
                       <td className="hidden px-5 py-4 text-sm text-slate-600 dark:text-slate-400 md:table-cell">
                         {payment.plans?.name || 'Custom Plan'}
                         <div className="mt-0.5 text-xs text-slate-500">
-                          {new Date(payment.start_date).toLocaleDateString()} to {new Date(payment.end_date).toLocaleDateString()}
+                          {new Date(payment.start_date).toLocaleDateString('en-GB')} to {new Date(payment.end_date).toLocaleDateString('en-GB')}
                         </div>
                       </td>
                       <td className="px-5 py-4">
                         <span className="font-bold text-emerald-600 dark:text-emerald-400">
-                          BDT {Number(payment.price_paid).toLocaleString()}
+                          {formatBdt(Number(payment.price_paid || 0))}
                         </span>
                       </td>
                       <td className="px-5 py-4">

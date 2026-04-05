@@ -1,6 +1,7 @@
-import React, { createContext, useContext, useEffect, useState } from 'react';
+import React, { createContext, useContext, useEffect, useState, useMemo, useCallback } from 'react';
 import { Session, User } from '@supabase/supabase-js';
 import { supabase } from '../lib/supabase';
+import { safeSessionGet, safeSessionSet } from '../lib/safeStorage';
 import { exitDemoMode, isDemoModeActive, setDemoMode } from '../lib/demoUtils';
 import { endImpersonation, getImpersonationSession } from '../lib/superAdmin';
 
@@ -67,7 +68,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     const [onboardingCompleted, setOnboardingCompleted] = useState<boolean>(true); // Default to true while loading
     const [loading, setLoading] = useState(true);
 
-    const setDashboardMode = async (mode: 'basic' | 'advanced') => {
+    const setDashboardMode = useCallback(async (mode: 'basic' | 'advanced') => {
         setDashboardModeState(mode);
         if (gymId && gymId !== 'demo-gym-id') {
             try {
@@ -76,9 +77,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
                 console.error('Failed to update dashboard mode', err);
             }
         } else if (gymId === 'demo-gym-id') {
-            sessionStorage.setItem('liftlegend_demo_dashboard_mode', mode);
+            safeSessionSet('liftlegend_demo_dashboard_mode', mode);
         }
-    };
+    }, [gymId]);
 
     useEffect(() => {
         let mounted = true;
@@ -92,7 +93,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
             setGymStatus('ACTIVE');
             setTrialEndsAt(null);
             setSubscriptionTier('PREMIUM');
-            setDashboardModeState((window.sessionStorage.getItem('liftlegend_demo_dashboard_mode') as 'basic' | 'advanced') || 'advanced');
+            setDashboardModeState((safeSessionGet('liftlegend_demo_dashboard_mode') as 'basic' | 'advanced') || 'advanced');
             setOnboardingCompleted(true);
             setLoading(false);
             return;
@@ -141,7 +142,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         };
     }, []);
 
-    const fetchUserRole = async (userId: string, userEmail: string | null) => {
+    const fetchUserRole = useCallback(async (userId: string, userEmail: string | null) => {
         setLoading(true);
         try {
             const { data, error } = await supabase
@@ -246,17 +247,17 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         } finally {
             setLoading(false);
         }
-    };
+    }, []);
 
-    const stopImpersonation = async () => {
+    const stopImpersonation = useCallback(async () => {
         await endImpersonation();
         setIsImpersonating(false);
         setImpersonatedGymId(null);
         setImpersonatedGymName(null);
         window.location.href = '/super-admin';
-    };
+    }, []);
 
-    const signOut = async () => {
+    const signOut = useCallback(async () => {
         setSession(null);
         setUser(null);
         setUserRole(null);
@@ -276,11 +277,14 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
             return;
         }
         await supabase.auth.signOut();
-    };
+    }, []);
+
+    const value = useMemo(() => ({ session, user, userRole, gymId, gymStatus, trialEndsAt, subscriptionTier, dashboardMode, gymName, gymLogoUrl, setDashboardMode, onboardingCompleted, setOnboardingCompleted, isImpersonating, impersonatedGymId, impersonatedGymName, stopImpersonation, loading, signOut }), [session, user, userRole, gymId, gymStatus, trialEndsAt, subscriptionTier, dashboardMode, gymName, gymLogoUrl, onboardingCompleted, isImpersonating, impersonatedGymId, impersonatedGymName, loading, setDashboardMode, setOnboardingCompleted, stopImpersonation, signOut]);
 
     return (
-        <AuthContext.Provider value={{ session, user, userRole, gymId, gymStatus, trialEndsAt, subscriptionTier, dashboardMode, gymName, gymLogoUrl, setDashboardMode, onboardingCompleted, setOnboardingCompleted, isImpersonating, impersonatedGymId, impersonatedGymName, stopImpersonation, loading, signOut }}>
+        <AuthContext.Provider value={value}>
             {children}
         </AuthContext.Provider>
     );
 };
+

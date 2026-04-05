@@ -208,7 +208,7 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
                 {/* More menu overlay */}
                 {moreMenuOpen && (
                     <>
-                        <div className="fixed inset-0 z-[-1]" onClick={() => setMoreMenuOpen(false)} />
+                        <div className="fixed inset-0 z-[50] bg-black/10" onClick={() => setMoreMenuOpen(false)} />
                         <div className="absolute bottom-full left-0 right-0 bg-white dark:bg-slate-900 border-t border-slate-200 dark:border-slate-800 shadow-2xl shadow-black/20 rounded-t-2xl p-3 grid grid-cols-4 gap-1 animate-slide-up">
                             {moreItems.map((item) => {
                                 const active = isActive(item.path);
