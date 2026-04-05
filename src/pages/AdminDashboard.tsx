@@ -1,21 +1,40 @@
-import React, { lazy, Suspense, useEffect, useState } from 'react';
+import React, { useEffect, useState, useTransition, useRef } from 'react';
 import DashboardModeToggle from '../components/dashboard/DashboardModeToggle';
 import { useAuth } from '../contexts/AuthContext';
 import { usePlan } from '../contexts/PlanContext';
 import DashboardSkeleton from '../components/dashboard/DashboardSkeleton';
 
-// Lazy-load dashboard variants — user only loads the one they're viewing
-const BasicDashboard = lazy(() => import('../components/dashboard/BasicDashboard'));
-const AdvancedDashboard = lazy(() => import('../components/dashboard/AdvancedDashboard'));
-const LockedAdvancedPreview = lazy(() => import('../components/dashboard/LockedAdvancedPreview'));
+// Lazy-load dashboard variants
+const BasicDashboard = React.lazy(() => import('../components/dashboard/BasicDashboard'));
+const AdvancedDashboard = React.lazy(() => import('../components/dashboard/AdvancedDashboard'));
+const LockedAdvancedPreview = React.lazy(() => import('../components/dashboard/LockedAdvancedPreview'));
+
+// Preload both dashboard chunks immediately so toggle is instant
+const preloadBasic = () => import('../components/dashboard/BasicDashboard');
+const preloadAdvanced = () => import('../components/dashboard/AdvancedDashboard');
 
 export default function AdminDashboard() {
   const { dashboardMode, setDashboardMode, onboardingCompleted } = useAuth();
-  const { canAccess, openUpgradeModal, isBasic } = usePlan();
+  const { canAccess, openUpgradeModal } = usePlan();
+  const [isPending, startTransition] = useTransition();
+  const preloaded = useRef(false);
 
   const hasAdvanced = canAccess('advancedDashboard');
 
   const [mode, setMode] = useState<'basic' | 'advanced'>('basic');
+
+  // Preload the OTHER dashboard variant on first render
+  // so switching is instant with zero loading spinner
+  useEffect(() => {
+    if (preloaded.current) return;
+    preloaded.current = true;
+    // Small delay to not block initial render
+    const timer = setTimeout(() => {
+      preloadBasic().catch(() => {});
+      preloadAdvanced().catch(() => {});
+    }, 300);
+    return () => clearTimeout(timer);
+  }, []);
 
   useEffect(() => {
     if (hasAdvanced) {
@@ -26,7 +45,11 @@ export default function AdminDashboard() {
   }, [dashboardMode, hasAdvanced]);
 
   const handleModeChange = (nextMode: 'basic' | 'advanced') => {
-    setMode(nextMode);
+    // Use startTransition so React keeps showing the current dashboard
+    // while the new one renders, instead of flashing a skeleton
+    startTransition(() => {
+      setMode(nextMode);
+    });
     if (hasAdvanced) {
       setDashboardMode(nextMode);
     }
@@ -59,10 +82,10 @@ export default function AdminDashboard() {
         <DashboardModeToggle mode={mode} userPlan={hasAdvanced ? 'pro' : 'basic'} onChange={handleModeChange} />
       </div>
 
-      <div className="max-w-full flex-1 p-4 sm:p-6 lg:p-8">
-        <Suspense fallback={<DashboardSkeleton />}>
+      <div className={`max-w-full flex-1 p-4 sm:p-6 lg:p-8 transition-opacity duration-150 ${isPending ? 'opacity-70' : 'opacity-100'}`}>
+        <React.Suspense fallback={<DashboardSkeleton />}>
           {dashboardContent}
-        </Suspense>
+        </React.Suspense>
       </div>
     </div>
   );

@@ -195,3 +195,50 @@ input:disabled {
     -webkit-overflow-scrolling: touch;
   }
 }
+
+/* ═══ Performance: GPU-accelerated transitions ═══ */
+.animate-slide-up {
+  animation: slideUp 200ms cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+@keyframes slideUp {
+  from {
+    opacity: 0;
+    transform: translateY(12px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Instant page content appearance */
+.animate-page-in {
+  animation: pageIn 120ms ease-out;
+}
+
+@keyframes pageIn {
+  from {
+    opacity: 0.6;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+/* GPU layer hints for scrollable areas */
+main {
+  will-change: scroll-position;
+  -webkit-overflow-scrolling: touch;
+}
+
+/* Eliminate 300ms tap delay on all interactive elements */
+a, button, input, select, textarea, [role="button"] {
+  touch-action: manipulation;
+}
+
+/* Reduce paint during scroll — promote nav to own layer */
+nav {
+  will-change: transform;
+  transform: translateZ(0);
+}

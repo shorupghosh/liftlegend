@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { useAuth } from '../../contexts/AuthContext';
 import { usePlan } from '../../contexts/PlanContext';
@@ -9,6 +9,7 @@ import { useDemoMode } from '../../hooks/useDemoMode';
 import { DemoBanner } from '../demo/DemoBanner';
 import { getTenantNavVisibility } from '../../lib/staffPermissions';
 import { PlanFeature, canAccessFeature } from '../../lib/planConfig';
+import { useRoutePrefetch, prefetchRoute, ROUTE_IMPORTERS } from '../../hooks/useRoutePrefetch';
 
 const tenantNavItems = [
     { label: 'Dashboard', icon: 'dashboard', path: '/admin' },
@@ -57,6 +58,15 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
     const location = useLocation();
     const [sidebarOpen, setSidebarOpen] = useState(false);
     const [moreMenuOpen, setMoreMenuOpen] = useState(false);
+
+    // Prefetch all route chunks in background after mount
+    useRoutePrefetch();
+
+    // Prefetch a route on touch/hover for instant navigation
+    const handleNavPrefetch = useCallback((path: string) => {
+        const importer = ROUTE_IMPORTERS[path];
+        if (importer) prefetchRoute(importer, path);
+    }, []);
 
     const isSuperAdmin = userRole === 'SUPER_ADMIN';
     const isBasicTier = subscriptionTier === 'BASIC' || !subscriptionTier;
@@ -153,7 +163,9 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
 
                 {/* Page content — add bottom padding on mobile for bottom nav */}
                 <main className="flex-1 overflow-y-auto pb-20 sm:pb-0">
-                    {children}
+                    <div key={location.pathname} className="animate-page-in">
+                        {children}
+                    </div>
                 </main>
             </div>
 
@@ -166,6 +178,8 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
                             <Link
                                 key={item.path}
                                 to={item.path}
+                                onTouchStart={() => handleNavPrefetch(item.path)}
+                                onMouseEnter={() => handleNavPrefetch(item.path)}
                                 className={`flex flex-col items-center justify-center gap-1 transition-colors relative touch-manipulation w-full h-full min-h-[64px] ${
                                     active
                                         ? 'text-primary-default'
