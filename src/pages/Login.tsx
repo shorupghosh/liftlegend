@@ -143,8 +143,9 @@ const Login: React.FC = () => {
         if (roleData?.role === 'SUPER_ADMIN') {
             navigate('/super-admin');
         } else {
-            // Wait for useEffect to handle the redirect so we have onboardingCompleted context
-            // Alternatively, we let the auth state propagate naturally.
+            // Auth state change will trigger redirect via useEffect.
+            // Reset local loading so the button isn't stuck as a spinner.
+            setLoading(false);
         }
     };
 
@@ -360,4 +361,3 @@ const Login: React.FC = () => {
 };
 
 export default Login;
-

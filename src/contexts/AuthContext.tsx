@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useEffect, useState, useMemo, useCallback } from 'react';
+import React, { createContext, useContext, useEffect, useState, useMemo, useCallback, useRef } from 'react';
 import { Session, User } from '@supabase/supabase-js';
 import { supabase } from '../lib/supabase';
 import { safeSessionGet, safeSessionSet } from '../lib/safeStorage';
@@ -67,6 +67,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     const [impersonatedGymName, setImpersonatedGymName] = useState<string | null>(null);
     const [onboardingCompleted, setOnboardingCompleted] = useState<boolean>(true); // Default to true while loading
     const [loading, setLoading] = useState(true);
+    const fetchInFlightRef = useRef(false);
+    const loadingTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
     const setDashboardMode = useCallback(async (mode: 'basic' | 'advanced') => {
         setDashboardModeState(mode);
@@ -84,6 +86,14 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     useEffect(() => {
         let mounted = true;
 
+        // Safety timeout — never let loading hang more than 12 seconds
+        loadingTimeoutRef.current = setTimeout(() => {
+            if (mounted) {
+                console.warn('[Auth] Loading timeout reached — forcing loading=false');
+                setLoading(false);
+            }
+        }, 12000);
+
         // Check for Demo Mode bypass
         const isDemo = isDemoModeActive();
         if (isDemo) {
@@ -96,8 +106,11 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
             setDashboardModeState((safeSessionGet('liftlegend_demo_dashboard_mode') as 'basic' | 'advanced') || 'advanced');
             setOnboardingCompleted(true);
             setLoading(false);
+            if (loadingTimeoutRef.current) clearTimeout(loadingTimeoutRef.current);
             return;
         }
+
+        let initialFetchDone = false;
 
         // Get active session
         supabase.auth.getSession().then(({ data: { session } }) => {
@@ -105,9 +118,11 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
             setSession(session);
             setUser(session?.user ?? null);
             if (session?.user) {
+                initialFetchDone = true;
                 fetchUserRole(session.user.id, session.user.email || null);
             } else {
                 setLoading(false);
+                if (loadingTimeoutRef.current) clearTimeout(loadingTimeoutRef.current);
             }
         });
 
@@ -121,6 +136,10 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
             setSession(session);
             setUser(session?.user ?? null);
             if (session?.user) {
+                // Skip duplicate fetch if getSession already triggered one for the same user
+                if (initialFetchDone && !fetchInFlightRef.current) {
+                    return; // getSession already handled this
+                }
                 fetchUserRole(session.user.id, session.user.email || null);
             } else {
                 setUserRole(null);
@@ -133,16 +152,21 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
                 setGymLogoUrl(null);
                 setOnboardingCompleted(true);
                 setLoading(false);
+                if (loadingTimeoutRef.current) clearTimeout(loadingTimeoutRef.current);
             }
         });
 
         return () => {
             mounted = false;
             subscription.unsubscribe();
+            if (loadingTimeoutRef.current) clearTimeout(loadingTimeoutRef.current);
         };
     }, []);
 
     const fetchUserRole = useCallback(async (userId: string, userEmail: string | null) => {
+        // Prevent duplicate concurrent fetches (race between getSession + onAuthStateChange)
+        if (fetchInFlightRef.current) return;
+        fetchInFlightRef.current = true;
         setLoading(true);
         try {
             const { data, error } = await supabase
@@ -200,13 +224,21 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
                     if (gymError) throw gymError;
 
-                    setGymStatus(gymData?.status || null);
-                    setTrialEndsAt(gymData?.trial_ends_at || null);
-                    setSubscriptionTier(gymData?.subscription_tier || 'BASIC');
-                    setOnboardingCompleted(gymData?.onboarding_completed !== false);
-                    setDashboardModeState(gymData?.dashboard_mode || 'advanced');
-                    setGymName(gymData?.name || null);
-                    setGymLogoUrl((gymData?.branding as any)?.logo_url || null);
+                    if (!gymData) {
+                        // Gym was deleted — clear state gracefully
+                        console.warn('[Auth] Gym not found for user role, gym may have been deleted');
+                        setGymStatus(null);
+                        setOnboardingCompleted(true);
+                        setDashboardModeState('advanced');
+                    } else {
+                        setGymStatus(gymData.status || null);
+                        setTrialEndsAt(gymData.trial_ends_at || null);
+                        setSubscriptionTier(gymData.subscription_tier || 'BASIC');
+                        setOnboardingCompleted(gymData.onboarding_completed !== false);
+                        setDashboardModeState(gymData.dashboard_mode || 'advanced');
+                        setGymName(gymData.name || null);
+                        setGymLogoUrl((gymData.branding as any)?.logo_url || null);
+                    }
                 } catch (err) {
                     // Graceful fallback if some columns don't exist yet
                     console.error('Failed to fetch gym data:', err);
@@ -245,7 +277,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
             setImpersonatedGymId(null);
             setImpersonatedGymName(null);
         } finally {
+            fetchInFlightRef.current = false;
             setLoading(false);
+            if (loadingTimeoutRef.current) clearTimeout(loadingTimeoutRef.current);
         }
     }, []);
 
