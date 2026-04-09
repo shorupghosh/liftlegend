@@ -395,9 +395,10 @@ export default function MembersManagement() {
       const statusIdx = headers.findIndex(h => h.includes('status'));
       const memberIdIdx = headers.findIndex(h => h === 'id' || h === 'no' || h === 'number' || h.includes('member id') || h.includes('member no') || h.includes('member number'));
       const joinDateIdx = headers.findIndex(h => h.includes('join') || h.includes('start') || h.includes('date'));
+      const expiryDateIdx = headers.findIndex(h => h.includes('expiry') || h.includes('end') || h.includes('valid'));
       const paidIdx = headers.findIndex(h => h.includes('paid') || h.includes('amount') || h.includes('payment') || h.includes('price'));
-      const planMap: Record<string, string> = {};
-      plans.forEach(p => { if (p.name && p.id) planMap[p.name.toLowerCase()] = p.id; });
+      const planMap: Record<string, Partial<Plan>> = {};
+      plans.forEach(p => { if (p.name && p.id) planMap[p.name.toLowerCase()] = p; });
 
       const emailRegex = /^\S+@\S+\.\S+$/;
       const phoneSet = new Set(members.map(m => m.phone).filter(Boolean));
@@ -414,6 +415,7 @@ export default function MembersManagement() {
         const planName = planIdx >= 0 ? row[planIdx]?.trim() : '';
         const memberNumber = memberIdIdx >= 0 ? row[memberIdIdx]?.trim() : null;
         const rawJoinDate = joinDateIdx >= 0 ? row[joinDateIdx]?.trim() : '';
+        const rawExpiryDate = expiryDateIdx >= 0 ? row[expiryDateIdx]?.trim() : '';
         const rawPaid = paidIdx >= 0 ? row[paidIdx]?.trim() : '';
 
         if (!fullName || fullName.length < 2) {
@@ -447,7 +449,8 @@ export default function MembersManagement() {
         }
 
         // Match plan by name if possible, otherwise just store as plan_name text
-        const matchedPlanId = planName && planMap[planName.toLowerCase()] ? planMap[planName.toLowerCase()] : null;
+        const matchedPlan = planName && planMap[planName.toLowerCase()] ? planMap[planName.toLowerCase()] : null;
+        const matchedPlanId = matchedPlan?.id || null;
         const status = statusIdx >= 0 ? row[statusIdx]?.trim().toUpperCase() : 'ACTIVE';
 
         // Parse join date - try multiple formats (DD/MM/YYYY, YYYY-MM-DD, MM/DD/YYYY)
@@ -468,6 +471,30 @@ export default function MembersManagement() {
           }
         }
 
+        const finalJoinDate = joinDate || new Date().toISOString().split('T')[0];
+
+        // Parse expiry date if in CSV
+        let expiryDate: string | null = null;
+        if (rawExpiryDate) {
+          const ddmmyyyy = rawExpiryDate.match(/^(\d{1,2})[\/\-](\d{1,2})[\/\-](\d{4})$/);
+          if (ddmmyyyy) {
+            const [, dd, mm, yyyy] = ddmmyyyy;
+            expiryDate = `${yyyy}-${mm.padStart(2, '0')}-${dd.padStart(2, '0')}`;
+          } else {
+            const isoMatch = rawExpiryDate.match(/^(\d{4})[\/\-](\d{1,2})[\/\-](\d{1,2})$/);
+            if (isoMatch) {
+              const [, yyyy, mm, dd] = isoMatch;
+              expiryDate = `${yyyy}-${mm.padStart(2, '0')}-${dd.padStart(2, '0')}`;
+            }
+          }
+        }
+
+        // Auto-calculate expiry if not in CSV or invalid
+        if (!expiryDate && finalJoinDate) {
+          const duration = matchedPlan?.duration_days ?? 30; // Default to 30 days for unknown plans to ensure alert works
+          expiryDate = calculateExpiryDate(finalJoinDate, duration);
+        }
+
         if (phone) phoneSet.add(phone);
         if (email) emailSet.add(email);
         stats.imported++;
@@ -486,7 +513,8 @@ export default function MembersManagement() {
           member_number: memberNumber,
           plan_id: matchedPlanId,
           plan_name: planName || null,
-          join_date: joinDate || new Date().toISOString().split('T')[0],
+          join_date: finalJoinDate,
+          expiry_date: expiryDate,
           status: ['ACTIVE', 'INACTIVE', 'FROZEN'].includes(status) ? status : 'ACTIVE',
         };
 
@@ -497,7 +525,7 @@ export default function MembersManagement() {
         const allInserted: any[] = [];
         for (let i = 0; i < newMembers.length; i += 50) {
           const batch = newMembers.slice(i, i + 50).map((item: any) => item.memberRecord);
-          const { data: inserted, error } = await supabase.from('members').insert(batch).select('id, plan_id, join_date');
+          const { data: inserted, error } = await supabase.from('members').insert(batch).select('id, plan_id, join_date, expiry_date');
           if (error) throw error;
           if (inserted) allInserted.push(...inserted.map((m: any, idx: number) => ({ ...m, paidAmount: newMembers[i + idx].paidAmount })));
         }
