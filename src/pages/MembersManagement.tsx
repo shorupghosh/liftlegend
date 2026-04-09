@@ -64,6 +64,7 @@ export default function MembersManagement() {
     email: '',
     phone: '',
     plan_id: '',
+    join_date: new Date().toISOString().split('T')[0],
   });
 
   const fetchMembers = useCallback(async () => {
@@ -162,7 +163,7 @@ export default function MembersManagement() {
   useRealtimeSubscription({ table: 'members', gymId, onChange: fetchMembers });
 
   const resetForm = () => {
-    setFormData({ full_name: '', email: '', phone: '', plan_id: '' });
+    setFormData({ full_name: '', email: '', phone: '', plan_id: '', join_date: new Date().toISOString().split('T')[0] });
     setEditingMember(null);
   };
 
@@ -174,6 +175,7 @@ export default function MembersManagement() {
       email: member.email || '',
       phone: member.phone || '',
       plan_id: member.plan_id || '',
+      join_date: member.join_date ? member.join_date.split('T')[0] : new Date().toISOString().split('T')[0],
     });
     setShowAddModal(true);
   };
@@ -194,6 +196,7 @@ export default function MembersManagement() {
             email: formData.email || undefined,
             phone: formData.phone || undefined,
             plan_id: formData.plan_id || undefined,
+            join_date: formData.join_date,
           });
           showToast('Member updated in demo.', 'info');
         } else {
@@ -202,6 +205,7 @@ export default function MembersManagement() {
             email: formData.email || undefined,
             phone: formData.phone || undefined,
             plan_id: formData.plan_id || undefined,
+            join_date: formData.join_date,
           });
           showToast('Member added in demo.', 'info');
         }
@@ -215,13 +219,13 @@ export default function MembersManagement() {
           email: formData.email || null,
           phone: formData.phone || null,
           plan_id: formData.plan_id || null,
+          join_date: formData.join_date || null,
         };
-        if (formData.plan_id && formData.plan_id !== editingMember.plan_id) {
-          const newPlan = plans.find(p => p.id === formData.plan_id);
-          if (newPlan?.duration_days) {
-            const today = new Date().toISOString().split('T')[0];
-            updatePayload.expiry_date = calculateExpiryDate(today, newPlan.duration_days);
-          }
+        const newPlan = formData.plan_id ? plans.find(p => p.id === formData.plan_id) : null;
+        if (newPlan?.duration_days && formData.join_date) {
+          updatePayload.expiry_date = calculateExpiryDate(formData.join_date, newPlan.duration_days);
+        } else if (!formData.plan_id) {
+          updatePayload.expiry_date = null;
         }
         const { error } = await supabase.from('members').update(updatePayload).eq('id', editingMember.id).eq('gym_id', gymId);
         if (error) throw error;
@@ -231,11 +235,10 @@ export default function MembersManagement() {
         showToast('Member updated!', 'success');
       } else {
         const selectedPlan = formData.plan_id ? plans.find(p => p.id === formData.plan_id) : null;
-        const today = new Date().toISOString().split('T')[0];
-        const expiryDate = selectedPlan?.duration_days ? calculateExpiryDate(today, selectedPlan.duration_days) : null;
+        const expiryDate = selectedPlan?.duration_days && formData.join_date ? calculateExpiryDate(formData.join_date, selectedPlan.duration_days) : null;
         const { data: newMem, error } = await supabase.from('members').insert([{
           gym_id: gymId, full_name: formData.full_name.trim(), email: formData.email || null,
-          phone: formData.phone || null, plan_id: formData.plan_id || null, join_date: today,
+          phone: formData.phone || null, plan_id: formData.plan_id || null, join_date: formData.join_date,
           expiry_date: expiryDate, status: 'ACTIVE'
         }]).select();
         if (error) throw error;

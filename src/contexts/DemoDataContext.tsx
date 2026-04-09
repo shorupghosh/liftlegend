@@ -22,7 +22,7 @@ type DemoDataContextValue = {
   state: DemoState;
   metrics: DemoMetrics;
   resetDemoData: () => void;
-  addMember: (payload: Pick<Member, 'full_name' | 'email' | 'phone' | 'plan_id'>) => Member;
+  addMember: (payload: Pick<Member, 'full_name' | 'email' | 'phone' | 'plan_id' | 'join_date'>) => Member;
   updateMember: (memberId: string, payload: Partial<Member>) => Member | null;
   deleteMember: (memberId: string) => void;
   toggleMemberStatus: (memberId: string) => Member | null;
@@ -125,7 +125,7 @@ export function DemoDataProvider({ children }: { children: React.ReactNode }) {
     });
   };
 
-  const addMember = (payload: Pick<Member, 'full_name' | 'email' | 'phone' | 'plan_id'>) => {
+  const addMember = (payload: Pick<Member, 'full_name' | 'email' | 'phone' | 'plan_id' | 'join_date'>) => {
     const memberId = `demo-member-${Date.now()}`;
     let createdMember: Member | null = null;
     setState((current) => {
@@ -138,7 +138,7 @@ export function DemoDataProvider({ children }: { children: React.ReactNode }) {
         email: payload.email || undefined,
         phone: payload.phone || undefined,
         plan_id: payload.plan_id || undefined,
-        join_date: today.split('T')[0],
+        join_date: payload.join_date || today.split('T')[0],
         expiry_date: plan
           ? new Date(Date.now() + plan.duration_days * 24 * 60 * 60 * 1000).toISOString().split('T')[0]
           : undefined,

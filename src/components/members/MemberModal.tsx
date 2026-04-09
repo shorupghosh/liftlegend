@@ -7,6 +7,7 @@ interface FormData {
   email: string;
   phone: string;
   plan_id: string;
+  join_date: string;
 }
 
 interface MemberModalProps {
@@ -20,6 +21,8 @@ interface MemberModalProps {
   onClose: () => void;
 }
 
+import { calculateExpiryDate } from '../../lib/memberExpiry';
+
 export const MemberModal: React.FC<MemberModalProps> = ({
   isOpen,
   isEditing,
@@ -31,6 +34,11 @@ export const MemberModal: React.FC<MemberModalProps> = ({
   onClose
 }) => {
   if (!isOpen) return null;
+
+  const selectedPlan = plans.find(p => p.id === formData.plan_id);
+  const expiryDate = selectedPlan?.duration_days && formData.join_date
+    ? calculateExpiryDate(formData.join_date, selectedPlan.duration_days)
+    : null;
 
   return (
     <div
@@ -46,7 +54,7 @@ export const MemberModal: React.FC<MemberModalProps> = ({
       >
         <div className="flex items-center justify-between px-6 py-4 border-b border-slate-100 dark:border-slate-800">
           <h3 id="member-modal-title" className="text-lg font-bold text-neutral-text dark:text-white">
-            {isEditing ? 'Edit Member' : 'Add New Member'}
+            {isEditing ? 'Edit / Renew Member' : 'Add New Member'}
           </h3>
           <button
             onClick={onClose}
@@ -96,6 +104,17 @@ export const MemberModal: React.FC<MemberModalProps> = ({
             />
           </div>
           <div className="space-y-1.5">
+            <label htmlFor="member-join-date" className="text-sm font-bold text-slate-700 dark:text-slate-300">Join Date</label>
+            <input
+              id="member-join-date"
+              required
+              value={formData.join_date}
+              onChange={(e) => setFormData({ ...formData, join_date: e.target.value })}
+              type="date"
+              className="w-full bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl h-11 px-4 text-sm focus:ring-2 focus:ring-primary-default/20 focus:border-primary-default outline-none transition-all"
+            />
+          </div>
+          <div className="space-y-1.5">
             <label htmlFor="member-plan" className="text-sm font-bold text-slate-700 dark:text-slate-300">Select Plan</label>
             <select
               id="member-plan"
@@ -108,6 +127,12 @@ export const MemberModal: React.FC<MemberModalProps> = ({
                 <option key={plan.id} value={plan.id}>{plan.name} ({formatBdt(Number(plan.price))})</option>
               ))}
             </select>
+            {expiryDate && (
+              <p className="text-xs text-slate-500 dark:text-slate-400 mt-1.5 flex items-center gap-1">
+                <span className="material-symbols-outlined text-[14px]">event_available</span>
+                End Date: <span className="font-medium text-slate-700 dark:text-slate-300">{new Date(expiryDate).toLocaleDateString('en-GB')}</span>
+              </p>
+            )}
           </div>
 
           <div className="pt-4 flex gap-3">
@@ -127,9 +152,9 @@ export const MemberModal: React.FC<MemberModalProps> = ({
               {isSubmitting ? (
                 <>
                   <div className="size-5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
-                  <span>{isEditing ? 'Updating...' : 'Creating...'}</span>
+                  <span>{isEditing ? 'Saving...' : 'Joining...'}</span>
                 </>
-              ) : isEditing ? 'Update Member' : 'Create Member'}
+              ) : isEditing ? 'Save / Renew' : 'Join'}
             </button>
           </div>
         </form>
