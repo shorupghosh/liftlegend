@@ -527,35 +527,56 @@ export default function MembersManagement() {
       }
 
       if (newMembers.length > 0) {
-        const allInserted: any[] = [];
-        for (let i = 0; i < newMembers.length; i += 50) {
-          const batch = newMembers.slice(i, i + 50).map((item: any) => item.memberRecord);
-          const { data: inserted, error } = await supabase.from('members').insert(batch).select('id, plan_id, join_date, expiry_date');
-          if (error) throw error;
-          if (inserted) allInserted.push(...inserted.map((m: any, idx: number) => ({ ...m, paidAmount: newMembers[i + idx].paidAmount })));
-        }
+        let allImported: any[] = [];
 
-        // Insert payment records into membership_history for members that had a paid amount
-        const paymentRecords = allInserted
-          .filter((m: any) => m.paidAmount && m.paidAmount > 0)
-          .map((m: any) => ({
-            gym_id: gymId,
-            member_id: m.id,
-            plan_id: m.plan_id || null,
-            start_date: m.join_date,
-            end_date: m.join_date,
-            price_paid: m.paidAmount,
-            payment_method: 'CASH',
-          }));
-
-        if (paymentRecords.length > 0) {
-          for (let i = 0; i < paymentRecords.length; i += 50) {
-            const batch = paymentRecords.slice(i, i + 50);
-            await supabase.from('membership_history').insert(batch);
+        if (isDemoMode) {
+          // In demo mode, simulate the insertion and update local state via context
+          newMembers.forEach(({ memberRecord, paidAmount }) => {
+            const added = addMember({
+              full_name: memberRecord.full_name,
+              email: memberRecord.email || undefined,
+              phone: memberRecord.phone || undefined,
+              member_number: memberRecord.member_number || undefined,
+              plan_id: memberRecord.plan_id || undefined,
+              join_date: memberRecord.join_date,
+            });
+            // We manually override the expiry if provided or calculated
+            if (memberRecord.expiry_date) {
+               updateMember(added.id, { expiry_date: memberRecord.expiry_date, plan_name: memberRecord.plan_name });
+            }
+            allImported.push({ ...added, plan_id: memberRecord.plan_id, join_date: memberRecord.join_date, expiry_date: memberRecord.expiry_date, paidAmount });
+          });
+          showToast(`Imported ${newMembers.length} members to demo data.`, 'success');
+        } else {
+          const allInserted: any[] = [];
+          for (let i = 0; i < newMembers.length; i += 50) {
+            const batch = newMembers.slice(i, i + 50).map((item: any) => item.memberRecord);
+            const { data: inserted, error } = await supabase.from('members').insert(batch).select('id, plan_id, join_date, expiry_date, plan_name');
+            if (error) throw error;
+            if (inserted) allInserted.push(...inserted.map((m: any, idx: number) => ({ ...m, paidAmount: newMembers[i + idx].paidAmount })));
           }
-        }
 
-        fetchMembers();
+          // Insert payment records into membership_history for members that had a paid amount
+          const paymentRecords = allInserted
+            .filter((m: any) => m.paidAmount && m.paidAmount > 0)
+            .map((m: any) => ({
+              gym_id: gymId,
+              member_id: m.id,
+              plan_id: m.plan_id || null,
+              start_date: m.join_date,
+              end_date: m.join_date, // This is just recording the payment date
+              price_paid: m.paidAmount,
+              payment_method: 'CASH',
+            }));
+
+          if (paymentRecords.length > 0) {
+            for (let i = 0; i < paymentRecords.length; i += 50) {
+              const batch = paymentRecords.slice(i, i + 50);
+              await supabase.from('membership_history').insert(batch);
+            }
+          }
+          fetchMembers();
+        }
       }
       setImportSummary(stats);
 
