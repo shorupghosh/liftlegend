@@ -508,7 +508,16 @@ export default function MembersManagement() {
 
         // Auto-calculate expiry if not in CSV or invalid
         if (!expiryDate && finalJoinDate) {
-          const duration = matchedPlan?.duration_days ?? 30; // Default to 30 days for unknown plans to ensure alert works
+          let duration = matchedPlan?.duration_days;
+          if (!duration) {
+            const lowerPlan = (planName || '').toLowerCase();
+            if (lowerPlan.includes('one month')) duration = 30;
+            else if (lowerPlan.includes('three month')) duration = 90;
+            else if (lowerPlan.includes('six month')) duration = 180;
+            else if (lowerPlan.includes('one year')) duration = 365;
+            else if (lowerPlan.includes('165')) duration = 165;
+            else duration = 30; // Final default
+          }
           expiryDate = calculateExpiryDate(finalJoinDate, duration);
         }
 
