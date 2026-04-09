@@ -9,6 +9,7 @@ interface FormData {
   member_number: string;
   plan_id: string;
   join_date: string;
+  expiry_date: string;
 }
 
 interface MemberModalProps {
@@ -139,11 +140,26 @@ export const MemberModal: React.FC<MemberModalProps> = ({
                 <option key={plan.id} value={plan.id}>{plan.name} ({formatBdt(Number(plan.price))})</option>
               ))}
             </select>
-            {expiryDate && (
-              <p className="text-xs text-slate-500 dark:text-slate-400 mt-1.5 flex items-center gap-1">
-                <span className="material-symbols-outlined text-[14px]">event_available</span>
-                End Date: <span className="font-medium text-slate-700 dark:text-slate-300">{new Date(expiryDate).toLocaleDateString('en-GB')}</span>
-              </p>
+          </div>
+
+          <div className="space-y-1.5">
+            <label htmlFor="member-expiry-date" className="text-sm font-bold text-slate-700 dark:text-slate-300">Expiry Date</label>
+            <input
+              id="member-expiry-date"
+              value={formData.expiry_date}
+              onChange={(e) => setFormData({ ...formData, expiry_date: e.target.value })}
+              type="date"
+              className="w-full bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl h-11 px-4 text-sm focus:ring-2 focus:ring-primary-default/20 focus:border-primary-default outline-none transition-all"
+            />
+            {expiryDate && formData.expiry_date !== expiryDate && (
+              <button 
+                type="button"
+                onClick={() => setFormData({ ...formData, expiry_date: expiryDate })}
+                className="text-[10px] text-primary-default font-bold hover:underline mt-1 flex items-center gap-0.5"
+              >
+                <span className="material-symbols-outlined text-xs">auto_fix</span>
+                RESET TO {new Date(expiryDate).toLocaleDateString('en-GB')} BASED ON PLAN
+              </button>
             )}
           </div>
 

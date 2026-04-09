@@ -66,7 +66,22 @@ export default function MembersManagement() {
     member_number: '',
     plan_id: '',
     join_date: new Date().toISOString().split('T')[0],
+    expiry_date: '',
   });
+
+  useEffect(() => {
+    // Standard effect: when plan OR join_date changes, we update the expiry_date automatically
+    // BUT only if calculating it yields a different result than what's already there (to avoid infinite loops)
+    const selectedPlan = plans.find(p => p.id === formData.plan_id);
+    if (selectedPlan?.duration_days && formData.join_date) {
+      const calculatedExpiry = calculateExpiryDate(formData.join_date, selectedPlan.duration_days);
+      // We only auto-fill if it's currently empty (e.g. adding new member) or if the plan has changed
+      // To keep it simple: if plan exists, we show it.
+      if (!formData.expiry_date || (editingMember ? (editingMember.plan_id !== formData.plan_id) : true)) {
+         setFormData(prev => ({ ...prev, expiry_date: calculatedExpiry }));
+      }
+    }
+  }, [formData.plan_id, formData.join_date, plans, editingMember]);
 
   const fetchMembers = useCallback(async () => {
     if (authLoading) return;
@@ -188,7 +203,7 @@ export default function MembersManagement() {
   useRealtimeSubscription({ table: 'members', gymId, onChange: fetchMembers });
 
   const resetForm = () => {
-    setFormData({ full_name: '', email: '', phone: '', member_number: '', plan_id: '', join_date: new Date().toISOString().split('T')[0] });
+    setFormData({ full_name: '', email: '', phone: '', member_number: '', plan_id: '', join_date: new Date().toISOString().split('T')[0], expiry_date: '' });
     setEditingMember(null);
   };
 
@@ -202,6 +217,7 @@ export default function MembersManagement() {
       member_number: member.member_number || '',
       plan_id: member.plan_id || '',
       join_date: member.join_date ? member.join_date.split('T')[0] : new Date().toISOString().split('T')[0],
+      expiry_date: member.expiry_date ? member.expiry_date.split('T')[0] : '',
     });
     setShowAddModal(true);
   };
@@ -224,6 +240,7 @@ export default function MembersManagement() {
             member_number: formData.member_number || undefined,
             plan_id: formData.plan_id || undefined,
             join_date: formData.join_date,
+            expiry_date: formData.expiry_date || undefined,
           });
           showToast('Member updated in demo.', 'info');
         } else {
@@ -234,6 +251,7 @@ export default function MembersManagement() {
             member_number: formData.member_number || undefined,
             plan_id: formData.plan_id || undefined,
             join_date: formData.join_date,
+            expiry_date: formData.expiry_date || undefined,
           });
           showToast('Member added in demo.', 'info');
         }
@@ -249,13 +267,9 @@ export default function MembersManagement() {
           member_number: formData.member_number || null,
           plan_id: formData.plan_id || null,
           join_date: formData.join_date || null,
+          expiry_date: formData.expiry_date || null,
+          status: 'ACTIVE',
         };
-        const newPlan = formData.plan_id ? plans.find(p => p.id === formData.plan_id) : null;
-        if (newPlan?.duration_days && formData.join_date) {
-          updatePayload.expiry_date = calculateExpiryDate(formData.join_date, newPlan.duration_days);
-        } else if (!formData.plan_id) {
-          updatePayload.expiry_date = null;
-        }
         const { error } = await supabase.from('members').update(updatePayload).eq('id', editingMember.id).eq('gym_id', gymId);
         if (error) throw error;
         await supabase.from('notifications').insert([{
@@ -263,8 +277,6 @@ export default function MembersManagement() {
         }]);
         showToast('Member updated!', 'success');
       } else {
-        const selectedPlan = formData.plan_id ? plans.find(p => p.id === formData.plan_id) : null;
-        const expiryDate = selectedPlan?.duration_days && formData.join_date ? calculateExpiryDate(formData.join_date, selectedPlan.duration_days) : null;
         const { data: newMem, error } = await supabase.from('members').insert([{
           gym_id: gymId,
           full_name: formData.full_name.trim(),
@@ -273,7 +285,7 @@ export default function MembersManagement() {
           member_number: formData.member_number || null,
           plan_id: formData.plan_id || null,
           join_date: formData.join_date,
-          expiry_date: expiryDate,
+          expiry_date: formData.expiry_date || null,
           status: 'ACTIVE'
         }]).select();
         if (error) throw error;
