@@ -26,12 +26,23 @@ const Login: React.FC = () => {
     const navigate = useNavigate();
 
     useEffect(() => {
-        if (!authLoading && user && userRole && !['LOCKED', 'SUSPENDED', 'PAST_DUE', 'EXPIRED', 'DELETED'].includes(gymStatus || '')) {
-            if (userRole === 'SUPER_ADMIN') {
-                navigate('/super-admin');
-            } else {
-                navigate(onboardingCompleted ? '/admin' : '/setup');
+        if (!authLoading && user) {
+            if (userRole && !['LOCKED', 'SUSPENDED', 'PAST_DUE', 'EXPIRED', 'DELETED'].includes(gymStatus || '')) {
+                if (userRole === 'SUPER_ADMIN') {
+                    navigate('/super-admin');
+                } else {
+                    navigate(onboardingCompleted ? '/admin' : '/setup');
+                }
+            } else if (!userRole) {
+                setError('Account found, but role permissions are missing. Please contact support.');
+                setLoading(false);
+            } else if (['LOCKED', 'SUSPENDED', 'PAST_DUE', 'EXPIRED', 'DELETED'].includes(gymStatus || '')) {
+                setError(`Your account is currently ${gymStatus}. Please contact support.`);
+                setLoading(false);
             }
+        } else if (!authLoading && !user) {
+            // Ensure local loading state resets if we're not authenticated after loading completes
+            setLoading(false);
         }
     }, [user, userRole, gymStatus, authLoading, navigate, onboardingCompleted]);
 
