@@ -21,12 +21,14 @@ export interface Member {
     status: string;
     notes?: string;
     plan_id?: string;
+    plan_name?: string;
     join_date?: string;
     expiry_date?: string;
     qr_code_value?: string;
     qr_generated_at?: string;
     created_at: string;
     plans?: Pick<Plan, 'name' | 'price' | 'duration_days'>;
+    last_payment?: number;
 }
 
 export interface Plan {

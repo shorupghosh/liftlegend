@@ -98,7 +98,7 @@ export default function MembersManagement() {
 
       let query = supabase
         .from('members')
-        .select('id, gym_id, full_name, email, phone, status, join_date, expiry_date, created_at, plan_id, plans(name, price, duration_days)', { count: 'exact' })
+        .select('id, gym_id, full_name, email, phone, status, join_date, expiry_date, created_at, plan_id, plan_name, plans(name, price, duration_days)', { count: 'exact' })
         .eq('gym_id', gymId)
         .order(sortConfig.key, { ascending: sortConfig.direction === 'asc' });
 
@@ -144,7 +144,31 @@ export default function MembersManagement() {
       if (membersRes.error) throw membersRes.error;
       if (plansRes.error) throw plansRes.error;
 
-      setMembers((membersRes.data as any) || []);
+      // Fetch last payment for each member from membership_history
+      const memberIds = (membersRes.data || []).map((m: any) => m.id);
+      let paymentMap: Record<string, number> = {};
+      if (memberIds.length > 0) {
+        const { data: payments } = await supabase
+          .from('membership_history')
+          .select('member_id, price_paid, created_at')
+          .eq('gym_id', gymId)
+          .in('member_id', memberIds)
+          .order('created_at', { ascending: false });
+        if (payments) {
+          for (const p of payments) {
+            if (!paymentMap[p.member_id]) {
+              paymentMap[p.member_id] = Number(p.price_paid);
+            }
+          }
+        }
+      }
+
+      const membersWithPayment = (membersRes.data || []).map((m: any) => ({
+        ...m,
+        last_payment: paymentMap[m.id] ?? undefined,
+      }));
+
+      setMembers(membersWithPayment);
       setTotalCount(membersRes.count || 0);
       setPlans(plansRes.data || []);
     } catch (error: any) {
@@ -358,6 +382,8 @@ export default function MembersManagement() {
       const phoneIdx = headers.findIndex(h => h.includes('phone'));
       const planIdx = headers.findIndex(h => h.includes('plan'));
       const statusIdx = headers.findIndex(h => h.includes('status'));
+      const joinDateIdx = headers.findIndex(h => h.includes('join') || h.includes('start') || h.includes('date'));
+      const paidIdx = headers.findIndex(h => h.includes('paid') || h.includes('amount') || h.includes('payment') || h.includes('price'));
       const planMap: Record<string, string> = {};
       plans.forEach(p => { if (p.name && p.id) planMap[p.name.toLowerCase()] = p.id; });
 
@@ -374,6 +400,8 @@ export default function MembersManagement() {
         const email = emailIdx >= 0 ? (row[emailIdx]?.trim() || null) : null;
         let phone = phoneIdx >= 0 ? (row[phoneIdx]?.trim() || null) : null;
         const planName = planIdx >= 0 ? row[planIdx]?.trim() : '';
+        const rawJoinDate = joinDateIdx >= 0 ? row[joinDateIdx]?.trim() : '';
+        const rawPaid = paidIdx >= 0 ? row[paidIdx]?.trim() : '';
 
         if (!fullName || fullName.length < 2) {
           stats.failed++;
@@ -387,13 +415,10 @@ export default function MembersManagement() {
           continue;
         }
 
-        // Basic phone cleanup
-        if (phone) phone = phone.replace(/[^0-9+]/g, '');
-
-        if (phone && phone.length < 8) {
-          stats.failed++;
-          stats.errors.push(`Row ${i + 1} (${fullName}): Invalid phone format`);
-          continue;
+        // Basic phone cleanup - allow empty or short phones
+        if (phone) {
+          phone = phone.replace(/[^0-9+]/g, '');
+          if (phone.length === 0) phone = null;
         }
 
         if (phone && phoneSet.has(phone)) {
@@ -408,24 +433,42 @@ export default function MembersManagement() {
           continue;
         }
 
-        if (planName && !planMap[planName.toLowerCase()]) {
-          stats.failed++;
-          stats.errors.push(`Row ${i + 1} (${fullName}): Unknown plan name "${planName}"`);
-          continue;
-        }
-
-        const matchedPlanId = planName ? planMap[planName.toLowerCase()] : null;
+        // Match plan by name if possible, otherwise just store as plan_name text
+        const matchedPlanId = planName && planMap[planName.toLowerCase()] ? planMap[planName.toLowerCase()] : null;
         const status = statusIdx >= 0 ? row[statusIdx]?.trim().toUpperCase() : 'ACTIVE';
+
+        // Parse join date - try multiple formats (DD/MM/YYYY, YYYY-MM-DD, MM/DD/YYYY)
+        let joinDate: string | null = null;
+        if (rawJoinDate) {
+          // Try DD/MM/YYYY or DD-MM-YYYY
+          const ddmmyyyy = rawJoinDate.match(/^(\d{1,2})[\/\-](\d{1,2})[\/\-](\d{4})$/);
+          if (ddmmyyyy) {
+            const [, dd, mm, yyyy] = ddmmyyyy;
+            joinDate = `${yyyy}-${mm.padStart(2, '0')}-${dd.padStart(2, '0')}`;
+          } else {
+            // Try YYYY-MM-DD
+            const isoMatch = rawJoinDate.match(/^(\d{4})[\/\-](\d{1,2})[\/\-](\d{1,2})$/);
+            if (isoMatch) {
+              const [, yyyy, mm, dd] = isoMatch;
+              joinDate = `${yyyy}-${mm.padStart(2, '0')}-${dd.padStart(2, '0')}`;
+            }
+          }
+        }
 
         if (phone) phoneSet.add(phone);
         if (email) emailSet.add(email);
         stats.imported++;
 
-        newMembers.push({
+        const memberRecord: any = {
           gym_id: gymId, full_name: fullName, email,
-          phone, plan_id: matchedPlanId,
+          phone: phone || null,
+          plan_id: matchedPlanId,
+          plan_name: planName || null,
+          join_date: joinDate || new Date().toISOString().split('T')[0],
           status: ['ACTIVE', 'INACTIVE', 'FROZEN'].includes(status) ? status : 'ACTIVE',
-        });
+        };
+
+        newMembers.push(memberRecord);
       }
 
       if (newMembers.length > 0) {

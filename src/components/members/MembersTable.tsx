@@ -5,6 +5,7 @@ import { AlertBadge } from '../ui/AlertBadge';
 import { EmptyState } from '../ui/EmptyState';
 import { getMemberExpiryAlert } from '../../lib/memberExpiry';
 import { StatusBadge, toneFromStatus } from '../ui/StatusBadge';
+import { formatBdt } from '../../lib/currency';
 
 interface MembersTableProps {
   loading: boolean;
@@ -51,8 +52,8 @@ export const MembersTable: React.FC<MembersTableProps> = ({
               <th onClick={() => onSort('join_date')} className="group cursor-pointer px-5 py-3.5 text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400 hidden md:table-cell hover:text-primary-default transition-colors">
                 <div className="flex items-center">Joined <SortIcon column="join_date" /></div>
               </th>
-              <th onClick={() => onSort('expiry_date')} className="group cursor-pointer px-5 py-3.5 text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400 hidden lg:table-cell hover:text-primary-default transition-colors">
-                <div className="flex items-center">Expiry <SortIcon column="expiry_date" /></div>
+              <th className="px-5 py-3.5 text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400 hidden lg:table-cell">
+                Last Paid
               </th>
               <th onClick={() => onSort('status')} className="group cursor-pointer px-5 py-3.5 text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400 hover:text-primary-default transition-colors">
                 <div className="flex items-center">Status <SortIcon column="status" /></div>
@@ -99,7 +100,7 @@ export const MembersTable: React.FC<MembersTableProps> = ({
               ))
             ) : members.length === 0 ? (
               <tr>
-                <td colSpan={7} className="p-12">
+                <td colSpan={8} className="p-12">
                   <EmptyState
                     icon={searchQuery ? 'search_off' : 'group'}
                     title={searchQuery ? 'No match found' : 'No members yet'}
@@ -128,6 +129,10 @@ export const MembersTable: React.FC<MembersTableProps> = ({
                         <span className="inline-flex items-center rounded-lg bg-slate-100 dark:bg-slate-800 px-2.5 py-1 text-xs font-medium text-slate-700 dark:text-slate-300">
                           {member.plans.name}
                         </span>
+                      ) : member.plan_name ? (
+                        <span className="inline-flex items-center rounded-lg bg-amber-50 dark:bg-amber-900/20 px-2.5 py-1 text-xs font-medium text-amber-700 dark:text-amber-400">
+                          {member.plan_name}
+                        </span>
                       ) : (
                         <span className="text-xs text-slate-400">No Plan</span>
                       )}
@@ -137,8 +142,12 @@ export const MembersTable: React.FC<MembersTableProps> = ({
                         ? new Date(member.join_date).toLocaleDateString('en-GB')
                         : new Date(member.created_at).toLocaleDateString('en-GB')}
                     </td>
-                    <td className="px-5 py-4 text-sm text-slate-500 hidden lg:table-cell font-medium">
-                      {member.expiry_date ? new Date(member.expiry_date).toLocaleDateString('en-GB') : <span className="text-xs text-slate-400">-</span>}
+                    <td className="px-5 py-4 text-sm hidden lg:table-cell font-medium">
+                      {member.last_payment ? (
+                        <span className="text-emerald-600 dark:text-emerald-400">{formatBdt(member.last_payment)}</span>
+                      ) : (
+                        <span className="text-xs text-slate-400">-</span>
+                      )}
                     </td>
                     <td className="px-5 py-4">
                       <div className="flex flex-col gap-1 items-start">
