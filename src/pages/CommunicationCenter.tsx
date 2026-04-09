@@ -68,6 +68,33 @@ export default function CommunicationCenter() {
     }
   };
 
+  const handleWhatsAppReminder = async (notification: NotificationItem) => {
+    const text = encodeURIComponent(`Reminder from Fit & Flex: ${notification.message}`);
+    let phone = notification.members?.phone;
+    if (phone) {
+      phone = phone.replace(/\D/g, '');
+      if (phone.startsWith('01')) {
+          phone = '88' + phone;
+      }
+      window.open(`https://wa.me/${phone}?text=${text}`, '_blank');
+      await markRead(notification.id);
+    } else {
+      alert("No phone number found for this member.");
+    }
+  };
+
+  const getNotificationStyles = (type: string) => {
+    switch (type) {
+      case 'expiry':
+      case 'payment_due':
+        return { icon: 'error', color: 'text-red-600 dark:text-red-400', bg: 'bg-red-50 dark:bg-red-900/20 border-red-200 dark:border-red-800/50' };
+      case 'inactive':
+        return { icon: 'warning', color: 'text-amber-600 dark:text-amber-400', bg: 'bg-amber-50 dark:bg-amber-900/20 border-amber-200 dark:border-amber-800/50' };
+      default:
+        return { icon: 'notifications', color: 'text-slate-600 dark:text-slate-300', bg: 'bg-slate-50 dark:bg-slate-800 border-slate-200 dark:border-slate-700' };
+    }
+  };
+
   return (
     <div className="space-y-6 p-4 sm:p-6 lg:p-8">
       <div className="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
@@ -152,21 +179,23 @@ export default function CommunicationCenter() {
           </div>
         ) : (
           <div className="divide-y divide-slate-100 dark:divide-slate-800">
-            {filteredNotifications.map((notification) => (
+            {filteredNotifications.map((notification) => {
+              const styles = getNotificationStyles(notification.type);
+              return (
               <div
                 key={notification.id}
                 className={`flex w-full items-start gap-4 p-5 text-left transition-colors ${
                   notification.is_read
-                    ? 'bg-white hover:bg-slate-50 dark:bg-slate-900 dark:hover:bg-slate-800/40'
-                    : 'bg-emerald-50/40 hover:bg-emerald-50 dark:bg-emerald-900/10 dark:hover:bg-emerald-900/20'
+                    ? 'bg-white hover:bg-slate-50 dark:bg-slate-900 dark:hover:bg-slate-800/40 opacity-70'
+                    : 'bg-emerald-50/40 hover:bg-emerald-50 dark:bg-emerald-900/10 dark:hover:bg-emerald-900/20 shadow-[inset_4px_0_0_0_#10b981]'
                 }`}
               >
-                <div className="mt-0.5 flex size-11 shrink-0 items-center justify-center rounded-full border border-slate-200 bg-slate-50 text-slate-600 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-300">
-                  <span className="material-symbols-outlined">notifications</span>
+                <div className={`mt-0.5 flex size-11 shrink-0 items-center justify-center rounded-full border ${styles.bg} ${styles.color}`}>
+                  <span className="material-symbols-outlined">{styles.icon}</span>
                 </div>
                 <div className="min-w-0 flex-1">
                   <div className="flex flex-wrap items-center gap-2">
-                    {!notification.is_read && <span className="size-2 rounded-full bg-accent-default" />}
+                    {!notification.is_read && <span className="size-2 rounded-full bg-emerald-500" />}
                     <h3 className="text-sm font-bold text-neutral-text dark:text-white">{notification.title}</h3>
                     <span className="rounded-full bg-slate-100 px-2 py-0.5 text-[10px] font-black uppercase tracking-widest text-slate-500 dark:bg-slate-800 dark:text-slate-300">
                       {typeLabel(notification.type)}
@@ -178,40 +207,54 @@ export default function CommunicationCenter() {
                     {notification.related_member_id && <span>Open member</span>}
                   </div>
                   <div className="mt-3 flex flex-wrap gap-2">
-                    <button
-                      type="button"
-                      onClick={() => handleNotificationClick(notification)}
-                      className="inline-flex h-9 items-center rounded-lg border border-slate-200 px-3 text-[11px] font-black uppercase tracking-widest text-slate-600 transition-colors hover:bg-slate-100 dark:border-slate-700 dark:text-slate-300 dark:hover:bg-slate-800"
-                    >
-                      Open Member
-                    </button>
+                    {notification.related_member_id && (
+                      <button
+                        type="button"
+                        onClick={() => handleNotificationClick(notification)}
+                        className="inline-flex h-9 items-center rounded-lg border border-slate-200 bg-white px-3 text-[11px] font-black uppercase tracking-widest text-slate-600 transition-colors hover:bg-slate-50 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-300 dark:hover:bg-slate-700"
+                      >
+                        Open Profile
+                      </button>
+                    )}
                     {(notification.type === 'expiry' || notification.type === 'payment_due') && notification.related_member_id && (
                       <button
                         type="button"
                         onClick={() => handleQuickRenew(notification)}
-                        className="inline-flex h-9 items-center rounded-lg bg-primary-default px-3 text-[11px] font-black uppercase tracking-widest text-white transition-colors hover:brightness-110"
+                        className="inline-flex h-9 items-center rounded-lg bg-emerald-600 px-3 text-[11px] font-black uppercase tracking-widest text-white transition-colors hover:bg-emerald-500"
                       >
                         Renew Now
                       </button>
                     )}
-                    <button
+                    {notification.members?.phone ? (
+                       <button
+                       type="button"
+                       onClick={() => handleWhatsAppReminder(notification)}
+                       className="inline-flex h-9 items-center gap-1.5 rounded-lg bg-[#25D366] px-3 text-[11px] font-black uppercase tracking-widest text-white transition-colors hover:brightness-110"
+                     >
+                       <span className="material-symbols-outlined text-sm">chat</span>
+                       WhatsApp
+                     </button>
+                    ) : (
+                      <button
                       type="button"
                       onClick={() => handleCopyReminder(notification)}
-                      className="inline-flex h-9 items-center rounded-lg bg-slate-900 px-3 text-[11px] font-black uppercase tracking-widest text-white transition-colors hover:bg-slate-800 dark:bg-white dark:text-slate-900 dark:hover:bg-slate-100"
+                      className="inline-flex h-9 items-center gap-1.5 rounded-lg bg-slate-900 px-3 text-[11px] font-black uppercase tracking-widest text-white transition-colors hover:bg-slate-800 dark:bg-white dark:text-slate-900 dark:hover:bg-slate-100"
                     >
-                      Copy Reminder
+                      <span className="material-symbols-outlined text-sm">content_copy</span>
+                      Copy
                     </button>
+                    )}
                     <button
                       type="button"
                       onClick={(e) => { e.stopPropagation(); toggleRead(notification.id, notification.is_read); }}
-                      className="inline-flex h-9 items-center rounded-lg border border-slate-200 px-3 text-[11px] font-black uppercase tracking-widest text-slate-600 transition-colors hover:bg-slate-100 dark:border-slate-700 dark:text-slate-300 dark:hover:bg-slate-800"
+                      className="inline-flex h-9 items-center rounded-lg border border-slate-200 px-3 text-[11px] font-black uppercase tracking-widest text-slate-500 transition-colors hover:bg-slate-100 dark:border-slate-700 dark:text-slate-400 dark:hover:bg-slate-800 ml-auto"
                     >
                       Mark as {notification.is_read ? 'unread' : 'read'}
                     </button>
                   </div>
                 </div>
               </div>
-            ))}
+            )})}
           </div>
         )}
       </div>

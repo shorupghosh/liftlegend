@@ -9,6 +9,10 @@ export type NotificationItem = {
   related_member_id: string | null;
   is_read: boolean;
   created_at: string;
+  members?: {
+    id: string;
+    phone: string | null;
+  } | null;
 };
 
 const missingFunctionPattern = /Could not find the function public\./i;
@@ -170,7 +174,7 @@ export async function fetchNotificationPayload(gymId: string, limit = 6): Promis
   try {
     const { data, error } = await supabase
       .from('notifications')
-      .select('id, gym_id, type, title, message, related_member_id, is_read, created_at')
+      .select('id, gym_id, type, title, message, related_member_id, is_read, created_at, members(id, phone)')
       .eq('gym_id', gymId)
       .order('created_at', { ascending: false })
       .limit(limit);
