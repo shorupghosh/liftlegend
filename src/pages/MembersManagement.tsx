@@ -459,6 +459,14 @@ export default function MembersManagement() {
         if (email) emailSet.add(email);
         stats.imported++;
 
+        // Parse paid amount
+        let paidAmount: number | null = null;
+        if (rawPaid) {
+          const cleaned = rawPaid.replace(/[^0-9.]/g, '');
+          const parsed = parseFloat(cleaned);
+          if (!isNaN(parsed) && parsed > 0) paidAmount = parsed;
+        }
+
         const memberRecord: any = {
           gym_id: gymId, full_name: fullName, email,
           phone: phone || null,
@@ -468,15 +476,38 @@ export default function MembersManagement() {
           status: ['ACTIVE', 'INACTIVE', 'FROZEN'].includes(status) ? status : 'ACTIVE',
         };
 
-        newMembers.push(memberRecord);
+        newMembers.push({ memberRecord, paidAmount });
       }
 
       if (newMembers.length > 0) {
+        const allInserted: any[] = [];
         for (let i = 0; i < newMembers.length; i += 50) {
-          const batch = newMembers.slice(i, i + 50);
-          const { error } = await supabase.from('members').insert(batch);
+          const batch = newMembers.slice(i, i + 50).map((item: any) => item.memberRecord);
+          const { data: inserted, error } = await supabase.from('members').insert(batch).select('id, plan_id, join_date');
           if (error) throw error;
+          if (inserted) allInserted.push(...inserted.map((m: any, idx: number) => ({ ...m, paidAmount: newMembers[i + idx].paidAmount })));
         }
+
+        // Insert payment records into membership_history for members that had a paid amount
+        const paymentRecords = allInserted
+          .filter((m: any) => m.paidAmount && m.paidAmount > 0)
+          .map((m: any) => ({
+            gym_id: gymId,
+            member_id: m.id,
+            plan_id: m.plan_id || null,
+            start_date: m.join_date,
+            end_date: m.join_date,
+            price_paid: m.paidAmount,
+            payment_method: 'CASH',
+          }));
+
+        if (paymentRecords.length > 0) {
+          for (let i = 0; i < paymentRecords.length; i += 50) {
+            const batch = paymentRecords.slice(i, i + 50);
+            await supabase.from('membership_history').insert(batch);
+          }
+        }
+
         fetchMembers();
       }
       setImportSummary(stats);
