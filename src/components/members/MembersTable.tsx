@@ -56,6 +56,9 @@ export const MembersTable: React.FC<MembersTableProps> = ({
               <th className="px-5 py-3.5 text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400 hidden lg:table-cell">
                 Payment
               </th>
+              <th onClick={() => onSort('expiry_date')} className="group cursor-pointer px-5 py-3.5 text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400 hidden xl:table-cell hover:text-primary-default transition-colors">
+                <div className="flex items-center">Expiry <SortIcon column="expiry_date" /></div>
+              </th>
               <th onClick={() => onSort('status')} className="group cursor-pointer px-5 py-3.5 text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400 hover:text-primary-default transition-colors">
                 <div className="flex items-center">Status <SortIcon column="status" /></div>
               </th>
@@ -104,7 +107,7 @@ export const MembersTable: React.FC<MembersTableProps> = ({
               ))
             ) : members.length === 0 ? (
               <tr>
-                <td colSpan={9} className="p-12">
+                <td colSpan={10} className="p-12">
                   <EmptyState
                     icon={searchQuery ? 'search_off' : 'group'}
                     title={searchQuery ? 'No match found' : 'No members yet'}
@@ -137,9 +140,14 @@ export const MembersTable: React.FC<MembersTableProps> = ({
                           {member.plans.name}
                         </span>
                       ) : member.plan_name ? (
-                        <span className="inline-flex items-center rounded-lg bg-amber-50 dark:bg-amber-900/20 px-2.5 py-1 text-xs font-medium text-amber-700 dark:text-amber-400">
-                          {member.plan_name}
-                        </span>
+                        <div className="flex flex-col gap-1 items-start">
+                          <span className="inline-flex items-center rounded-lg bg-amber-50 dark:bg-amber-900/20 px-2.5 py-1 text-xs font-medium text-amber-700 dark:text-amber-400 border border-amber-100 dark:border-amber-900/30">
+                            {member.plan_name}
+                          </span>
+                          <span className="text-[10px] text-amber-600 font-bold flex items-center gap-0.5">
+                            <span className="material-symbols-outlined text-xs">warning</span> FIX PLAN
+                          </span>
+                        </div>
                       ) : (
                         <span className="text-xs text-slate-400">No Plan</span>
                       )}
@@ -155,6 +163,9 @@ export const MembersTable: React.FC<MembersTableProps> = ({
                       ) : (
                         <span className="text-xs text-slate-400">-</span>
                       )}
+                    </td>
+                    <td className="px-5 py-4 text-sm text-slate-500 hidden xl:table-cell font-medium">
+                      {member.expiry_date ? new Date(member.expiry_date).toLocaleDateString('en-GB') : <span className="text-xs text-slate-400">-</span>}
                     </td>
                     <td className="px-5 py-4">
                       <div className="flex flex-col gap-1 items-start">

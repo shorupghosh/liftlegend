@@ -5,6 +5,7 @@ type ImportSummaryData = {
   imported: number;
   skipped: number;
   failed: number;
+  unrecognizedPlans?: number;
   errors: string[];
 };
 
@@ -30,22 +31,26 @@ export function ImportSummaryModal({ isOpen, onClose, summary, onDownloadErrors 
         </div>
         
         <div className="p-6">
-          <div className="grid grid-cols-4 gap-4 mb-6">
+          <div className="grid grid-cols-5 gap-2 mb-6">
             <div className="text-center">
-              <p className="text-xs uppercase tracking-widest text-slate-500 font-bold">Total</p>
-              <p className="text-2xl font-black mt-1 text-slate-700 dark:text-slate-300">{summary.total}</p>
+              <p className="text-[10px] uppercase tracking-widest text-slate-500 font-bold">Total</p>
+              <p className="text-xl font-black mt-1 text-slate-700 dark:text-slate-300">{summary.total}</p>
             </div>
             <div className="text-center">
-              <p className="text-xs uppercase tracking-widest text-emerald-500 font-bold">Imported</p>
-              <p className="text-2xl font-black mt-1 text-emerald-600 dark:text-emerald-400">{summary.imported}</p>
+              <p className="text-[10px] uppercase tracking-widest text-emerald-500 font-bold">New</p>
+              <p className="text-xl font-black mt-1 text-emerald-600 dark:text-emerald-400">{summary.imported}</p>
             </div>
             <div className="text-center">
-              <p className="text-xs uppercase tracking-widest text-amber-500 font-bold">Skipped</p>
-              <p className="text-2xl font-black mt-1 text-amber-600 dark:text-amber-400">{summary.skipped}</p>
+              <p className="text-[10px] uppercase tracking-widest text-amber-500 font-bold">Fix Plan</p>
+              <p className="text-xl font-black mt-1 text-amber-600 dark:text-amber-400">{summary.unrecognizedPlans || 0}</p>
             </div>
             <div className="text-center">
-              <p className="text-xs uppercase tracking-widest text-red-500 font-bold">Failed</p>
-              <p className="text-2xl font-black mt-1 text-red-600 dark:text-red-400">{summary.failed}</p>
+              <p className="text-[10px] uppercase tracking-widest text-slate-400 font-bold">Skip</p>
+              <p className="text-xl font-black mt-1 text-slate-500 dark:text-slate-500">{summary.skipped}</p>
+            </div>
+            <div className="text-center">
+              <p className="text-[10px] uppercase tracking-widest text-red-500 font-bold">Fail</p>
+              <p className="text-xl font-black mt-1 text-red-600 dark:text-red-400">{summary.failed}</p>
             </div>
           </div>
 

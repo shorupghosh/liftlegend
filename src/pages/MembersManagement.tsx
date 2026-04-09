@@ -404,7 +404,7 @@ export default function MembersManagement() {
       const phoneSet = new Set(members.map(m => m.phone).filter(Boolean));
       const emailSet = new Set(members.map(m => m.email).filter(Boolean));
 
-      const stats = { total: lines.length - 1, imported: 0, skipped: 0, failed: 0, errors: [] as string[] };
+      const stats = { total: lines.length - 1, imported: 0, skipped: 0, failed: 0, unrecognizedPlans: 0, errors: [] as string[] };
       const newMembers: any[] = [];
 
       for (let i = 1; i < lines.length; i++) {
@@ -452,6 +452,11 @@ export default function MembersManagement() {
         const matchedPlan = planName && planMap[planName.toLowerCase()] ? planMap[planName.toLowerCase()] : null;
         const matchedPlanId = matchedPlan?.id || null;
         const status = statusIdx >= 0 ? row[statusIdx]?.trim().toUpperCase() : 'ACTIVE';
+
+        if (planName && !matchedPlanId) {
+          stats.unrecognizedPlans++;
+          stats.errors.push(`Row ${i + 1} (${fullName}): Plan "${planName}" not recognized. Please link via "Edit Member" later.`);
+        }
 
         // Parse join date - try multiple formats (DD/MM/YYYY, YYYY-MM-DD, MM/DD/YYYY)
         let joinDate: string | null = null;
