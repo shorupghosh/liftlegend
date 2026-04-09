@@ -211,15 +211,15 @@ export default function MembersManagement() {
     resetForm();
     setShowAddModal(true);
     
-    // Auto-detect next member number
+    // Auto-detect next member number (Starting from 001)
     try {
-      let nextNum = 1001;
+      let nextNum = 1;
       if (isDemoMode) {
         const numbers = demoState.members
           .map(m => parseInt(m.member_number?.replace(/[^0-9]/g, '') || '0'))
           .filter(n => !isNaN(n) && n > 0);
         if (numbers.length > 0) {
-          nextNum = Math.max(1000, ...numbers) + 1;
+          nextNum = Math.max(0, ...numbers) + 1;
         }
       } else if (gymId) {
         const { data } = await supabase
@@ -234,11 +234,12 @@ export default function MembersManagement() {
             .map(m => parseInt(m.member_number?.replace(/[^0-9]/g, '') || '0'))
             .filter(n => !isNaN(n) && n > 0);
           if (numbers.length > 0) {
-            nextNum = Math.max(1000, ...numbers) + 1;
+            nextNum = Math.max(0, ...numbers) + 1;
           }
         }
       }
-      setFormData(prev => ({ ...prev, member_number: nextNum.toString() }));
+      // Pad to 3 digits (e.g., 001, 002)
+      setFormData(prev => ({ ...prev, member_number: nextNum.toString().padStart(3, '0') }));
     } catch (err) {
       console.warn('Could not auto-generate member ID', err);
     }
