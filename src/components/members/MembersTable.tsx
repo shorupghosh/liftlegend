@@ -45,6 +45,7 @@ export const MembersTable: React.FC<MembersTableProps> = ({
         <table className="w-full text-left border-collapse min-w-[800px] whitespace-nowrap">
           <thead>
             <tr className="bg-slate-50 dark:bg-slate-800/50 border-b border-slate-200 dark:border-slate-800">
+              <th className="px-5 py-3.5 text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400 w-14">ID</th>
               <th onClick={() => onSort('full_name')} className="group cursor-pointer px-5 py-3.5 text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400 hover:text-primary-default transition-colors">
                 <div className="flex items-center">Member <SortIcon column="full_name" /></div>
               </th>
@@ -53,7 +54,7 @@ export const MembersTable: React.FC<MembersTableProps> = ({
                 <div className="flex items-center">Joined <SortIcon column="join_date" /></div>
               </th>
               <th className="px-5 py-3.5 text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400 hidden lg:table-cell">
-                Last Paid
+                Payment
               </th>
               <th onClick={() => onSort('status')} className="group cursor-pointer px-5 py-3.5 text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400 hover:text-primary-default transition-colors">
                 <div className="flex items-center">Status <SortIcon column="status" /></div>
@@ -66,6 +67,9 @@ export const MembersTable: React.FC<MembersTableProps> = ({
             {loading ? (
               Array.from({ length: 5 }).map((_, i) => (
                 <tr key={`skeleton-${i}`} className="animate-pulse">
+                  <td className="px-5 py-4">
+                    <div className="h-4 w-8 bg-slate-200 dark:bg-slate-800 rounded" />
+                  </td>
                   <td className="px-5 py-4">
                     <div className="flex items-center gap-3">
                       <div className="size-9 rounded-full bg-slate-200 dark:bg-slate-800 shrink-0" />
@@ -100,7 +104,7 @@ export const MembersTable: React.FC<MembersTableProps> = ({
               ))
             ) : members.length === 0 ? (
               <tr>
-                <td colSpan={8} className="p-12">
+                <td colSpan={9} className="p-12">
                   <EmptyState
                     icon={searchQuery ? 'search_off' : 'group'}
                     title={searchQuery ? 'No match found' : 'No members yet'}
@@ -109,10 +113,11 @@ export const MembersTable: React.FC<MembersTableProps> = ({
                 </td>
               </tr>
             ) : (
-              members.map((member) => {
+              members.map((member, idx) => {
                 const alert = getMemberExpiryAlert(member.expiry_date);
                 return (
                   <tr key={member.id} className="hover:bg-slate-50/80 dark:hover:bg-slate-800/30 transition-colors">
+                    <td className="px-5 py-4 text-xs font-mono text-slate-400">{(page - 1) * 50 + idx + 1}</td>
                     <td className="px-5 py-4">
                       <div className="flex items-center gap-3">
                         <div className="size-9 rounded-full bg-primary-default/10 flex items-center justify-center text-primary-default font-bold text-sm shrink-0">
