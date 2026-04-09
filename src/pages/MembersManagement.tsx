@@ -63,6 +63,7 @@ export default function MembersManagement() {
     full_name: '',
     email: '',
     phone: '',
+    member_number: '',
     plan_id: '',
     join_date: new Date().toISOString().split('T')[0],
   });
@@ -98,7 +99,7 @@ export default function MembersManagement() {
 
       let query = supabase
         .from('members')
-        .select('id, gym_id, full_name, email, phone, status, join_date, expiry_date, created_at, plan_id, plan_name, plans(name, price, duration_days)', { count: 'exact' })
+        .select('id, gym_id, full_name, email, phone, status, join_date, expiry_date, created_at, member_number, plan_id, plan_name, plans(name, price, duration_days)', { count: 'exact' })
         .eq('gym_id', gymId)
         .order(sortConfig.key, { ascending: sortConfig.direction === 'asc' });
 
@@ -187,7 +188,7 @@ export default function MembersManagement() {
   useRealtimeSubscription({ table: 'members', gymId, onChange: fetchMembers });
 
   const resetForm = () => {
-    setFormData({ full_name: '', email: '', phone: '', plan_id: '', join_date: new Date().toISOString().split('T')[0] });
+    setFormData({ full_name: '', email: '', phone: '', member_number: '', plan_id: '', join_date: new Date().toISOString().split('T')[0] });
     setEditingMember(null);
   };
 
@@ -198,6 +199,7 @@ export default function MembersManagement() {
       full_name: member.full_name || '',
       email: member.email || '',
       phone: member.phone || '',
+      member_number: member.member_number || '',
       plan_id: member.plan_id || '',
       join_date: member.join_date ? member.join_date.split('T')[0] : new Date().toISOString().split('T')[0],
     });
@@ -219,6 +221,7 @@ export default function MembersManagement() {
             full_name: formData.full_name.trim(),
             email: formData.email || undefined,
             phone: formData.phone || undefined,
+            member_number: formData.member_number || undefined,
             plan_id: formData.plan_id || undefined,
             join_date: formData.join_date,
           });
@@ -228,6 +231,7 @@ export default function MembersManagement() {
             full_name: formData.full_name.trim(),
             email: formData.email || undefined,
             phone: formData.phone || undefined,
+            member_number: formData.member_number || undefined,
             plan_id: formData.plan_id || undefined,
             join_date: formData.join_date,
           });
@@ -242,6 +246,7 @@ export default function MembersManagement() {
           full_name: formData.full_name.trim(),
           email: formData.email || null,
           phone: formData.phone || null,
+          member_number: formData.member_number || null,
           plan_id: formData.plan_id || null,
           join_date: formData.join_date || null,
         };
@@ -261,9 +266,15 @@ export default function MembersManagement() {
         const selectedPlan = formData.plan_id ? plans.find(p => p.id === formData.plan_id) : null;
         const expiryDate = selectedPlan?.duration_days && formData.join_date ? calculateExpiryDate(formData.join_date, selectedPlan.duration_days) : null;
         const { data: newMem, error } = await supabase.from('members').insert([{
-          gym_id: gymId, full_name: formData.full_name.trim(), email: formData.email || null,
-          phone: formData.phone || null, plan_id: formData.plan_id || null, join_date: formData.join_date,
-          expiry_date: expiryDate, status: 'ACTIVE'
+          gym_id: gymId,
+          full_name: formData.full_name.trim(),
+          email: formData.email || null,
+          phone: formData.phone || null,
+          member_number: formData.member_number || null,
+          plan_id: formData.plan_id || null,
+          join_date: formData.join_date,
+          expiry_date: expiryDate,
+          status: 'ACTIVE'
         }]).select();
         if (error) throw error;
         await supabase.from('notifications').insert([{
@@ -382,6 +393,7 @@ export default function MembersManagement() {
       const phoneIdx = headers.findIndex(h => h.includes('phone'));
       const planIdx = headers.findIndex(h => h.includes('plan'));
       const statusIdx = headers.findIndex(h => h.includes('status'));
+      const memberIdIdx = headers.findIndex(h => h === 'id' || h === 'no' || h === 'number' || h.includes('member id') || h.includes('member no') || h.includes('member number'));
       const joinDateIdx = headers.findIndex(h => h.includes('join') || h.includes('start') || h.includes('date'));
       const paidIdx = headers.findIndex(h => h.includes('paid') || h.includes('amount') || h.includes('payment') || h.includes('price'));
       const planMap: Record<string, string> = {};
@@ -400,6 +412,7 @@ export default function MembersManagement() {
         const email = emailIdx >= 0 ? (row[emailIdx]?.trim() || null) : null;
         let phone = phoneIdx >= 0 ? (row[phoneIdx]?.trim() || null) : null;
         const planName = planIdx >= 0 ? row[planIdx]?.trim() : '';
+        const memberNumber = memberIdIdx >= 0 ? row[memberIdIdx]?.trim() : null;
         const rawJoinDate = joinDateIdx >= 0 ? row[joinDateIdx]?.trim() : '';
         const rawPaid = paidIdx >= 0 ? row[paidIdx]?.trim() : '';
 
@@ -470,6 +483,7 @@ export default function MembersManagement() {
         const memberRecord: any = {
           gym_id: gymId, full_name: fullName, email,
           phone: phone || null,
+          member_number: memberNumber,
           plan_id: matchedPlanId,
           plan_name: planName || null,
           join_date: joinDate || new Date().toISOString().split('T')[0],

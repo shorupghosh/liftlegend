@@ -20,6 +20,7 @@ export interface Member {
     gender?: string;
     status: string;
     notes?: string;
+    member_number?: string;
     plan_id?: string;
     plan_name?: string;
     join_date?: string;

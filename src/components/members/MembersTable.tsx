@@ -117,7 +117,9 @@ export const MembersTable: React.FC<MembersTableProps> = ({
                 const alert = getMemberExpiryAlert(member.expiry_date);
                 return (
                   <tr key={member.id} className="hover:bg-slate-50/80 dark:hover:bg-slate-800/30 transition-colors">
-                    <td className="px-5 py-4 text-xs font-mono text-slate-400">{(page - 1) * 50 + idx + 1}</td>
+                    <td className="px-5 py-4 text-xs font-mono text-slate-400">
+                      {member.member_number || (page - 1) * 50 + idx + 1}
+                    </td>
                     <td className="px-5 py-4">
                       <div className="flex items-center gap-3">
                         <div className="size-9 rounded-full bg-primary-default/10 flex items-center justify-center text-primary-default font-bold text-sm shrink-0">

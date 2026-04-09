@@ -22,7 +22,7 @@ type DemoDataContextValue = {
   state: DemoState;
   metrics: DemoMetrics;
   resetDemoData: () => void;
-  addMember: (payload: Pick<Member, 'full_name' | 'email' | 'phone' | 'plan_id' | 'join_date'>) => Member;
+  addMember: (payload: Pick<Member, 'full_name' | 'email' | 'phone' | 'member_number' | 'plan_id' | 'join_date'>) => Member;
   updateMember: (memberId: string, payload: Partial<Member>) => Member | null;
   deleteMember: (memberId: string) => void;
   toggleMemberStatus: (memberId: string) => Member | null;
@@ -125,7 +125,7 @@ export function DemoDataProvider({ children }: { children: React.ReactNode }) {
     });
   };
 
-  const addMember = (payload: Pick<Member, 'full_name' | 'email' | 'phone' | 'plan_id' | 'join_date'>) => {
+  const addMember = (payload: Pick<Member, 'full_name' | 'email' | 'phone' | 'member_number' | 'plan_id' | 'join_date'>) => {
     const memberId = `demo-member-${Date.now()}`;
     let createdMember: Member | null = null;
     setState((current) => {
@@ -137,6 +137,7 @@ export function DemoDataProvider({ children }: { children: React.ReactNode }) {
         full_name: payload.full_name.trim(),
         email: payload.email || undefined,
         phone: payload.phone || undefined,
+        member_number: payload.member_number || undefined,
         plan_id: payload.plan_id || undefined,
         join_date: payload.join_date || today.split('T')[0],
         expiry_date: plan
