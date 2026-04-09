@@ -125,28 +125,7 @@ const Login: React.FC = () => {
             return;
         }
 
-        const { data: roleData } = await supabase
-            .from('user_roles')
-            .select('role')
-            .eq('user_id', data.user.id)
-            .limit(1)
-            .maybeSingle();
-
-        // If user is authenticated but has no role record yet, they might be a new user 
-        // who hasn't completed setup or the setup trigger failed.
-        if (!roleData) {
-            setError('Account found, but you do not have permission to access the dashboard yet. Please contact support.');
-            setLoading(false);
-            return;
-        }
-
-        if (roleData?.role === 'SUPER_ADMIN') {
-            navigate('/super-admin');
-        } else {
-            // Auth state change will trigger redirect via useEffect.
-            // Reset local loading so the button isn't stuck as a spinner.
-            setLoading(false);
-        }
+        // Authentication successful. AuthContext will update states and useEffect will redirect.
     };
 
     return (
