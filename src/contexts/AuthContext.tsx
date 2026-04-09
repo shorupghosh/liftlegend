@@ -168,11 +168,19 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         if (fetchInFlightRef.current) return;
         fetchInFlightRef.current = true;
         setLoading(true);
+
+        const controller = new AbortController();
+        const timeoutId = setTimeout(() => {
+            console.warn('[fetchUserRole] Request timed out. Aborting.');
+            controller.abort();
+        }, 10000);
+
         try {
             const { data, error } = await supabase
                 .from('user_roles')
                 .select('role, gym_id, display_name')
-                .eq('user_id', userId);
+                .eq('user_id', userId)
+                .abortSignal(controller.signal);
 
             if (error) throw error;
 
@@ -220,7 +228,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
                         .from('gyms')
                         .select('status, trial_ends_at, subscription_tier, onboarding_completed, dashboard_mode, name, branding')
                         .eq('id', activeImpersonation?.gymId || selectedRole.gym_id)
-                        .maybeSingle();
+                        .maybeSingle()
+                        .abortSignal(controller.signal);
 
                     if (gymError) throw gymError;
 
@@ -247,7 +256,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
                             .from('gyms')
                             .select('status, trial_ends_at, subscription_tier, name, branding')
                             .eq('id', activeImpersonation?.gymId || selectedRole.gym_id)
-                            .maybeSingle();
+                            .maybeSingle()
+                            .abortSignal(controller.signal);
                         setGymStatus(fallbackData?.status || null);
                         setTrialEndsAt(fallbackData?.trial_ends_at || null);
                         setSubscriptionTier(fallbackData?.subscription_tier || 'BASIC');
@@ -277,6 +287,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
             setImpersonatedGymId(null);
             setImpersonatedGymName(null);
         } finally {
+            clearTimeout(timeoutId);
             fetchInFlightRef.current = false;
             setLoading(false);
             if (loadingTimeoutRef.current) clearTimeout(loadingTimeoutRef.current);
