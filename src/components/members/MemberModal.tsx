@@ -68,17 +68,7 @@ export const MemberModal: React.FC<MemberModalProps> = ({
         </div>
 
         <form onSubmit={onSubmit} className="p-6 space-y-4 overflow-y-auto">
-          <div className="space-y-1.5">
-            <label htmlFor="member-id" className="text-sm font-bold text-slate-700 dark:text-slate-300">Member ID / Number</label>
-            <input
-              id="member-id"
-              value={formData.member_number}
-              onChange={(e) => setFormData({ ...formData, member_number: e.target.value })}
-              type="text"
-              placeholder="e.g. 1001"
-              className="w-full bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl h-11 px-4 text-sm focus:ring-2 focus:ring-primary-default/20 focus:border-primary-default outline-none transition-all"
-            />
-          </div>
+
           <div className="space-y-1.5">
             <label htmlFor="member-name" className="text-sm font-bold text-slate-700 dark:text-slate-300">Full Name *</label>
             <input

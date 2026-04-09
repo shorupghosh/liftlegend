@@ -207,42 +207,9 @@ export default function MembersManagement() {
     setEditingMember(null);
   };
 
-  const openAddModal = async () => {
+  const openAddModal = () => {
     resetForm();
     setShowAddModal(true);
-    
-    // Auto-detect next member number (Starting from 001)
-    try {
-      let nextNum = 1;
-      if (isDemoMode) {
-        const numbers = demoState.members
-          .map(m => parseInt(m.member_number?.replace(/[^0-9]/g, '') || '0'))
-          .filter(n => !isNaN(n) && n > 0);
-        if (numbers.length > 0) {
-          nextNum = Math.max(0, ...numbers) + 1;
-        }
-      } else if (gymId) {
-        const { data } = await supabase
-          .from('members')
-          .select('member_number')
-          .eq('gym_id', gymId)
-          .order('created_at', { ascending: false })
-          .limit(20);
-        
-        if (data && data.length > 0) {
-          const numbers = data
-            .map(m => parseInt(m.member_number?.replace(/[^0-9]/g, '') || '0'))
-            .filter(n => !isNaN(n) && n > 0);
-          if (numbers.length > 0) {
-            nextNum = Math.max(0, ...numbers) + 1;
-          }
-        }
-      }
-      // Pad to 3 digits (e.g., 001, 002)
-      setFormData(prev => ({ ...prev, member_number: nextNum.toString().padStart(3, '0') }));
-    } catch (err) {
-      console.warn('Could not auto-generate member ID', err);
-    }
   };
   const openEditModal = (member: any) => {
     setEditingMember(member);
