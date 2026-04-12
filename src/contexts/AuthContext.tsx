@@ -181,33 +181,24 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
             if (error) throw error;
 
             if (!data || data.length === 0) {
-                console.warn('[Auth] Orphaned account detected. Attempting auto-heal...');
+                console.warn('[Auth] Orphaned account detected. Attempting auto-heal via secure RPC...');
                 try {
-                    // Auto-heal missing gym and role for orphaned auth users
-                    const { data: gymRes, error: gymErr } = await supabase
-                        .from('gyms')
-                        .insert({ owner_id: userId, name: 'My Gym', status: 'ACTIVE', subscription_tier: 'ADVANCED' })
-                        .select('id')
-                        .maybeSingle();
-
-                    if (!gymErr && gymRes) {
-                        const { error: roleErr } = await supabase
-                            .from('user_roles')
-                            .insert({
-                                user_id: userId,
-                                gym_id: gymRes.id,
-                                role: 'OWNER',
-                                display_name: userEmail || 'Recovered Admin'
-                            });
-                        if (!roleErr) {
-                            // Recovered! Re-fetch roles.
-                            setUser(null);
-                            setTimeout(() => window.location.reload(), 500);
-                            return;
-                        }
+                    // This calls the backend SECURITY DEFINER script which perfectly bypasses frontend RLS blocking
+                    await supabase.rpc('permanent_heal_permissions');
+                    
+                    // Immediately re-fetch the now-healed role to allow seamless login
+                    const { data: recoveredData } = await supabase
+                        .from('user_roles')
+                        .select('role, gym_id, display_name')
+                        .eq('user_id', userId);
+                        
+                    if (recoveredData && recoveredData.length > 0) {
+                        setUser(null);
+                        setTimeout(() => window.location.reload(), 300);
+                        return;
                     }
                 } catch (e) {
-                    console.error('Auto-heal failed:', e);
+                    console.error('RPC auto-heal failed:', e);
                 }
 
                 setUserRole(null);
