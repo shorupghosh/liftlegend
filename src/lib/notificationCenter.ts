@@ -210,7 +210,7 @@ export async function fetchNotificationPayload(gymId: string, limit = 6): Promis
   }
 
   return {
-    items: (data || []) as NotificationItem[],
+    items: (data || []) as unknown as NotificationItem[],
     unreadCount: (data || []).filter((item) => !item.is_read).length,
   };
   } catch (err) {

@@ -16,6 +16,7 @@ import { EmptyState } from '../components/ui/EmptyState';
 import { ErrorState } from '../components/ui/ErrorState';
 import { getMemberExpiryAlert, calculateExpiryDate, getDaysLeft } from '../lib/memberExpiry';
 import { useDemoData } from '../contexts/DemoDataContext';
+import { useDemoMode } from '../hooks/useDemoMode';
 import { useDebounce } from '../hooks/useDebounce';
 import { useFavorites } from '../hooks/useFavorites';
 import UsageLimitBanner, { UsageLimitGuard } from '../components/plan/UsageLimitBanner';
