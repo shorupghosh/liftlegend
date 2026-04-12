@@ -219,6 +219,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
             // Fetch gym status for lock detection (skip for super admins)
             // Single combined query — avoids 3 separate round-trips to gyms table
             if ((!isSuperAdmin || activeImpersonation) && (activeImpersonation?.gymId || selectedRole.gym_id)) {
+                // Background fallback to ensure members expire properly even if cron fails or is disabled
+                supabase.rpc('force_refresh_all_expiries').catch(() => {});
+                
                 try {
                     const { data: gymData, error: gymError } = await (supabase
                         .from('gyms')
