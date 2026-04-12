@@ -19,6 +19,8 @@ interface MembersTableProps {
   totalPages: number;
   totalCount: number;
   setPage: React.Dispatch<React.SetStateAction<number>>;
+  isFavorite: (id: string) => boolean;
+  toggleFavorite: (id: string) => void;
 }
 
 export const MembersTable: React.FC<MembersTableProps> = ({
@@ -32,7 +34,9 @@ export const MembersTable: React.FC<MembersTableProps> = ({
   page,
   totalPages,
   totalCount,
-  setPage
+  setPage,
+  isFavorite,
+  toggleFavorite
 }) => {
   const SortIcon = ({ column }: { column: string }) => {
     if (sortConfig.key !== column) return <span className="material-symbols-outlined text-xs ml-1 opacity-0 group-hover:opacity-100 transition-opacity">unfold_more</span>;
@@ -119,6 +123,19 @@ export const MembersTable: React.FC<MembersTableProps> = ({
                   <tr key={member.id} className="hover:bg-slate-50/80 dark:hover:bg-slate-800/30 transition-colors">
                     <td className="px-5 py-4">
                       <div className="flex items-center gap-3">
+                        <button 
+                          onClick={(e) => { e.stopPropagation(); toggleFavorite(member.id); }} 
+                          className="shrink-0 group hover:scale-110 transition-transform"
+                          aria-label={isFavorite(member.id) ? "Remove from favorites" : "Add to favorites"}
+                        >
+                          <span className={`material-symbols-outlined text-xl transition-colors ${
+                            isFavorite(member.id) 
+                              ? "text-amber-400 [font-variation-settings:'FILL'1]" 
+                              : "text-slate-300 dark:text-slate-600 group-hover:text-amber-300"
+                          }`}>
+                            star
+                          </span>
+                        </button>
                         <div className="size-9 rounded-full bg-primary-default/10 flex items-center justify-center text-primary-default font-bold text-sm shrink-0">
                           {member.full_name?.charAt(0) || '?'}
                         </div>

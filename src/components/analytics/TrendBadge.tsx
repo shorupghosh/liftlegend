@@ -24,7 +24,7 @@ export function TrendBadge({ trend }: { trend: TrendMeta }) {
     ? 'bg-slate-100 text-slate-500 dark:bg-slate-800 dark:text-slate-300'
     : trend.positive
       ? 'bg-emerald-50 text-emerald-600 dark:bg-emerald-950/40 dark:text-emerald-300'
-      : 'bg-rose-50 text-rose-600 dark:bg-rose-950/40 dark:text-rose-300';
+      : 'bg-slate-100 text-slate-600 dark:bg-slate-800 dark:text-slate-300';
 
   return (
     <span className={`inline-flex items-center rounded-full px-2.5 py-1 text-[10px] font-black uppercase tracking-widest ${className}`}>

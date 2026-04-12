@@ -136,10 +136,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
             setSession(session);
             setUser(session?.user ?? null);
             if (session?.user) {
-                // Skip duplicate fetch if getSession already triggered one for the same user
-                if (initialFetchDone && !fetchInFlightRef.current) {
-                    return; // getSession already handled this
-                }
                 fetchUserRole(session.user.id, session.user.email || null);
             } else {
                 setUserRole(null);
@@ -176,10 +172,10 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         }, 10000);
 
         try {
-            const { data, error } = await supabase
+            const { data, error } = await (supabase
                 .from('user_roles')
                 .select('role, gym_id, display_name')
-                .eq('user_id', userId)
+                .eq('user_id', userId) as any)
                 .abortSignal(controller.signal);
 
             if (error) throw error;
@@ -224,11 +220,11 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
             // Single combined query — avoids 3 separate round-trips to gyms table
             if ((!isSuperAdmin || activeImpersonation) && (activeImpersonation?.gymId || selectedRole.gym_id)) {
                 try {
-                    const { data: gymData, error: gymError } = await supabase
+                    const { data: gymData, error: gymError } = await (supabase
                         .from('gyms')
                         .select('status, trial_ends_at, subscription_tier, onboarding_completed, dashboard_mode, name, branding')
                         .eq('id', activeImpersonation?.gymId || selectedRole.gym_id)
-                        .maybeSingle()
+                        .maybeSingle() as any)
                         .abortSignal(controller.signal);
 
                     if (gymError) throw gymError;
@@ -252,11 +248,11 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
                     // Graceful fallback if some columns don't exist yet
                     console.error('Failed to fetch gym data:', err);
                     try {
-                        const { data: fallbackData } = await supabase
+                        const { data: fallbackData } = await (supabase
                             .from('gyms')
                             .select('status, trial_ends_at, subscription_tier, name, branding')
                             .eq('id', activeImpersonation?.gymId || selectedRole.gym_id)
-                            .maybeSingle()
+                            .maybeSingle() as any)
                             .abortSignal(controller.signal);
                         setGymStatus(fallbackData?.status || null);
                         setTrialEndsAt(fallbackData?.trial_ends_at || null);

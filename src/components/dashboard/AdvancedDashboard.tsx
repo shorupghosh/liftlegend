@@ -28,7 +28,7 @@ const StatCard = React.memo(({ label, value, trend, icon, color, onClick }: {
         <span className="material-symbols-outlined">{icon}</span>
       </div>
       {trend && (
-        <span className={`text-[10px] font-black px-2 py-1 rounded-full ${trend.positive ? 'bg-emerald-500/10 text-emerald-600' : 'bg-red-500/10 text-red-600'}`}>
+        <span className={`text-[10px] font-black px-2 py-1 rounded-full ${trend.positive ? 'bg-emerald-500/10 text-emerald-600' : 'bg-slate-100 text-slate-600 dark:bg-slate-800 dark:text-slate-300'}`}>
           {trend.positive ? '↑' : '↓'} {trend.value}
         </span>
       )}

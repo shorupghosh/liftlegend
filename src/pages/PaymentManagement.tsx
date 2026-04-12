@@ -294,7 +294,6 @@ export default function PaymentManagement() {
       if (isDemoMode) {
         setMembers(
           demoState.members
-            .filter((member) => member.status === 'ACTIVE')
             .map((member) => ({
               ...member,
               due_amount: Number((member as any).dueAmount || 0),
@@ -308,8 +307,7 @@ export default function PaymentManagement() {
         supabase
           .from('members')
           .select('id, full_name, phone, plan_id')
-          .eq('gym_id', gymId)
-          .eq('status', 'ACTIVE'),
+          .eq('gym_id', gymId),
         supabase.from('plans').select('id, name, price, duration_days').eq('gym_id', gymId),
       ]);
 

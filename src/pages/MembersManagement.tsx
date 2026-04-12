@@ -16,8 +16,8 @@ import { EmptyState } from '../components/ui/EmptyState';
 import { ErrorState } from '../components/ui/ErrorState';
 import { getMemberExpiryAlert, calculateExpiryDate, getDaysLeft } from '../lib/memberExpiry';
 import { useDemoData } from '../contexts/DemoDataContext';
-import { useDemoMode } from '../hooks/useDemoMode';
 import { useDebounce } from '../hooks/useDebounce';
+import { useFavorites } from '../hooks/useFavorites';
 import UsageLimitBanner, { UsageLimitGuard } from '../components/plan/UsageLimitBanner';
 
 const PAGE_SIZE = 50;
@@ -40,6 +40,7 @@ export default function MembersManagement() {
   const { state: demoState, addMember, updateMember, deleteMember } = useDemoData();
   const { showToast } = useToast();
   const { isLimitReached, refreshUsage } = usePlan();
+  const { isFavorite, toggleFavorite } = useFavorites();
   const [members, setMembers] = useState<Member[]>([]);
   const [plans, setPlans] = useState<Partial<Plan>[]>([]);
   const [loading, setLoading] = useState(true);
@@ -632,6 +633,10 @@ export default function MembersManagement() {
         default: return true;
       }
     }).sort((a, b) => {
+      const favA = isFavorite(a.id) ? 1 : 0;
+      const favB = isFavorite(b.id) ? 1 : 0;
+      if (favA !== favB) return favB - favA;
+
       if (isDemoMode) {
         const { key, direction } = sortConfig;
         let valA: any = (a as any)[key] || '';
@@ -645,7 +650,7 @@ export default function MembersManagement() {
       }
       return 0;
     });
-  }, [members, filterPlan, filterStatus, isDemoMode, sortConfig]);
+  }, [members, filterPlan, filterStatus, isDemoMode, sortConfig, isFavorite]);
 
   const totalPages = Math.ceil(totalCount / PAGE_SIZE);
 
@@ -733,6 +738,7 @@ export default function MembersManagement() {
           loading={loading} members={filteredMembers} searchQuery={searchQuery} sortConfig={sortConfig}
           onSort={(key) => setSortConfig(prev => ({ key, direction: prev.key === key && prev.direction === 'desc' ? 'asc' : 'desc' }))}
           onEdit={openEditModal} onDelete={handleDelete} page={page} totalPages={totalPages} totalCount={totalCount} setPage={setPage}
+          isFavorite={isFavorite} toggleFavorite={toggleFavorite}
         />
       )}
 
