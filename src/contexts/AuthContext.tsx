@@ -181,6 +181,35 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
             if (error) throw error;
 
             if (!data || data.length === 0) {
+                console.warn('[Auth] Orphaned account detected. Attempting auto-heal...');
+                try {
+                    // Auto-heal missing gym and role for orphaned auth users
+                    const { data: gymRes, error: gymErr } = await supabase
+                        .from('gyms')
+                        .insert({ owner_id: userId, name: 'My Gym', status: 'ACTIVE', subscription_tier: 'ADVANCED' })
+                        .select('id')
+                        .maybeSingle();
+
+                    if (!gymErr && gymRes) {
+                        const { error: roleErr } = await supabase
+                            .from('user_roles')
+                            .insert({
+                                user_id: userId,
+                                gym_id: gymRes.id,
+                                role: 'OWNER',
+                                display_name: userEmail || 'Recovered Admin'
+                            });
+                        if (!roleErr) {
+                            // Recovered! Re-fetch roles.
+                            setUser(null);
+                            setTimeout(() => window.location.reload(), 500);
+                            return;
+                        }
+                    }
+                } catch (e) {
+                    console.error('Auto-heal failed:', e);
+                }
+
                 setUserRole(null);
                 setGymId(null);
                 setGymStatus(null);
