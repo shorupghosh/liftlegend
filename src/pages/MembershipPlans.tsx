@@ -227,7 +227,7 @@ export default function MembershipPlans() {
             // BUG-22 FIXED: "Most Popular" badge is now based on `is_popular` DB field, not hardcoded index
             const isPopular = plan.is_popular === true;
             return (
-              <div key={plan.id} className={`relative flex flex-col ${colorSet.bg} rounded-2xl border ${colorSet.border} p-6 ${colorSet.shadow} transition-all duration-300`}>
+              <div key={plan.id} className={`relative flex flex-col ${colorSet.bg} rounded-2xl ${isPopular ? 'border-2 border-primary-default' : 'border border-slate-200 dark:border-slate-800'} p-6 ${isPopular ? 'shadow-2xl shadow-primary-default/10 scale-[1.02] z-10' : 'shadow-sm hover:shadow-xl'} transition-all duration-300`}>
                 {isPopular && (
                   <div className="absolute -top-3.5 left-1/2 -translate-x-1/2 bg-primary-default text-white text-[10px] font-black uppercase tracking-[0.2em] px-4 py-1.5 rounded-full shadow-lg">
                     Most Popular
