@@ -11,6 +11,7 @@ export default function SubscriptionLock() {
     const [contactForm, setContactForm] = useState({ name: '', email: '', message: '' });
     const [contactSent, setContactSent] = useState(false);
     const [contactSending, setContactSending] = useState(false);
+    const [bkashImgError, setBkashImgError] = useState(false);
 
     const handleContactSubmit = (e: React.FormEvent) => {
         e.preventDefault();
@@ -199,19 +200,18 @@ export default function SubscriptionLock() {
                                 <h2 className="text-xl font-extrabold text-neutral-text dark:text-white mb-1">Pay with bKash</h2>
                                 <p className="text-slate-500 text-sm mb-6">Scan the QR code below or send money to our personal number.</p>
 
-                                {/* bKash QR Scanner Image Placeholder */}
+                                {/* bKash QR Scanner Image */}
                                 <div className="mx-auto max-w-[240px] aspect-square bg-[#f3f4f6] dark:bg-slate-800 rounded-2xl border-4 border-[#e2136e]/20 flex flex-col items-center justify-center overflow-hidden mb-6 relative">
-                                    {/* The image tag below expects a file named bkash-qr.jpg in your public folder */}
-                                    <img src="/bkash-qr.jpg" alt="bKash QR Scanner" className="w-full h-full object-cover relative z-10" 
-                                        onError={(e) => {
-                                            // Fallback text if image isn't added yet
-                                            e.currentTarget.style.display = 'none';
-                                            const parent = e.currentTarget.parentElement;
-                                            if (parent) {
-                                                parent.innerHTML = '<span class="material-symbols-outlined text-5xl text-slate-400 mb-2">image</span><p class="text-xs text-slate-500 font-medium px-4">Upload your bKash QR code<br/>as <b>public/bkash-qr.jpg</b></p>';
-                                            }
-                                        }} 
-                                    />
+                                    {bkashImgError ? (
+                                        <>
+                                            <span className="material-symbols-outlined text-5xl text-slate-400 mb-2">qr_code_2</span>
+                                            <p className="text-xs text-slate-500 font-medium px-4 text-center">Scan via bKash app<br/>or send to the number below</p>
+                                        </>
+                                    ) : (
+                                        <img src="/bkash-qr.jpg" alt="bKash QR Scanner" className="w-full h-full object-cover relative z-10" 
+                                            onError={() => setBkashImgError(true)} 
+                                        />
+                                    )}
                                 </div>
 
                                 <div className="bg-slate-50 dark:bg-slate-800/50 rounded-xl p-5 mb-6 ring-1 ring-slate-200 dark:ring-slate-700">

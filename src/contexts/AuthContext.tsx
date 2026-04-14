@@ -172,7 +172,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         }, 10000);
 
         try {
-            const { data, error } = await (supabase
+            let { data, error } = await (supabase
                 .from('user_roles')
                 .select('role, gym_id, display_name')
                 .eq('user_id', userId) as any)
@@ -180,40 +180,45 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
             if (error) throw error;
 
+            // Auto-heal: if user exists but has no roles, try backend recovery
             if (!data || data.length === 0) {
                 console.warn('[Auth] Orphaned account detected. Attempting auto-heal via secure RPC...');
+                let healed = false;
                 try {
-                    // This calls the backend SECURITY DEFINER script which perfectly bypasses frontend RLS blocking
                     await supabase.rpc('permanent_heal_permissions');
                     
-                    // Immediately re-fetch the now-healed role to allow seamless login
-                    const { data: recoveredData } = await supabase
+                    // Re-fetch the now-healed role — no reload needed
+                    const { data: recoveredData, error: recoveredError } = await supabase
                         .from('user_roles')
                         .select('role, gym_id, display_name')
                         .eq('user_id', userId);
                         
-                    if (recoveredData && recoveredData.length > 0) {
-                        setUser(null);
-                        setTimeout(() => window.location.reload(), 300);
-                        return;
+                    if (!recoveredError && recoveredData && recoveredData.length > 0) {
+                        // Use the recovered data directly — continue normal flow below
+                        data = recoveredData;
+                        healed = true;
+                        console.log('[Auth] Auto-heal succeeded, roles recovered in-memory.');
                     }
                 } catch (e) {
                     console.error('RPC auto-heal failed:', e);
                 }
 
-                setUserRole(null);
-                setGymId(null);
-                setGymStatus(null);
-                setTrialEndsAt(null);
-                setSubscriptionTier(null);
-                setDashboardModeState(null);
-                setGymName(null);
-                setGymLogoUrl(null);
-                setOnboardingCompleted(true);
-                return;
+                // If heal didn't produce data, genuinely no roles exist
+                if (!healed) {
+                    setUserRole(null);
+                    setGymId(null);
+                    setGymStatus(null);
+                    setTrialEndsAt(null);
+                    setSubscriptionTier(null);
+                    setDashboardModeState(null);
+                    setGymName(null);
+                    setGymLogoUrl(null);
+                    setOnboardingCompleted(true);
+                    return;
+                }
             }
 
-            const selectedRole = data.find((row) => row.role === 'SUPER_ADMIN') || data[0];
+            const selectedRole = data.find((row: any) => row.role === 'SUPER_ADMIN') || data[0];
             const isSuperAdmin = selectedRole.role === 'SUPER_ADMIN';
             const activeImpersonation = isSuperAdmin ? getImpersonationSession() : null;
 
@@ -240,7 +245,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
             // Single combined query — avoids 3 separate round-trips to gyms table
             if ((!isSuperAdmin || activeImpersonation) && (activeImpersonation?.gymId || selectedRole.gym_id)) {
                 // Background fallback to ensure members expire properly even if cron fails or is disabled
-                supabase.rpc('force_refresh_all_expiries').catch(() => {});
+                Promise.resolve(supabase.rpc('force_refresh_all_expiries')).catch(() => {});
                 
                 try {
                     const { data: gymData, error: gymError } = await (supabase

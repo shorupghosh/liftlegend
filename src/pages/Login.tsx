@@ -26,7 +26,13 @@ const Login: React.FC = () => {
     const navigate = useNavigate();
 
     useEffect(() => {
-        if (!authLoading && user) {
+        // While auth is actively loading/fetching, clear any stale error to avoid flicker
+        if (authLoading) {
+            setError(null);
+            return;
+        }
+
+        if (user) {
             if (userRole && !['LOCKED', 'SUSPENDED', 'PAST_DUE', 'EXPIRED', 'DELETED'].includes(gymStatus || '')) {
                 if (userRole === 'SUPER_ADMIN') {
                     navigate('/super-admin');
@@ -40,7 +46,7 @@ const Login: React.FC = () => {
                 setError(`Your account is currently ${gymStatus}. Please contact support.`);
                 setLoading(false);
             }
-        } else if (!authLoading && !user) {
+        } else {
             // Ensure local loading state resets if we're not authenticated after loading completes
             setLoading(false);
         }
