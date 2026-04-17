@@ -77,72 +77,78 @@ const Login: React.FC = () => {
         setError(null);
         setSuccessMessage(null);
 
-        if (isSignUp) {
-            if (password.length < 6) {
-                setError('Password must be at least 6 characters.');
-                setLoading(false);
-                return;
-            }
-            if (password !== confirmPassword) {
-                setError('Passwords do not match.');
-                setLoading(false);
-                return;
-            }
-            if (!gymName.trim()) {
-                setError('Gym Name is required.');
+        try {
+            if (isSignUp) {
+                if (password.length < 6) {
+                    setError('Password must be at least 6 characters.');
+                    setLoading(false);
+                    return;
+                }
+                if (password !== confirmPassword) {
+                    setError('Passwords do not match.');
+                    setLoading(false);
+                    return;
+                }
+                if (!gymName.trim()) {
+                    setError('Gym Name is required.');
+                    setLoading(false);
+                    return;
+                }
+
+                const { error: signUpError } = await supabase.auth.signUp({
+                    email: email.trim(),
+                    password,
+                    options: {
+                        data: {
+                            gym_name: gymName.trim(),
+                            address: gymAddress.trim(),
+                            capacity: memberCapacity,
+                            selected_plan_tier: selectedPlan || 'ADVANCED',
+                        },
+                    },
+                });
+
+                if (signUpError) {
+                    setError(signUpError.message || 'Unable to create your account right now.');
+                    setLoading(false);
+                    return;
+                }
+
+                setSuccessMessage('Account created! Check your email to confirm, then sign in.');
+                setIsSignUp(false);
                 setLoading(false);
                 return;
             }
 
-            const { error: signUpError } = await supabase.auth.signUp({
+            const { data, error: signInError } = await supabase.auth.signInWithPassword({
                 email: email.trim(),
                 password,
-                options: {
-                    data: {
-                        gym_name: gymName.trim(),
-                        address: gymAddress.trim(),
-                        capacity: memberCapacity,
-                        selected_plan_tier: selectedPlan || 'ADVANCED',
-                    },
-                },
             });
 
-            if (signUpError) {
-                setError(signUpError.message || 'Unable to create your account right now.');
+            if (signInError) {
+                let userMsg = signInError.message;
+                if (signInError.message === 'Invalid login credentials') {
+                    userMsg = 'Invalid email or password.';
+                } else if (signInError.message.toLowerCase().includes('confirm') || signInError.message.toLowerCase().includes('verified')) {
+                    userMsg = 'Please verify your email address before signing in. Check your inbox for a confirmation link.';
+                }
+                setError(userMsg);
                 setLoading(false);
                 return;
             }
 
-            setSuccessMessage('Account created! Check your email to confirm, then sign in.');
-            setIsSignUp(false);
-            setLoading(false);
-            return;
-        }
-
-        const { data, error: signInError } = await supabase.auth.signInWithPassword({
-            email: email.trim(),
-            password,
-        });
-
-        if (signInError) {
-            let userMsg = signInError.message;
-            if (signInError.message === 'Invalid login credentials') {
-                userMsg = 'Invalid email or password.';
-            } else if (signInError.message.toLowerCase().includes('confirm') || signInError.message.toLowerCase().includes('verified')) {
-                userMsg = 'Please verify your email address before signing in. Check your inbox for a confirmation link.';
+            if (!data.user) {
+                setError('Unable to sign in right now. Please try again.');
+                setLoading(false);
+                return;
             }
-            setError(userMsg);
-            setLoading(false);
-            return;
-        }
 
-        if (!data.user) {
-            setError('Unable to sign in right now. Please try again.');
+            // Authentication successful. AuthContext will update states and useEffect will redirect.
+        } catch (err: any) {
+            console.error("Auth error:", err);
+            setError(err.message || 'An unexpected error occurred. Please try again.');
             setLoading(false);
-            return;
         }
-
-        // Authentication successful. AuthContext will update states and useEffect will redirect.
     };
 
     return (

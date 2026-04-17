@@ -32,18 +32,18 @@ BEGIN
   -- System Admin Check
   IF NEW.email = 'admin@gym.com' OR NEW.email LIKE 'admin@%' THEN
     INSERT INTO public.user_roles (user_id, role, display_name)
-    VALUES (NEW.id, 'SUPER_ADMIN', 'System Admin');
+    VALUES (NEW.id, 'SUPER_ADMIN'::public.user_role, 'System Admin');
     RETURN NEW;
   END IF;
 
   -- Create their exclusive Gym Database Workspace
-  INSERT INTO public.gyms (owner_id, name, status, subscription_tier, address)
-  VALUES (NEW.id, v_gym_name, 'ACTIVE', v_plan_tier, v_address)
+  INSERT INTO public.gyms (name, status, subscription_tier, address)
+  VALUES (v_gym_name, 'ACTIVE', v_plan_tier, v_address)
   RETURNING id INTO v_gym_id;
 
   -- Explicitly grant them the 'OWNER' permission role
   INSERT INTO public.user_roles (user_id, gym_id, role, display_name)
-  VALUES (NEW.id, v_gym_id, 'OWNER', COALESCE(NEW.raw_user_meta_data->>'full_name', NEW.email));
+  VALUES (NEW.id, v_gym_id, 'OWNER'::public.user_role, COALESCE(NEW.raw_user_meta_data->>'full_name', NEW.email));
 
   RETURN NEW;
 EXCEPTION WHEN OTHERS THEN
@@ -81,12 +81,10 @@ BEGIN
         IF u_record.email = 'admin@gym.com' OR u_record.email LIKE 'admin@%' THEN
             v_role := 'SUPER_ADMIN';
             INSERT INTO public.user_roles (user_id, role, display_name)
-            VALUES (u_record.id, v_role, COALESCE(u_record.raw_user_meta_data->>'full_name', 'System Admin'));
+            VALUES (u_record.id, 'SUPER_ADMIN'::public.user_role, COALESCE(u_record.raw_user_meta_data->>'full_name', 'System Admin'));
         ELSE
-            v_role := 'OWNER';
-            INSERT INTO public.gyms (owner_id, name, status, subscription_tier)
+            INSERT INTO public.gyms (name, status, subscription_tier)
             VALUES (
-                u_record.id, 
                 COALESCE(u_record.raw_user_meta_data->>'gym_name', 'My Gym Workspace'), 
                 'ACTIVE', 
                 'ADVANCED'
@@ -97,7 +95,7 @@ BEGIN
             VALUES (
                 u_record.id, 
                 v_gym_id, 
-                v_role, 
+                'OWNER'::public.user_role, 
                 COALESCE(u_record.raw_user_meta_data->>'full_name', u_record.email, 'Gym Owner')
             );
         END IF;

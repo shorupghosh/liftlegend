@@ -14,7 +14,7 @@ export const LandingPricing: React.FC = () => {
         <div className="grid md:grid-cols-3 gap-8 max-w-6xl mx-auto">
           <div className="p-10 bg-white dark:bg-slate-800 rounded-lg border border-slate-200 dark:border-slate-700 flex flex-col hover:shadow-2xl transition-all">
             <div className="mb-8">
-              <h4 className="text-lg font-bold text-slate-900 dark:text-white mb-2">Basic</h4>
+              <h3 className="text-lg font-bold text-slate-900 dark:text-white mb-2">Basic</h3>
               <div className="flex items-baseline gap-1">
                 <span className="text-4xl font-black text-slate-900 dark:text-white uppercase">BDT 1,000</span>
                 <span className="text-slate-500">/mo</span>
@@ -56,7 +56,7 @@ export const LandingPricing: React.FC = () => {
           <div className="p-10 bg-white dark:bg-slate-800 rounded-lg border-2 border-[#1978e5] flex flex-col relative shadow-2xl scale-105">
             <div className="absolute -top-4 left-1/2 -translate-x-1/2 bg-[#1978e5] text-white text-xs font-black px-4 py-1.5 rounded-full uppercase tracking-widest">Most Popular</div>
             <div className="mb-8">
-              <h4 className="text-lg font-bold text-slate-900 dark:text-white mb-2">Advanced</h4>
+              <h3 className="text-lg font-bold text-slate-900 dark:text-white mb-2">Advanced</h3>
               <div className="flex items-baseline gap-1">
                 <span className="text-4xl font-black text-slate-900 dark:text-white uppercase">BDT 1,500</span>
                 <span className="text-slate-500">/mo</span>
@@ -97,7 +97,7 @@ export const LandingPricing: React.FC = () => {
           </div>
           <div className="p-10 bg-white dark:bg-slate-800 rounded-lg border border-slate-200 dark:border-slate-700 flex flex-col hover:shadow-2xl transition-all">
             <div className="mb-8">
-              <h4 className="text-lg font-bold text-slate-900 dark:text-white mb-2">Premium</h4>
+              <h3 className="text-lg font-bold text-slate-900 dark:text-white mb-2">Premium</h3>
               <div className="flex items-baseline gap-1">
                 <span className="text-4xl font-black text-slate-900 dark:text-white uppercase">BDT 2,000</span>
                 <span className="text-slate-500">/mo</span>

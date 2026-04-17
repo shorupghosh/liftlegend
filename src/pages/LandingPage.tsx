@@ -171,7 +171,7 @@ export default function LandingPage() {
                 ].map((item, i) => (
                   <div key={i} className="relative p-6 bg-white dark:bg-slate-800 rounded-xl shadow-sm border border-slate-100 dark:border-slate-700">
                     <span className="text-5xl font-black text-[#1978e5]/10 absolute top-4 right-4">{item.step}</span>
-                    <h4 className="text-xl font-bold mb-3 text-slate-900 dark:text-white relative z-10">{item.title}</h4>
+                    <h3 className="text-xl font-bold mb-3 text-slate-900 dark:text-white relative z-10">{item.title}</h3>
                     <p className="text-slate-600 dark:text-slate-400 text-sm relative z-10">{item.desc}</p>
                   </div>
                 ))}
@@ -229,7 +229,7 @@ export default function LandingPage() {
                       <span className="material-symbols-outlined text-primary-default">payments</span>
                     </div>
                     <div>
-                      <h5 className="font-bold text-slate-900 dark:text-white">Payments Workflow</h5>
+                      <p className="font-bold text-slate-900 dark:text-white">Payments Workflow</p>
                       <p className="text-xs text-slate-500">Collections, dues, and renewals</p>
                     </div>
                   </div>
@@ -241,7 +241,7 @@ export default function LandingPage() {
                       <span className="material-symbols-outlined text-primary-default">groups</span>
                     </div>
                     <div>
-                      <h5 className="font-bold text-slate-900 dark:text-white">Operations Workflow</h5>
+                      <p className="font-bold text-slate-900 dark:text-white">Operations Workflow</p>
                       <p className="text-xs text-slate-500">Attendance, staff, and reminders</p>
                     </div>
                   </div>
@@ -274,7 +274,7 @@ export default function LandingPage() {
               <div className="flex items-center gap-3 text-white mb-6">
                 <BrandLogo className="h-14 sm:h-16 w-auto object-contain" variant="light" />
               </div>
-              <h5 className="text-white font-bold mb-4">Powering the next generation of gyms in Bangladesh</h5>
+              <p className="text-white font-bold mb-4">Powering the next generation of gyms in Bangladesh</p>
               <p className="max-w-xs mb-8">LiftLegend helps gym owners simplify operations, improve member experience, and grow their business with modern management tools.</p>
               <div className="flex gap-4">
                 <a className="size-10 rounded-full bg-slate-800 flex items-center justify-center hover:bg-[#1978e5] transition-colors" href="https://www.facebook.com/Liftlegendgym/" target="_blank" rel="noreferrer" aria-label="Facebook">
@@ -285,7 +285,7 @@ export default function LandingPage() {
               </div>
             </div>
             <div>
-              <h5 className="text-white font-bold mb-6">Product</h5>
+              <p className="text-white font-bold mb-6">Product</p>
               <ul className="space-y-4 text-sm">
                 <li><a className="hover:text-[#1978e5] transition-colors" href="#features">Features</a></li>
                 <li><a className="hover:text-[#1978e5] transition-colors" href="#pricing">Pricing</a></li>
@@ -294,7 +294,7 @@ export default function LandingPage() {
               </ul>
             </div>
             <div>
-              <h5 className="text-white font-bold mb-6">Company</h5>
+              <p className="text-white font-bold mb-6">Company</p>
               <ul className="space-y-4 text-sm">
                 <li><a className="hover:text-[#1978e5] transition-colors" href={`mailto:${SUPPORT_EMAIL}`}>Contact Team</a></li>
                 <li><a className="hover:text-[#1978e5] transition-colors" href="tel:01756625762">Call Support</a></li>
@@ -303,7 +303,7 @@ export default function LandingPage() {
               </ul>
             </div>
             <div>
-              <h5 className="text-white font-bold mb-6">Contact</h5>
+              <p className="text-white font-bold mb-6">Contact</p>
               <ul className="space-y-4 text-sm">
                 <li className="flex items-center gap-2">
                   <span className="material-symbols-outlined text-sm">call</span>
