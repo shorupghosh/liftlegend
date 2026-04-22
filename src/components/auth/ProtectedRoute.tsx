@@ -1,14 +1,14 @@
 import { Navigate, Outlet } from 'react-router-dom';
 import { useAuth } from '../../contexts/AuthContext';
 import { isDemoModeActive } from '../../lib/demoUtils';
-import { PageLoader } from '../ui/PageLoader';
+import { SkeletonLayout } from '../layout/SkeletonLayout';
 
 export const ProtectedRoute = ({ allowedRoles }: { allowedRoles?: string[] }) => {
     const { session, userRole, gymStatus, trialEndsAt, loading } = useAuth();
     const isDemo = isDemoModeActive();
 
     if (loading) {
-        return <div className="min-h-screen bg-neutral-default p-6"><PageLoader label="Opening workspace..." /></div>;
+        return <SkeletonLayout />;
     }
 
     // Demo mode handles its own bypass

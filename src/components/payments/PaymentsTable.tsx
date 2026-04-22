@@ -138,7 +138,7 @@ export const PaymentsTable: React.FC<PaymentsTableProps> = ({
         </div>
       </div>
 
-      <div className="overflow-hidden rounded-xl border border-slate-200 bg-white shadow-sm dark:border-slate-800 dark:bg-slate-900">
+      <div className="hidden sm:block overflow-hidden rounded-xl border border-slate-200 bg-white shadow-sm dark:border-slate-800 dark:bg-slate-900">
         <div className="overflow-x-auto">
           <table className="w-full border-collapse text-left min-w-[800px] whitespace-nowrap">
             <thead>

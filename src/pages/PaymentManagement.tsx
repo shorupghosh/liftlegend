@@ -562,7 +562,7 @@ export default function PaymentManagement() {
         </div>
         <button
           onClick={() => setShowAddModal(true)}
-          className="flex h-11 items-center gap-2 self-start rounded-xl bg-primary-default px-4 text-sm font-bold text-white shadow-lg shadow-primary-default/20 transition-all hover:brightness-110 active:scale-95 sm:self-auto sm:px-5"
+          className="flex h-11 w-full justify-center items-center gap-2 rounded-xl bg-primary-default px-4 text-sm font-bold text-white shadow-lg shadow-primary-default/20 transition-all hover:brightness-110 active:scale-95 sm:w-auto sm:px-5"
         >
           <span className="material-symbols-outlined text-lg">add_card</span>
           Record Payment

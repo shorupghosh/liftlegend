@@ -44,199 +44,337 @@ export const MembersTable: React.FC<MembersTableProps> = ({
   };
 
   return (
-    <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl shadow-sm">
-      <div className="overflow-x-auto">
-        <table className="w-full text-left border-collapse min-w-[800px] whitespace-nowrap">
-          <thead>
-            <tr className="bg-slate-50 dark:bg-slate-800/50 border-b border-slate-200 dark:border-slate-800">
+    <>
+      <div className="space-y-3 sm:hidden">
+        {loading ? (
+          Array.from({ length: 4 }).map((_, i) => (
+            <div key={`mobile-skeleton-${i}`} className="rounded-xl border border-slate-200 bg-white p-4 dark:border-slate-800 dark:bg-slate-900 animate-pulse">
+              <div className="flex gap-3 items-center">
+                <div className="size-10 rounded-full bg-slate-200 dark:bg-slate-800 shrink-0" />
+                <div className="flex-1 space-y-2">
+                  <div className="h-4 bg-slate-200 dark:bg-slate-800 rounded w-1/2" />
+                  <div className="h-3 bg-slate-100 dark:bg-slate-800 rounded w-1/3" />
+                </div>
+              </div>
+            </div>
+          ))
+        ) : members.length === 0 ? (
+          <div className="rounded-xl border border-slate-200 bg-white p-4 dark:border-slate-800 dark:bg-slate-900">
+            <EmptyState
+              icon={searchQuery ? 'search_off' : 'group'}
+              title={searchQuery ? 'No match found' : 'No members yet'}
+              description={searchQuery ? 'Try adjusting your search or filters.' : 'Your gym roster will appear here.'}
+            />
+          </div>
+        ) : (
+          members.map((member) => {
+            const alert = getMemberExpiryAlert(member.expiry_date);
+            const today = new Date();
+            today.setHours(0,0,0,0);
+            const expiry = member.expiry_date ? new Date(member.expiry_date) : null;
+            if (expiry) expiry.setHours(0,0,0,0);
+            let mainStatus = member.status || 'ACTIVE';
+            let tone = toneFromStatus(member.status);
 
-              <th onClick={() => onSort('full_name')} className="group cursor-pointer px-5 py-3.5 text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400 hover:text-primary-default transition-colors">
-                <div className="flex items-center">Member <SortIcon column="full_name" /></div>
-              </th>
-              <th className="px-5 py-3.5 text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400">Plan</th>
-              <th onClick={() => onSort('join_date')} className="group cursor-pointer px-5 py-3.5 text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400 hidden md:table-cell hover:text-primary-default transition-colors">
-                <div className="flex items-center">Joined <SortIcon column="join_date" /></div>
-              </th>
-              <th className="px-5 py-3.5 text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400 hidden lg:table-cell">
-                Payment
-              </th>
-              <th onClick={() => onSort('expiry_date')} className="group cursor-pointer px-5 py-3.5 text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400 hidden xl:table-cell hover:text-primary-default transition-colors">
-                <div className="flex items-center">Expiry <SortIcon column="expiry_date" /></div>
-              </th>
-              <th onClick={() => onSort('status')} className="group cursor-pointer px-5 py-3.5 text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400 hover:text-primary-default transition-colors">
-                <div className="flex items-center">Status <SortIcon column="status" /></div>
-              </th>
-              <th className="px-5 py-3.5 text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400">Alert</th>
-              <th className="px-5 py-3.5 text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400">Actions</th>
-            </tr>
-          </thead>
-          <tbody className="divide-y divide-slate-100 dark:divide-slate-800">
-            {loading ? (
-              Array.from({ length: 5 }).map((_, i) => (
-                <tr key={`skeleton-${i}`} className="animate-pulse">
-                  <td className="px-5 py-4">
-                    <div className="flex items-center gap-3">
-                      <div className="size-9 rounded-full bg-slate-200 dark:bg-slate-800 shrink-0" />
-                      <div className="min-w-0 flex-1 space-y-2">
-                        <div className="h-4 bg-slate-200 dark:bg-slate-800 rounded w-24" />
-                        <div className="h-3 bg-slate-100 dark:bg-slate-800/50 rounded w-16" />
+            if (!member.plan_id && !member.plans) {
+              mainStatus = 'No Plan';
+              tone = 'neutral';
+            } else if (expiry && expiry < today) {
+              mainStatus = 'Expired';
+              tone = 'danger';
+            }
+
+            return (
+              <div key={member.id} className="rounded-xl border border-slate-200 bg-white p-4 dark:border-slate-800 dark:bg-slate-900 flex flex-col gap-3">
+                <div className="flex items-center gap-3">
+                  <button 
+                    onClick={(e) => { e.stopPropagation(); toggleFavorite(member.id); }} 
+                    className="shrink-0 group hover:scale-110 transition-transform"
+                    aria-label={isFavorite(member.id) ? "Remove from favorites" : "Add to favorites"}
+                  >
+                    <span className={`material-symbols-outlined text-[18px] transition-colors ${
+                      isFavorite(member.id) 
+                        ? "text-amber-400 [font-variation-settings:'FILL'1]" 
+                        : "text-slate-300 dark:text-slate-600 group-hover:text-amber-300"
+                    }`}>
+                      star
+                    </span>
+                  </button>
+                  <div className="size-10 rounded-full bg-primary-default/10 flex items-center justify-center text-primary-default font-bold text-base shrink-0">
+                    {member.full_name?.charAt(0) || '?'}
+                  </div>
+                  <div className="min-w-0 flex-1">
+                    <Link to={`/admin/members/${member.id}`} className="font-semibold text-sm text-primary-default hover:underline block truncate">{member.full_name}</Link>
+                    <span className="text-xs text-slate-500 truncate block">{member.email || member.phone || '-'}</span>
+                  </div>
+                  <div className="shrink-0 flex items-center gap-1">
+                     <StatusBadge label={mainStatus} tone={tone} />
+                  </div>
+                </div>
+                
+                <div className="grid grid-cols-2 gap-2 mt-1 bg-slate-50 dark:bg-slate-800/50 p-2.5 rounded-lg">
+                  <div>
+                    <p className="text-[10px] uppercase tracking-wider font-bold text-slate-400">Plan Details</p>
+                    {member.plans ? (
+                      <p className="text-xs font-semibold text-slate-700 dark:text-slate-300 mt-0.5">{member.plans.name}</p>
+                    ) : member.plan_name ? (
+                      <div className="mt-0.5 flex flex-col">
+                        <span className="text-xs font-semibold text-amber-700 dark:text-amber-400">{member.plan_name}</span>
+                        <span className="text-[9px] text-amber-600 font-bold">⚠️ FIX PLAN</span>
                       </div>
-                    </div>
-                  </td>
-                  <td className="px-5 py-4">
-                    <div className="h-6 w-20 bg-slate-200 dark:bg-slate-800 rounded-lg" />
-                  </td>
-                  <td className="px-5 py-4 hidden md:table-cell">
-                    <div className="h-4 w-20 bg-slate-100 dark:bg-slate-800/50 rounded" />
-                  </td>
-                  <td className="px-5 py-4 hidden lg:table-cell">
-                    <div className="h-4 w-20 bg-slate-100 dark:bg-slate-800/50 rounded" />
-                  </td>
-                  <td className="px-5 py-4">
-                    <div className="h-6 w-16 bg-slate-200 dark:bg-slate-800 rounded-full" />
-                  </td>
-                  <td className="px-5 py-4">
-                    <div className="h-6 w-24 bg-slate-200 dark:bg-slate-800 rounded-full" />
-                  </td>
-                  <td className="px-5 py-4">
-                    <div className="flex gap-2">
-                      <div className="size-8 bg-slate-200 dark:bg-slate-800 rounded-lg" />
-                      <div className="size-8 bg-slate-200 dark:bg-slate-800 rounded-lg" />
-                    </div>
-                  </td>
-                </tr>
-              ))
-            ) : members.length === 0 ? (
-              <tr>
-                <td colSpan={8} className="p-12">
-                  <EmptyState
-                    icon={searchQuery ? 'search_off' : 'group'}
-                    title={searchQuery ? 'No match found' : 'No members yet'}
-                    description={searchQuery ? 'Try adjusting your search or filters.' : 'Your gym roster will appear here.'}
-                  />
-                </td>
+                    ) : (
+                      <p className="text-xs font-semibold text-slate-400 mt-0.5">No Plan</p>
+                    )}
+                  </div>
+                  <div>
+                    <p className="text-[10px] uppercase tracking-wider font-bold text-slate-400">Expiry</p>
+                    <p className="text-xs font-semibold text-slate-700 dark:text-slate-300 mt-0.5">
+                      {member.expiry_date ? new Date(member.expiry_date).toLocaleDateString('en-GB') : '-'}
+                    </p>
+                  </div>
+                </div>
+                
+                <div className="flex justify-between items-center pt-2">
+                  <div className="flex flex-col gap-1">
+                    <AlertBadge variant={alert.variant}>{alert.label}</AlertBadge>
+                    {((member as any).due_amount || 0) > 0 && (
+                      <span className="text-[9px] bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400 px-2 py-0.5 rounded-full font-bold uppercase tracking-wider w-fit">
+                        Payment Due
+                      </span>
+                    )}
+                  </div>
+                  <div className="flex gap-2">
+                    <button onClick={() => onEdit(member)} className="size-8 flex items-center justify-center text-slate-400 hover:text-primary-default bg-slate-50 dark:bg-slate-800 hover:bg-primary-default/10 rounded-lg transition-colors border border-slate-200 dark:border-slate-700" aria-label={`Edit ${member.full_name}`}>
+                      <span className="material-symbols-outlined text-[16px]">edit</span>
+                    </button>
+                    <button onClick={() => onDelete(member)} className="size-8 flex items-center justify-center text-slate-400 hover:text-red-500 bg-slate-50 dark:bg-slate-800 hover:bg-red-50 dark:hover:bg-red-950/50 rounded-lg transition-colors border border-slate-200 dark:border-slate-700" aria-label={`Delete ${member.full_name}`}>
+                      <span className="material-symbols-outlined text-[16px]">delete</span>
+                    </button>
+                  </div>
+                </div>
+              </div>
+            );
+          })
+        )}
+        <div className="flex items-center justify-between py-2">
+          <span className="text-xs text-slate-500">{searchQuery ? `${members.length} found` : `${totalCount} members`}</span>
+          {totalPages > 1 && (
+            <div className="flex items-center gap-2">
+              <button
+                onClick={() => setPage(p => Math.max(1, p - 1))}
+                disabled={page === 1}
+                className="flex size-8 items-center justify-center rounded-lg border border-slate-200 bg-white text-sm font-bold disabled:opacity-40 dark:border-slate-700 dark:bg-slate-900 shadow-sm"
+              >
+                {'<'}
+              </button>
+              <span className="text-xs font-medium text-slate-500">
+                {page}/{totalPages}
+              </span>
+              <button
+                onClick={() => setPage(p => Math.min(totalPages, p + 1))}
+                disabled={page === totalPages}
+                className="flex size-8 items-center justify-center rounded-lg border border-slate-200 bg-white text-sm font-bold disabled:opacity-40 dark:border-slate-700 dark:bg-slate-900 shadow-sm"
+              >
+                {'>'}
+              </button>
+            </div>
+          )}
+        </div>
+      </div>
+
+      <div className="hidden sm:block bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl shadow-sm">
+        <div className="overflow-x-auto">
+          <table className="w-full text-left border-collapse min-w-[800px] whitespace-nowrap">
+            <thead>
+              <tr className="bg-slate-50 dark:bg-slate-800/50 border-b border-slate-200 dark:border-slate-800">
+                <th onClick={() => onSort('full_name')} className="group cursor-pointer px-5 py-3.5 text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400 hover:text-primary-default transition-colors">
+                  <div className="flex items-center">Member <SortIcon column="full_name" /></div>
+                </th>
+                <th className="px-5 py-3.5 text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400">Plan</th>
+                <th onClick={() => onSort('join_date')} className="group cursor-pointer px-5 py-3.5 text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400 hidden md:table-cell hover:text-primary-default transition-colors">
+                  <div className="flex items-center">Joined <SortIcon column="join_date" /></div>
+                </th>
+                <th className="px-5 py-3.5 text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400 hidden lg:table-cell">
+                  Payment
+                </th>
+                <th onClick={() => onSort('expiry_date')} className="group cursor-pointer px-5 py-3.5 text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400 hidden xl:table-cell hover:text-primary-default transition-colors">
+                  <div className="flex items-center">Expiry <SortIcon column="expiry_date" /></div>
+                </th>
+                <th onClick={() => onSort('status')} className="group cursor-pointer px-5 py-3.5 text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400 hover:text-primary-default transition-colors">
+                  <div className="flex items-center">Status <SortIcon column="status" /></div>
+                </th>
+                <th className="px-5 py-3.5 text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400">Alert</th>
+                <th className="px-5 py-3.5 text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400">Actions</th>
               </tr>
-            ) : (
-              members.map((member, idx) => {
-                const alert = getMemberExpiryAlert(member.expiry_date);
-                return (
-                  <tr key={member.id} className="hover:bg-slate-50/80 dark:hover:bg-slate-800/30 transition-colors">
+            </thead>
+            <tbody className="divide-y divide-slate-100 dark:divide-slate-800">
+              {loading ? (
+                Array.from({ length: 5 }).map((_, i) => (
+                  <tr key={`skeleton-${i}`} className="animate-pulse">
                     <td className="px-5 py-4">
                       <div className="flex items-center gap-3">
-                        <button 
-                          onClick={(e) => { e.stopPropagation(); toggleFavorite(member.id); }} 
-                          className="shrink-0 group hover:scale-110 transition-transform"
-                          aria-label={isFavorite(member.id) ? "Remove from favorites" : "Add to favorites"}
-                        >
-                          <span className={`material-symbols-outlined text-xl transition-colors ${
-                            isFavorite(member.id) 
-                              ? "text-amber-400 [font-variation-settings:'FILL'1]" 
-                              : "text-slate-300 dark:text-slate-600 group-hover:text-amber-300"
-                          }`}>
-                            star
-                          </span>
-                        </button>
-                        <div className="size-9 rounded-full bg-primary-default/10 flex items-center justify-center text-primary-default font-bold text-sm shrink-0">
-                          {member.full_name?.charAt(0) || '?'}
-                        </div>
-                        <div className="min-w-0">
-                          <Link to={`/admin/members/${member.id}`} className="font-semibold text-sm text-primary-default hover:underline block truncate">{member.full_name}</Link>
-                          <span className="text-xs text-slate-500 truncate block">{member.email || member.phone || '-'}</span>
+                        <div className="size-9 rounded-full bg-slate-200 dark:bg-slate-800 shrink-0" />
+                        <div className="min-w-0 flex-1 space-y-2">
+                          <div className="h-4 bg-slate-200 dark:bg-slate-800 rounded w-24" />
+                          <div className="h-3 bg-slate-100 dark:bg-slate-800/50 rounded w-16" />
                         </div>
                       </div>
                     </td>
                     <td className="px-5 py-4">
-                      {member.plans ? (
-                        <span className="inline-flex items-center rounded-lg bg-slate-100 dark:bg-slate-800 px-2.5 py-1 text-xs font-medium text-slate-700 dark:text-slate-300">
-                          {member.plans.name}
-                        </span>
-                      ) : member.plan_name ? (
-                        <div className="flex flex-col gap-1 items-start">
-                          <span className="inline-flex items-center rounded-lg bg-amber-50 dark:bg-amber-900/20 px-2.5 py-1 text-xs font-medium text-amber-700 dark:text-amber-400 border border-amber-100 dark:border-amber-900/30">
-                            {member.plan_name}
-                          </span>
-                          <span className="text-[10px] text-amber-600 font-bold flex items-center gap-0.5">
-                            <span className="material-symbols-outlined text-xs">warning</span> FIX PLAN
-                          </span>
-                        </div>
-                      ) : (
-                        <span className="text-xs text-slate-400">No Plan</span>
-                      )}
+                      <div className="h-6 w-20 bg-slate-200 dark:bg-slate-800 rounded-lg" />
                     </td>
-                    <td className="px-5 py-4 text-sm text-slate-500 hidden md:table-cell">
-                      {member.join_date
-                        ? new Date(member.join_date).toLocaleDateString('en-GB')
-                        : new Date(member.created_at).toLocaleDateString('en-GB')}
+                    <td className="px-5 py-4 hidden md:table-cell">
+                      <div className="h-4 w-20 bg-slate-100 dark:bg-slate-800/50 rounded" />
                     </td>
-                    <td className="px-5 py-4 text-sm hidden lg:table-cell font-medium">
-                      {member.last_payment ? (
-                        <span className="text-emerald-600 dark:text-emerald-400">{formatBdt(member.last_payment)}</span>
-                      ) : (
-                        <span className="text-xs text-slate-400">-</span>
-                      )}
-                    </td>
-                    <td className="px-5 py-4 text-sm text-slate-500 hidden xl:table-cell font-medium">
-                      {member.expiry_date ? new Date(member.expiry_date).toLocaleDateString('en-GB') : <span className="text-xs text-slate-400">-</span>}
+                    <td className="px-5 py-4 hidden lg:table-cell">
+                      <div className="h-4 w-20 bg-slate-100 dark:bg-slate-800/50 rounded" />
                     </td>
                     <td className="px-5 py-4">
-                      <div className="flex flex-col gap-1 items-start">
-                        {(() => {
-                           const today = new Date();
-                           today.setHours(0,0,0,0);
-                           const expiry = member.expiry_date ? new Date(member.expiry_date) : null;
-                           if (expiry) expiry.setHours(0,0,0,0);
-                           let mainStatus = member.status || 'ACTIVE';
-                           let tone = toneFromStatus(member.status);
-
-                           if (!member.plan_id && !member.plans) {
-                             mainStatus = 'No Plan';
-                             tone = 'neutral';
-                           } else if (expiry && expiry < today) {
-                             mainStatus = 'Expired';
-                             tone = 'danger';
-                           }
-
-                           return <StatusBadge label={mainStatus} tone={tone} />;
-                        })()}
-                        {((member as any).due_amount || 0) > 0 && (
-                          <span className="text-[10px] bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400 px-2 py-0.5 rounded-full font-bold uppercase tracking-wider">
-                            Payment Due
-                          </span>
-                        )}
-                      </div>
+                      <div className="h-6 w-16 bg-slate-200 dark:bg-slate-800 rounded-full" />
                     </td>
                     <td className="px-5 py-4">
-                      <AlertBadge variant={alert.variant}>{alert.label}</AlertBadge>
+                      <div className="h-6 w-24 bg-slate-200 dark:bg-slate-800 rounded-full" />
                     </td>
                     <td className="px-5 py-4">
-                      <div className="flex gap-1">
-                        <button onClick={() => onEdit(member)} className="size-9 flex items-center justify-center text-slate-400 hover:text-primary-default hover:bg-primary-default/10 rounded-lg transition-colors" aria-label={`Edit ${member.full_name}`}>
-                          <span className="material-symbols-outlined text-lg">edit</span>
-                        </button>
-                        <button onClick={() => onDelete(member)} className="size-9 flex items-center justify-center text-slate-400 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-950/50 rounded-lg transition-colors" aria-label={`Delete ${member.full_name}`}>
-                          <span className="material-symbols-outlined text-lg">delete</span>
-                        </button>
+                      <div className="flex gap-2">
+                        <div className="size-8 bg-slate-200 dark:bg-slate-800 rounded-lg" />
+                        <div className="size-8 bg-slate-200 dark:bg-slate-800 rounded-lg" />
                       </div>
                     </td>
                   </tr>
-                );
-              })
-            )}
-          </tbody>
-        </table>
+                ))
+              ) : members.length === 0 ? (
+                <tr>
+                  <td colSpan={8} className="p-12">
+                    <EmptyState
+                      icon={searchQuery ? 'search_off' : 'group'}
+                      title={searchQuery ? 'No match found' : 'No members yet'}
+                      description={searchQuery ? 'Try adjusting your search or filters.' : 'Your gym roster will appear here.'}
+                    />
+                  </td>
+                </tr>
+              ) : (
+                members.map((member, idx) => {
+                  const alert = getMemberExpiryAlert(member.expiry_date);
+                  return (
+                    <tr key={member.id} className="hover:bg-slate-50/80 dark:hover:bg-slate-800/30 transition-colors">
+                      <td className="px-5 py-4">
+                        <div className="flex items-center gap-3">
+                          <button 
+                            onClick={(e) => { e.stopPropagation(); toggleFavorite(member.id); }} 
+                            className="shrink-0 group hover:scale-110 transition-transform"
+                            aria-label={isFavorite(member.id) ? "Remove from favorites" : "Add to favorites"}
+                          >
+                            <span className={`material-symbols-outlined text-xl transition-colors ${
+                              isFavorite(member.id) 
+                                ? "text-amber-400 [font-variation-settings:'FILL'1]" 
+                                : "text-slate-300 dark:text-slate-600 group-hover:text-amber-300"
+                            }`}>
+                              star
+                            </span>
+                          </button>
+                          <div className="size-9 rounded-full bg-primary-default/10 flex items-center justify-center text-primary-default font-bold text-sm shrink-0">
+                            {member.full_name?.charAt(0) || '?'}
+                          </div>
+                          <div className="min-w-0">
+                            <Link to={`/admin/members/${member.id}`} className="font-semibold text-sm text-primary-default hover:underline block truncate">{member.full_name}</Link>
+                            <span className="text-xs text-slate-500 truncate block">{member.email || member.phone || '-'}</span>
+                          </div>
+                        </div>
+                      </td>
+                      <td className="px-5 py-4">
+                        {member.plans ? (
+                          <span className="inline-flex items-center rounded-lg bg-slate-100 dark:bg-slate-800 px-2.5 py-1 text-xs font-medium text-slate-700 dark:text-slate-300">
+                            {member.plans.name}
+                          </span>
+                        ) : member.plan_name ? (
+                          <div className="flex flex-col gap-1 items-start">
+                            <span className="inline-flex items-center rounded-lg bg-amber-50 dark:bg-amber-900/20 px-2.5 py-1 text-xs font-medium text-amber-700 dark:text-amber-400 border border-amber-100 dark:border-amber-900/30">
+                              {member.plan_name}
+                            </span>
+                            <span className="text-[10px] text-amber-600 font-bold flex items-center gap-0.5">
+                              <span className="material-symbols-outlined text-xs">warning</span> FIX PLAN
+                            </span>
+                          </div>
+                        ) : (
+                          <span className="text-xs text-slate-400">No Plan</span>
+                        )}
+                      </td>
+                      <td className="px-5 py-4 text-sm text-slate-500 hidden md:table-cell">
+                        {member.join_date
+                          ? new Date(member.join_date).toLocaleDateString('en-GB')
+                          : new Date(member.created_at).toLocaleDateString('en-GB')}
+                      </td>
+                      <td className="px-5 py-4 text-sm hidden lg:table-cell font-medium">
+                        {member.last_payment ? (
+                          <span className="text-emerald-600 dark:text-emerald-400">{formatBdt(member.last_payment)}</span>
+                        ) : (
+                          <span className="text-xs text-slate-400">-</span>
+                        )}
+                      </td>
+                      <td className="px-5 py-4 text-sm text-slate-500 hidden xl:table-cell font-medium">
+                        {member.expiry_date ? new Date(member.expiry_date).toLocaleDateString('en-GB') : <span className="text-xs text-slate-400">-</span>}
+                      </td>
+                      <td className="px-5 py-4">
+                        <div className="flex flex-col gap-1 items-start">
+                          {(() => {
+                             const today = new Date();
+                             today.setHours(0,0,0,0);
+                             const expiry = member.expiry_date ? new Date(member.expiry_date) : null;
+                             if (expiry) expiry.setHours(0,0,0,0);
+                             let mainStatus = member.status || 'ACTIVE';
+                             let tone = toneFromStatus(member.status);
+  
+                             if (!member.plan_id && !member.plans) {
+                               mainStatus = 'No Plan';
+                               tone = 'neutral';
+                             } else if (expiry && expiry < today) {
+                               mainStatus = 'Expired';
+                               tone = 'danger';
+                             }
+  
+                             return <StatusBadge label={mainStatus} tone={tone} />;
+                          })()}
+                          {((member as any).due_amount || 0) > 0 && (
+                            <span className="text-[10px] bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400 px-2 py-0.5 rounded-full font-bold uppercase tracking-wider">
+                              Payment Due
+                            </span>
+                          )}
+                        </div>
+                      </td>
+                      <td className="px-5 py-4">
+                        <AlertBadge variant={alert.variant}>{alert.label}</AlertBadge>
+                      </td>
+                      <td className="px-5 py-4">
+                        <div className="flex gap-1">
+                          <button onClick={() => onEdit(member)} className="size-9 flex items-center justify-center text-slate-400 hover:text-primary-default hover:bg-primary-default/10 rounded-lg transition-colors" aria-label={`Edit ${member.full_name}`}>
+                            <span className="material-symbols-outlined text-lg">edit</span>
+                          </button>
+                          <button onClick={() => onDelete(member)} className="size-9 flex items-center justify-center text-slate-400 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-950/50 rounded-lg transition-colors" aria-label={`Delete ${member.full_name}`}>
+                            <span className="material-symbols-outlined text-lg">delete</span>
+                          </button>
+                        </div>
+                      </td>
+                    </tr>
+                  );
+                })
+              )}
+            </tbody>
+          </table>
+        </div>
+        <div className="flex items-center justify-between px-5 py-3 bg-slate-50 dark:bg-slate-800/50 border-t border-slate-200 dark:border-slate-800">
+          <span className="text-xs sm:text-sm text-slate-500">
+            {searchQuery ? `${members.length} results found` : `${totalCount} total members`}
+          </span>
+          {totalPages > 1 && (
+            <div className="flex items-center gap-2">
+              <button onClick={() => setPage(p => Math.max(1, p - 1))} disabled={page === 1} className="px-3 py-1.5 text-xs font-bold bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-lg disabled:opacity-40 hover:bg-slate-50 transition-colors shadow-sm">Prev</button>
+              <span className="text-xs text-slate-500 font-medium">Page {page} of {totalPages}</span>
+              <button onClick={() => setPage(p => Math.min(totalPages, p + 1))} disabled={page === totalPages} className="px-3 py-1.5 text-xs font-bold bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-lg disabled:opacity-40 hover:bg-slate-50 transition-colors shadow-sm">Next</button>
+            </div>
+          )}
+        </div>
       </div>
-      <div className="flex items-center justify-between px-5 py-3 bg-slate-50 dark:bg-slate-800/50 border-t border-slate-200 dark:border-slate-800">
-        <span className="text-xs sm:text-sm text-slate-500">
-          {searchQuery ? `${members.length} results found` : `${totalCount} total members`}
-        </span>
-        {totalPages > 1 && (
-          <div className="flex items-center gap-2">
-            <button onClick={() => setPage(p => Math.max(1, p - 1))} disabled={page === 1} className="px-3 py-1.5 text-xs font-bold bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-lg disabled:opacity-40 hover:bg-slate-50 transition-colors shadow-sm">Prev</button>
-            <span className="text-xs text-slate-500 font-medium">Page {page} of {totalPages}</span>
-            <button onClick={() => setPage(p => Math.min(totalPages, p + 1))} disabled={page === totalPages} className="px-3 py-1.5 text-xs font-bold bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-lg disabled:opacity-40 hover:bg-slate-50 transition-colors shadow-sm">Next</button>
-          </div>
-        )}
-      </div>
-    </div>
+    </>
   );
 };

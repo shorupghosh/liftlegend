@@ -399,7 +399,7 @@ export default function AttendanceScanner() {
           </h1>
           <p className="text-slate-500 dark:text-slate-400 text-sm mt-1">Log member check-ins and track daily attendance</p>
         </div>
-        <div className="flex flex-wrap items-center gap-3">
+        <div className="flex sm:flex-nowrap items-center gap-3 w-full sm:w-auto">
           <button
             onClick={() => {
               if (!canAccess('qrCheckin')) {
@@ -408,10 +408,10 @@ export default function AttendanceScanner() {
               }
               setShowQrModal(true);
             }}
-            className="flex items-center gap-2 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 px-5 py-2.5 rounded-xl font-bold transition-colors active:scale-95"
+            className="flex-1 sm:flex-none flex justify-center items-center gap-2 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 px-5 py-2.5 rounded-xl font-bold transition-colors active:scale-95 w-full sm:w-auto h-11"
           >
-            <span className="material-symbols-outlined">qr_code_scanner</span>
-            Scan QR
+            <span className="material-symbols-outlined text-lg">qr_code_scanner</span>
+            <span className="truncate">Scan QR</span>
             {!canAccess('qrCheckin') && (
               <span className="ml-1 text-[10px] font-bold text-amber-500 bg-amber-50 dark:bg-amber-500/10 px-1.5 py-0.5 rounded flex items-center gap-1">
                 <span className="material-symbols-outlined text-[12px]" style={{ fontVariationSettings: "'FILL' 1" }}>lock</span>
@@ -421,10 +421,10 @@ export default function AttendanceScanner() {
           </button>
           <button
             onClick={() => setShowManualModal(true)}
-            className="flex items-center gap-2 bg-primary-default hover:brightness-110 text-white px-5 py-2.5 rounded-xl font-bold shadow-lg shadow-primary-default/30 transition-all active:scale-95"
+            className="flex-1 sm:flex-none flex justify-center items-center gap-2 bg-primary-default hover:brightness-110 text-white px-5 py-2.5 rounded-xl font-bold shadow-lg shadow-primary-default/30 transition-all active:scale-95 w-full sm:w-auto h-11"
           >
-            <span className="material-symbols-outlined">person_add</span>
-            Manual Check-In
+            <span className="material-symbols-outlined text-lg">person_add</span>
+            <span className="truncate">Manual</span>
           </button>
         </div>
       </div>

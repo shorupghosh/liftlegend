@@ -44,13 +44,11 @@ const AuditLogs = lazy(() => import('./pages/super-admin/AuditLogs'));
 const GymDetails = lazy(() => import('./pages/super-admin/GymDetails'));
 const SetupWizard = lazy(() => import('./pages/SetupWizard'));
 const SubscriptionBilling = lazy(() => import('./pages/SubscriptionBilling'));
+import { SkeletonLayout } from './components/layout/SkeletonLayout';
+
 // Loading spinner shown while a lazy page chunk is being fetched
 function RouteLoader() {
-  return (
-    <div className="min-h-screen bg-neutral-default p-6 dark:bg-slate-950">
-      <PageLoader label="Loading page..." />
-    </div>
-  );
+  return <SkeletonLayout />;
 }
 
 export default function App() {

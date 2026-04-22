@@ -663,18 +663,18 @@ export default function MembersManagement() {
           <h1 className="text-xl sm:text-2xl lg:text-3xl font-display font-extrabold text-neutral-text dark:text-white tracking-tight">Members</h1>
           <p className="text-slate-500 dark:text-slate-400 text-xs sm:text-sm mt-1">{totalCount} registered members</p>
         </div>
-        <div className="flex items-center gap-2">
-          <button onClick={handleExportCSV} disabled={isExporting} className="flex items-center justify-center gap-2 rounded-xl h-11 px-3 sm:px-4 bg-emerald-600 text-white text-sm font-bold shadow-lg shadow-emerald-600/20 hover:brightness-110 active:scale-95 transition-all disabled:opacity-50">
+        <div className="flex sm:flex-nowrap items-center gap-2 w-full sm:w-auto">
+          <button onClick={handleExportCSV} disabled={isExporting} className="flex-1 sm:flex-none flex items-center justify-center gap-2 rounded-xl h-11 px-3 sm:px-4 bg-emerald-600 text-white text-sm font-bold shadow-lg shadow-emerald-600/20 hover:brightness-110 active:scale-95 transition-all disabled:opacity-50">
             <span className="material-symbols-outlined text-lg">download</span>
-            <span className="hidden sm:inline">{isExporting ? 'Exporting...' : 'Export CSV'}</span>
+            <span className="hidden sm:inline">{isExporting ? 'Exporting...' : 'Export'}</span>
           </button>
           <input ref={csvInputRef} type="file" accept=".csv" className="hidden" onChange={handleImportCSV} />
-          <button onClick={() => csvInputRef.current?.click()} disabled={isImporting} className="flex items-center justify-center gap-2 rounded-xl h-11 px-3 sm:px-4 bg-blue-600 text-white text-sm font-bold shadow-lg shadow-blue-600/20 hover:brightness-110 active:scale-95 transition-all disabled:opacity-50">
+          <button onClick={() => csvInputRef.current?.click()} disabled={isImporting} className="flex-1 sm:flex-none flex items-center justify-center gap-2 rounded-xl h-11 px-3 sm:px-4 bg-blue-600 text-white text-sm font-bold shadow-lg shadow-blue-600/20 hover:brightness-110 active:scale-95 transition-all disabled:opacity-50">
             <span className="material-symbols-outlined text-lg">upload</span>
-            <span className="hidden sm:inline">{isImporting ? 'Importing...' : 'Import Members'}</span>
+            <span className="hidden sm:inline">{isImporting ? 'Importing...' : 'Import'}</span>
           </button>
           <UsageLimitGuard resource="members">
-            <button onClick={openAddModal} className="flex items-center gap-2 rounded-xl h-11 px-4 sm:px-5 bg-accent-default text-white text-sm font-bold shadow-lg shadow-orange-500/20 hover:brightness-110 active:scale-95 transition-all">
+            <button onClick={openAddModal} className="flex-1 sm:flex-none flex items-center justify-center gap-2 rounded-xl h-11 px-4 sm:px-5 bg-accent-default text-white text-sm font-bold shadow-lg shadow-orange-500/20 hover:brightness-110 active:scale-95 transition-all w-full">
               <span className="material-symbols-outlined text-lg">person_add</span>
               <span className="hidden xs:inline">Add</span>
             </button>
