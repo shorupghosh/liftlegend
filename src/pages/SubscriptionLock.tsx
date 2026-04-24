@@ -38,16 +38,16 @@ export default function SubscriptionLock() {
                 {/* Main View */}
                 {activeView === 'main' && (
                     <>
-                        {/* Lock Icon */}
+                        {/* Welcome / Lock Icon */}
                         <div className="text-center mb-8">
-                            <div className="inline-flex items-center justify-center size-20 rounded-2xl bg-red-100 dark:bg-red-950/30 text-red-500 mb-6">
-                                <span className="material-symbols-outlined text-5xl">lock</span>
+                            <div className="inline-flex items-center justify-center size-20 rounded-2xl bg-primary-default/10 text-primary-default mb-6">
+                                <span className="material-symbols-outlined text-5xl">verified</span>
                             </div>
                             <h1 className="text-3xl font-display font-extrabold text-neutral-text dark:text-white tracking-tight">
-                                Account Locked
+                                Welcome to LiftLegend
                             </h1>
-                            <p className="text-slate-500 dark:text-slate-400 mt-2 text-sm max-w-md mx-auto">
-                                Your gym's subscription or trial has expired. Please renew your plan to continue using LiftLegend without losing your data.
+                            <p className="text-slate-500 dark:text-slate-400 mt-2 text-sm max-w-md mx-auto font-medium">
+                                Your 30-day trial or subscription has expired. Choose an easy-to-pay scheme to continue managing your gym seamlessly.
                             </p>
                         </div>
 
@@ -201,22 +201,34 @@ export default function SubscriptionLock() {
                                 <p className="text-slate-500 text-sm mb-6">Scan the QR code below or send money to our personal number.</p>
 
                                 {/* bKash QR Scanner Image */}
-                                <div className="mx-auto max-w-[240px] aspect-square bg-[#f3f4f6] dark:bg-slate-800 rounded-2xl border-4 border-[#e2136e]/20 flex flex-col items-center justify-center overflow-hidden mb-6 relative">
+                                <div className="mx-auto max-w-[260px] aspect-square bg-white dark:bg-slate-800 rounded-2xl border border-slate-200 dark:border-slate-700 shadow-sm flex flex-col items-center justify-center overflow-hidden mb-6 relative p-3">
                                     {bkashImgError ? (
                                         <>
                                             <span className="material-symbols-outlined text-5xl text-slate-400 mb-2">qr_code_2</span>
                                             <p className="text-xs text-slate-500 font-medium px-4 text-center">Scan via bKash app<br/>or send to the number below</p>
                                         </>
                                     ) : (
-                                        <img src="/bkash-qr.jpg" alt="bKash QR Scanner" className="w-full h-full object-cover relative z-10" 
+                                        <img src="/bkash-qr.jpg" alt="bKash QR Scanner" className="w-full h-full object-contain relative z-10 rounded-xl" 
                                             onError={() => setBkashImgError(true)} 
                                         />
                                     )}
                                 </div>
 
-                                <div className="bg-slate-50 dark:bg-slate-800/50 rounded-xl p-5 mb-6 ring-1 ring-slate-200 dark:ring-slate-700">
-                                    <p className="text-sm font-semibold text-slate-600 dark:text-slate-400 mb-1">Send payment to (Personal):</p>
-                                    <p className="text-3xl font-black text-[#e2136e] tracking-tight">01756-625762</p>
+                                <div className="bg-slate-50 dark:bg-slate-800/50 rounded-xl p-5 mb-6 ring-1 ring-slate-200 dark:ring-slate-700 space-y-4">
+                                    <div>
+                                        <p className="text-sm font-semibold text-slate-600 dark:text-slate-400 mb-1">Send payment to (Personal):</p>
+                                        <p className="text-3xl font-black text-[#e2136e] tracking-tight">01756-625762</p>
+                                    </div>
+                                    <div className="h-px bg-slate-200 dark:bg-slate-700"></div>
+                                    <div className="flex flex-col items-center">
+                                        <p className="text-sm font-semibold text-slate-600 dark:text-slate-400 mb-2">Payment Reference / Referral Code:</p>
+                                        <div className="flex items-center justify-center gap-3">
+                                            <code className="text-lg font-mono font-bold bg-white dark:bg-slate-900 px-4 py-2 rounded-lg text-slate-800 dark:text-slate-200 border border-slate-200 dark:border-slate-700 shadow-sm tracking-wider">
+                                                {user?.id ? user.id.slice(0, 8).toUpperCase() : 'LIFT24'}
+                                            </code>
+                                        </div>
+                                        <p className="text-xs text-slate-500 mt-2">(Please include this code in your bKash reference)</p>
+                                    </div>
                                 </div>
 
                                 <div className="bg-amber-50 dark:bg-amber-950/20 border border-amber-200 dark:border-amber-800 rounded-xl p-4 text-left">

@@ -3,6 +3,7 @@ import { Link, useNavigate } from 'react-router-dom';
 import { APP_NAME, COMPANY_NAME, SUPPORT_EMAIL } from '../lib/branding';
 import { LandingPricing } from '../components/landing/LandingPricing';
 import { LandingFeatures } from '../components/landing/LandingFeatures';
+import { LandingTestimonials } from '../components/landing/LandingTestimonials';
 import { enterDemoMode } from '../lib/demoUtils';
 import { BrandLogo } from '../components/BrandLogo';
 
@@ -206,8 +207,11 @@ export default function LandingPage() {
           {/* Pricing Section */}
           <LandingPricing />
 
+          {/* Real Reviews */}
+          <LandingTestimonials />
+
           {/* Buyer Checklist */}
-          <section className="py-24 px-6 max-w-7xl mx-auto" id="testimonials">
+          <section className="py-24 px-6 max-w-7xl mx-auto">
             <div className="grid lg:grid-cols-3 gap-12">
               <div className="lg:col-span-1">
                 <h2 className="text-3xl md:text-4xl font-black text-slate-900 dark:text-white leading-tight mb-6">What we demo live before purchase</h2>

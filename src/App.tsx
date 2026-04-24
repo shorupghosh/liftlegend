@@ -24,6 +24,7 @@ const Login = lazy(() => import('./pages/Login'));
 const ResetPassword = lazy(() => import('./pages/ResetPassword'));
 const SubscriptionLock = lazy(() => import('./pages/SubscriptionLock'));
 const BookDemo = lazy(() => import('./pages/BookDemo'));
+const LeaveReview = lazy(() => import('./pages/LeaveReview'));
 const AdminDashboard = lazy(() => import('./pages/AdminDashboard'));
 const MembersManagement = lazy(() => import('./pages/MembersManagement'));
 const MemberDetail = lazy(() => import('./pages/MemberDetail'));
@@ -68,6 +69,7 @@ export default function App() {
               <Route path="/reset-password" element={<ResetPassword />} />
               <Route path="/subscription-locked" element={<SubscriptionLock />} />
               <Route path="/book-demo" element={<BookDemo />} />
+              <Route path="/leave-review" element={<LeaveReview />} />
               <Route path="/demo" element={<AdminLayout><AdminDashboard /></AdminLayout>} />
 
               {/* Super Admin Routes */}

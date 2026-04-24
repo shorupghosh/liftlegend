@@ -160,6 +160,17 @@ export const AdminHeader: React.FC<AdminHeaderProps> = ({
         </button>
       )}
 
+      {!isSuperAdmin && (
+        <button 
+           onClick={() => navigate('/leave-review')}
+           className="hidden md:flex items-center gap-1.5 rounded-full border border-emerald-300 bg-emerald-50 px-3 py-1 text-[11px] font-black uppercase tracking-widest text-emerald-700 hover:bg-emerald-100 transition-colors dark:border-emerald-800 dark:bg-emerald-950/40 dark:text-emerald-200 dark:hover:bg-emerald-900/60"
+           title="Leave a review for LiftLegend"
+        >
+          <span className="material-symbols-outlined text-[14px]">rate_review</span>
+          Review Us
+        </button>
+      )}
+
       <div className="relative flex items-center gap-1" ref={notificationsRef}>
         <NotificationDropdown
           open={notificationsOpen}
