@@ -26,6 +26,7 @@ export const BrandLogo: React.FC<BrandLogoProps> = ({
           alt={displayName}
           className={`${className} object-contain`}
           fetchPriority="high"
+          loading="eager"
         />
         {showText && (
           <span className="text-xl font-bold text-slate-900 dark:text-white">
@@ -45,12 +46,14 @@ export const BrandLogo: React.FC<BrandLogoProps> = ({
             alt={`${displayName} — Gym Management Software Bangladesh`}
             className={`${className} dark:hidden block object-contain`}
             fetchPriority="high"
+            loading="eager"
           />
           <img
             src="/logo-dark.png"
             alt={`${displayName} — Gym Management Software Bangladesh`}
             className={`${className} hidden dark:block object-contain`}
             fetchPriority="high"
+            loading="eager"
           />
         </>
       ) : (
@@ -59,6 +62,7 @@ export const BrandLogo: React.FC<BrandLogoProps> = ({
           alt={`${displayName} — Gym Management Software Bangladesh`}
           className={`${className} object-contain`}
           fetchPriority="high"
+          loading="eager"
         />
       )}
 
