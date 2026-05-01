@@ -1,5 +1,4 @@
-import React, { useState, useEffect } from 'react';
-import { safeLocalGet, safeLocalSet } from '../lib/safeStorage';
+import React, { useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { BrandLogo } from '../components/BrandLogo';
 
@@ -15,55 +14,9 @@ export default function BookDemo() {
     meta.setAttribute('content', 'Schedule a 30-minute personalized demo of LiftLegend, the top gym management software in Bangladesh. See features like QR attendance and payment tracking.');
   }, []);
 
-  const [form, setForm] = useState({ name: '', email: '', phone: '', gymName: '', message: '' });
-  const [sent, setSent] = useState(false);
-  const [sending, setSending] = useState(false);
-  const [leadRef, setLeadRef] = useState<string | null>(null);
-  const [submitError, setSubmitError] = useState<string | null>(null);
-
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
-    setForm({ ...form, [e.target.name]: e.target.value });
-  };
-
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setSending(true);
-    setSubmitError(null);
-
-    try {
-      const timestamp = new Date().toISOString();
-      const reference = `LL-${Date.now().toString().slice(-6)}`;
-      const payload = {
-        ...form,
-        reference,
-        submitted_at: timestamp,
-        source: 'book-demo-page',
-      };
-
-      const existingLeads = JSON.parse(safeLocalGet('liftlegend_demo_leads') || '[]');
-      safeLocalSet('liftlegend_demo_leads', JSON.stringify([payload, ...existingLeads]));
-
-      const webhookUrl = import.meta.env.VITE_DEMO_LEAD_WEBHOOK_URL as string | undefined;
-      if (webhookUrl) {
-        const response = await fetch(webhookUrl, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify(payload),
-        });
-        if (!response.ok) {
-          throw new Error('Lead webhook request failed.');
-        }
-      }
-
-      setLeadRef(reference);
-      setSending(false);
-      setSent(true);
-    } catch (error) {
-      console.error('Failed to submit demo lead:', error);
-      setSending(false);
-      setSubmitError('Could not submit the request. Please contact support via phone or WhatsApp.');
-    }
-  };
+  // You can replace this URL with your actual Calendly, Cal.com, or Google Calendar booking link.
+  // We use Calendly here because it automatically handles email notifications to both you and the customer.
+  const CALENDAR_URL = "https://calendly.com/liftlegend2/30min"; 
 
   return (
     <div className="min-h-screen bg-[#f6f7f8] dark:bg-[#111821] text-slate-900 dark:text-slate-100 font-display">
@@ -80,10 +33,10 @@ export default function BookDemo() {
         </div>
       </header>
 
-      <main className="max-w-4xl mx-auto px-6 py-16 md:py-24">
-        <div className="grid lg:grid-cols-2 gap-16 items-start">
+      <main className="max-w-7xl mx-auto px-4 sm:px-6 py-10 md:py-16">
+        <div className="grid lg:grid-cols-5 gap-8 lg:gap-16 items-start">
           {/* Left: Info */}
-          <div className="flex flex-col gap-6">
+          <div className="flex flex-col gap-6 lg:col-span-2 pt-4">
             <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-[#1978e5]/10 border border-[#1978e5]/20 text-[#1978e5] text-xs font-bold uppercase tracking-wider w-fit">
               <span className="material-symbols-outlined text-sm">event</span>
               30-Minute Demo Session
@@ -92,14 +45,14 @@ export default function BookDemo() {
               Book a <span className="text-[#1978e5]">30-Minute Demo</span>
             </h1>
             <p className="text-lg text-slate-600 dark:text-slate-400 leading-relaxed">
-              See how LiftLegend can transform your gym management. Our team will walk you through every feature and answer all your questions.
+              Select a date and time from the calendar to schedule a live walkthrough. Once booked, you'll instantly receive a confirmation email with the meeting link.
             </p>
-            <div className="space-y-4 mt-4">
+            <div className="space-y-4 mt-4 hidden lg:block">
               {[
                 { icon: 'videocam', label: 'Live 1-on-1 demo call' },
-                { icon: 'timer', label: '30 minutes, no commitment' },
+                { icon: 'event_available', label: 'Instant calendar confirmation' },
+                { icon: 'notifications_active', label: 'Automated email reminders' },
                 { icon: 'tune', label: 'Customized to your gym needs' },
-                { icon: 'credit_card_off', label: 'No credit card required' },
               ].map((item) => (
                 <div key={item.label} className="flex items-center gap-3">
                   <div className="size-10 rounded-xl bg-green-100 dark:bg-green-900/20 flex items-center justify-center text-green-600">
@@ -111,83 +64,23 @@ export default function BookDemo() {
             </div>
           </div>
 
-          {/* Right: Form */}
-          <div className="bg-white dark:bg-slate-900 rounded-2xl shadow-xl border border-slate-200 dark:border-slate-800 overflow-hidden">
-            {sent ? (
-              <div className="p-10 text-center">
-                <div className="inline-flex items-center justify-center size-20 rounded-full bg-green-100 dark:bg-green-900/20 text-green-600 mb-6">
-                  <span className="material-symbols-outlined text-5xl">check_circle</span>
-                </div>
-                <h2 className="text-2xl font-bold text-slate-900 dark:text-white mb-3">Demo Request Sent!</h2>
-                <p className="text-slate-500 dark:text-slate-400 mb-8">
-                  Our team will call or message you to confirm a time.
-                </p>
-                {leadRef && (
-                  <p className="text-xs text-slate-400 mb-6">Reference: {leadRef}</p>
-                )}
-                <Link to="/" className="inline-flex items-center gap-2 px-6 py-3 bg-[#1978e5] text-white font-bold rounded-xl hover:bg-blue-600 transition-all">
-                  <span className="material-symbols-outlined text-sm">home</span>
-                  Back to Home
-                </Link>
-              </div>
-            ) : (
-              <form onSubmit={handleSubmit} className="p-8 space-y-5">
-                <h2 className="text-xl font-bold text-slate-900 dark:text-white mb-1">Fill in your details</h2>
-                <p className="text-sm text-slate-500 dark:text-slate-400 mb-4">We'll reach out to schedule your demo.</p>
-                {submitError && (
-                  <div className="rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
-                    {submitError}
-                  </div>
-                )}
-
-                <div className="space-y-2">
-                  <label htmlFor="demo-name" className="text-sm font-medium text-slate-700 dark:text-slate-300">Your Name *</label>
-                  <input id="demo-name" name="name" type="text" required value={form.name} onChange={handleChange}
-                    className="w-full px-4 py-3 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-900 dark:text-white rounded-xl focus:ring-2 focus:ring-[#1978e5]/20 focus:border-[#1978e5] outline-none transition-all"
-                    placeholder="Mohammad Ali" />
-                </div>
-
-                <div className="space-y-2">
-                  <label htmlFor="demo-email" className="text-sm font-medium text-slate-700 dark:text-slate-300">Email Address *</label>
-                  <input id="demo-email" name="email" type="email" required value={form.email} onChange={handleChange}
-                    className="w-full px-4 py-3 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-900 dark:text-white rounded-xl focus:ring-2 focus:ring-[#1978e5]/20 focus:border-[#1978e5] outline-none transition-all"
-                    placeholder="you@email.com" />
-                </div>
-
-                <div className="space-y-2">
-                  <label htmlFor="demo-phone" className="text-sm font-medium text-slate-700 dark:text-slate-300">Phone Number</label>
-                  <input id="demo-phone" name="phone" type="tel" value={form.phone} onChange={handleChange}
-                    className="w-full px-4 py-3 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-900 dark:text-white rounded-xl focus:ring-2 focus:ring-[#1978e5]/20 focus:border-[#1978e5] outline-none transition-all"
-                    placeholder="+880 1700-000000" />
-                </div>
-
-                <div className="space-y-2">
-                  <label htmlFor="demo-gym" className="text-sm font-medium text-slate-700 dark:text-slate-300">Gym Name</label>
-                  <input id="demo-gym" name="gymName" type="text" value={form.gymName} onChange={handleChange}
-                    className="w-full px-4 py-3 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-900 dark:text-white rounded-xl focus:ring-2 focus:ring-[#1978e5]/20 focus:border-[#1978e5] outline-none transition-all"
-                    placeholder="Your Gym Name" />
-                </div>
-
-                <div className="space-y-2">
-                  <label htmlFor="demo-message" className="text-sm font-medium text-slate-700 dark:text-slate-300">Your Message *</label>
-                  <textarea id="demo-message" name="message" required rows={4} value={form.message} onChange={handleChange}
-                    className="w-full px-4 py-3 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-900 dark:text-white rounded-xl focus:ring-2 focus:ring-[#1978e5]/20 focus:border-[#1978e5] outline-none transition-all resize-none"
-                    placeholder="Tell us about your gym and what features interest you..." />
-                </div>
-
-                <button type="submit" disabled={sending}
-                  className="w-full py-3.5 px-4 bg-[#1978e5] hover:bg-blue-600 text-white font-bold rounded-xl transition-all shadow-lg shadow-[#1978e5]/20 flex items-center justify-center gap-2 disabled:opacity-70 active:scale-[0.98]">
-                  {sending ? (
-                    <div className="size-5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
-                  ) : (
-                    <>
-                      <span className="material-symbols-outlined text-sm">send</span>
-                      Book a 30-Minute Demo for Your Gym
-                    </>
-                  )}
-                </button>
-              </form>
-            )}
+          {/* Right: Calendar Embed */}
+          <div className="lg:col-span-3 bg-white dark:bg-slate-900 rounded-3xl shadow-2xl border border-slate-200 dark:border-slate-800 overflow-hidden relative min-h-[700px]">
+            {/* Loading placeholder */}
+            <div className="absolute inset-0 flex flex-col items-center justify-center bg-slate-50 dark:bg-slate-900/50 z-0">
+                <div className="size-10 border-4 border-[#1978e5]/30 border-t-[#1978e5] rounded-full animate-spin mb-4" />
+                <p className="text-sm font-medium text-slate-500">Loading Calendar...</p>
+            </div>
+            
+            {/* Calendar Iframe */}
+            <iframe 
+              src={CALENDAR_URL}
+              width="100%" 
+              height="100%" 
+              frameBorder="0" 
+              title="Schedule a Demo"
+              className="relative z-10 w-full h-[700px] sm:h-[750px] bg-transparent"
+            ></iframe>
           </div>
         </div>
       </main>
