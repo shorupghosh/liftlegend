@@ -6,9 +6,17 @@ import { PLAN_DISPLAY } from '../lib/planConfig';
 type ActiveView = 'main' | 'plans' | 'renew' | 'contact';
 
 export default function SubscriptionLock() {
-    const { user, signOut, subscriptionTier, trialEndsAt } = useAuth();
+    const { user, gymName, signOut, subscriptionTier, trialEndsAt } = useAuth();
     const [activeView, setActiveView] = useState<ActiveView>('main');
-    const [contactForm, setContactForm] = useState({ name: '', email: '', message: '' });
+    const [contactForm, setContactForm] = useState({ name: gymName || '', email: user?.email || '', message: '' });
+
+    React.useEffect(() => {
+        setContactForm(prev => ({
+            ...prev,
+            name: prev.name || gymName || '',
+            email: prev.email || user?.email || ''
+        }));
+    }, [gymName, user?.email]);
     const [contactSent, setContactSent] = useState(false);
     const [contactSending, setContactSending] = useState(false);
     const [bkashImgError, setBkashImgError] = useState(false);

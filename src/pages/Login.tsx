@@ -152,10 +152,17 @@ const Login: React.FC = () => {
     };
 
     return (
-        <div className="min-h-screen bg-slate-50 dark:bg-slate-950 flex items-center justify-center p-4">
-            <div className="max-w-md w-full bg-white dark:bg-slate-900 rounded-2xl shadow-xl border border-slate-200 dark:border-slate-800 overflow-hidden">
-                <div className="p-8">
-                    <div className="flex flex-col items-center justify-center mb-8">
+        <div className="min-h-screen bg-[#f6f7f8] dark:bg-[#0a0f16] flex items-center justify-center p-4 relative overflow-hidden font-display selection:bg-primary-default/20 selection:text-primary-default">
+            {/* Ambient Background Glows */}
+            <div className="absolute top-0 right-0 w-[500px] h-[500px] bg-blue-500/10 dark:bg-blue-500/20 rounded-full blur-[100px] pointer-events-none transform translate-x-1/3 -translate-y-1/3"></div>
+            <div className="absolute bottom-0 left-0 w-[500px] h-[500px] bg-emerald-500/10 dark:bg-emerald-500/20 rounded-full blur-[100px] pointer-events-none transform -translate-x-1/3 translate-y-1/3"></div>
+
+            <div className="max-w-md w-full bg-white/80 dark:bg-[#111821]/80 backdrop-blur-2xl rounded-[32px] shadow-2xl border border-white/50 dark:border-slate-800/50 overflow-hidden relative z-10">
+                {/* Subtle gradient border effect at the top */}
+                <div className="absolute top-0 inset-x-0 h-1 bg-gradient-to-r from-blue-500 via-primary-default to-emerald-500"></div>
+                
+                <div className="p-8 sm:p-10">
+                    <div className="flex flex-col items-center justify-center mb-10">
                         <div className="mb-6">
                             <BrandLogo className="h-14 sm:h-16 w-auto object-contain mx-auto" variant="auto" />
                         </div>
@@ -195,7 +202,7 @@ const Login: React.FC = () => {
                                         value={gymName}
                                         onChange={(e) => setGymName(e.target.value)}
                                         autoComplete="organization"
-                                        className="w-full px-4 py-3 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-slate-900 dark:text-white rounded-xl focus:ring-2 focus:ring-primary-default/20 focus:border-primary-default outline-none transition-all"
+                                        className="w-full px-4 py-3.5 bg-slate-50 dark:bg-slate-900/50 border border-slate-200 dark:border-slate-800 text-slate-900 dark:text-white rounded-xl focus:ring-2 focus:ring-primary-default focus:border-transparent outline-none transition-all placeholder:text-slate-400 font-medium"
                                         placeholder="LiftZone Fitness"
                                     />
                                 </div>
@@ -207,7 +214,7 @@ const Login: React.FC = () => {
                                         value={gymAddress}
                                         onChange={(e) => setGymAddress(e.target.value)}
                                         autoComplete="street-address"
-                                        className="w-full px-4 py-3 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-slate-900 dark:text-white rounded-xl focus:ring-2 focus:ring-primary-default/20 focus:border-primary-default outline-none transition-all"
+                                        className="w-full px-4 py-3.5 bg-slate-50 dark:bg-slate-900/50 border border-slate-200 dark:border-slate-800 text-slate-900 dark:text-white rounded-xl focus:ring-2 focus:ring-primary-default focus:border-transparent outline-none transition-all placeholder:text-slate-400 font-medium"
                                         placeholder="Banani, Dhaka"
                                     />
                                 </div>
@@ -218,7 +225,7 @@ const Login: React.FC = () => {
                                         value={memberCapacity}
                                         onChange={(e) => setMemberCapacity(e.target.value)}
                                         autoComplete="off"
-                                        className="w-full px-4 py-3 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-slate-900 dark:text-white rounded-xl focus:ring-2 focus:ring-primary-default/20 focus:border-primary-default outline-none transition-all"
+                                        className="w-full px-4 py-3.5 bg-slate-50 dark:bg-slate-900/50 border border-slate-200 dark:border-slate-800 text-slate-900 dark:text-white rounded-xl focus:ring-2 focus:ring-primary-default focus:border-transparent outline-none transition-all placeholder:text-slate-400 font-medium"
                                     >
                                         <option value="0-100">0 - 100 Members</option>
                                         <option value="100-500">100 - 500 Members</option>
@@ -240,7 +247,7 @@ const Login: React.FC = () => {
                                     name="email"
                                     value={email}
                                     onChange={(e) => setEmail(e.target.value)}
-                                    className="w-full pl-10 pr-4 py-3 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-slate-900 dark:text-white rounded-xl focus:ring-2 focus:ring-primary-default/20 focus:border-primary-default outline-none transition-all"
+                                    className="w-full pl-10 pr-4 py-3.5 bg-slate-50 dark:bg-slate-900/50 border border-slate-200 dark:border-slate-800 text-slate-900 dark:text-white rounded-xl focus:ring-2 focus:ring-primary-default focus:border-transparent outline-none transition-all placeholder:text-slate-400 font-medium"
                                     placeholder="admin@gym.com"
                                 />
                             </div>
@@ -259,7 +266,7 @@ const Login: React.FC = () => {
                                     name="password"
                                     value={password}
                                     onChange={(e) => setPassword(e.target.value)}
-                                    className="w-full pl-10 pr-12 py-3 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-slate-900 dark:text-white rounded-xl focus:ring-2 focus:ring-primary-default/20 focus:border-primary-default outline-none transition-all"
+                                    className="w-full pl-10 pr-12 py-3.5 bg-slate-50 dark:bg-slate-900/50 border border-slate-200 dark:border-slate-800 text-slate-900 dark:text-white rounded-xl focus:ring-2 focus:ring-primary-default focus:border-transparent outline-none transition-all placeholder:text-slate-400 font-medium"
                                     placeholder="********"
                                 />
                                 <button
@@ -286,7 +293,7 @@ const Login: React.FC = () => {
                                         autoComplete="new-password"
                                         value={confirmPassword}
                                         onChange={(e) => setConfirmPassword(e.target.value)}
-                                        className="w-full pl-10 pr-12 py-3 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-slate-900 dark:text-white rounded-xl focus:ring-2 focus:ring-primary-default/20 focus:border-primary-default outline-none transition-all"
+                                        className="w-full pl-10 pr-12 py-3.5 bg-slate-50 dark:bg-slate-900/50 border border-slate-200 dark:border-slate-800 text-slate-900 dark:text-white rounded-xl focus:ring-2 focus:ring-primary-default focus:border-transparent outline-none transition-all placeholder:text-slate-400 font-medium"
                                         placeholder="********"
                                     />
                                     <button
@@ -315,7 +322,7 @@ const Login: React.FC = () => {
                         <button
                             type="submit"
                             disabled={loading}
-                            className="w-full py-3 px-4 bg-primary-default hover:bg-primary-dark text-white font-bold rounded-xl transition-colors shadow-lg shadow-primary-default/20 flex items-center justify-center disabled:opacity-70"
+                            className="w-full py-3.5 px-4 bg-gradient-to-r from-blue-600 to-primary-default hover:from-blue-700 hover:to-blue-600 text-white font-black uppercase tracking-wider text-sm rounded-xl transition-all shadow-xl shadow-primary-default/25 flex items-center justify-center disabled:opacity-70 active:scale-[0.98]"
                         >
                             {loading ? (
                                 <div className="size-5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
