@@ -56,8 +56,8 @@ export const AdminSidebar: React.FC<AdminSidebarProps> = ({
   `}
       >
           {/* Logo area */}
-          <div className="h-16 flex items-center px-4 border-b border-slate-200 dark:border-slate-800 shrink-0">
-                  <BrandLogo className="h-12 w-auto object-contain" variant="auto" />
+          <div className="h-20 flex items-center px-4 border-b border-slate-200 dark:border-slate-800 shrink-0">
+                  <BrandLogo className="h-16 w-auto object-contain" variant="auto" />
                   <span className="text-[10px] font-bold text-primary-default uppercase tracking-widest bg-primary-default/10 px-2 py-0.5 rounded-full">
                       {isSuperAdmin ? 'PLATFORM' : 'GYM OS'}
                   </span>

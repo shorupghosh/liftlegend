@@ -164,7 +164,7 @@ const Login: React.FC = () => {
                 <div className="p-8 sm:p-10">
                     <div className="flex flex-col items-center justify-center mb-10">
                         <div className="mb-6">
-                            <BrandLogo className="h-14 sm:h-16 w-auto object-contain mx-auto" variant="auto" />
+                            <BrandLogo className="h-16 sm:h-20 w-auto object-contain mx-auto" variant="auto" />
                         </div>
                         <h2 className="text-2xl font-display font-bold text-slate-900 dark:text-white">
                             {isSignUp ? 'Create an Account' : 'Welcome Back'}

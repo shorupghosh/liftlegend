@@ -11,7 +11,7 @@ interface BrandLogoProps {
 
 export const BrandLogo: React.FC<BrandLogoProps> = ({
   variant = 'auto',
-  className = 'h-11 w-auto',
+  className = 'h-14 w-auto',
   showText = false,
 }) => {
   const { gymLogoUrl, gymName, subscriptionTier } = useAuth();
