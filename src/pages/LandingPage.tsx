@@ -107,8 +107,8 @@ export default function LandingPage() {
                   <span className="material-symbols-outlined text-sm">verified_user</span>
                   Built for Bangladesh gym operations
                 </div>
-                <h1 className="text-4xl sm:text-5xl md:text-7xl font-black leading-[1.1] tracking-tight text-slate-900 dark:text-white">
-                  Elevate Your <span className="text-[#1978e5]">Gym Management</span> in Bangladesh
+                <h1 className="text-4xl sm:text-5xl md:text-6xl font-black leading-[1.1] tracking-tight text-slate-900 dark:text-white">
+                  Stop Losing Money on Expired Memberships. <span className="text-[#1978e5]">Manage Your Gym Without a Khata.</span>
                 </h1>
                 <p className="text-lg md:text-xl text-slate-600 dark:text-slate-400 leading-relaxed max-w-xl">
                   LiftLegend helps gym owners track members, payments, and renewals without paper records.
@@ -126,32 +126,123 @@ export default function LandingPage() {
                     Explore Live Demo
                   </button>
                 </div>
+                <div className="flex flex-col gap-2 mt-2">
+                  <div className="flex items-center gap-2 text-sm font-bold text-slate-600 dark:text-slate-300">
+                    <span className="text-xl">🇧🇩</span> Proudly Made in Bangladesh
+                  </div>
+                  <div className="flex items-center gap-2 text-sm font-bold text-slate-600 dark:text-slate-300">
+                    <span className="text-xl">📱</span> 100% Mobile Ready — Zero Hardware Required
+                  </div>
+                </div>
                 <div className="flex items-center gap-4 text-sm text-slate-500">
                   <span>Used by gyms moving beyond notebooks and spreadsheets.</span>
                 </div>
               </div>
-              <div className="relative group">
+              <div className="relative group" role="region" aria-label="LiftLegend QR Scanner Demo Video">
                 <div className="absolute -inset-4 bg-[#1978e5]/20 blur-3xl rounded-full opacity-50 group-hover:opacity-75 transition duration-1000"></div>
-                <div className="relative bg-white dark:bg-slate-900 rounded-2xl overflow-hidden shadow-2xl border border-slate-200 dark:border-slate-800 p-6">
-                  <p className="text-xs font-black uppercase tracking-widest text-slate-500 mb-4">Live Product Preview</p>
-                  <div className="space-y-3">
-                    <div className="rounded-xl border border-slate-200 dark:border-slate-700 p-4 bg-slate-50 dark:bg-slate-800/50">
-                      <p className="text-xs text-slate-500">Today Collections</p>
-                      <p className="text-2xl font-black text-slate-900 dark:text-white">৳ 18,450</p>
-                      <p className="text-xs text-emerald-600 font-semibold mt-1">Cash + bKash + Card</p>
+                <div className="relative bg-white dark:bg-slate-900 rounded-2xl overflow-hidden shadow-2xl border border-slate-200 dark:border-slate-800 aspect-[4/3] flex items-center justify-center">
+                  <img 
+                    src="/demo-scan.gif" 
+                    alt="LiftLegend QR Scanner Demo"
+                    className="w-full h-full object-cover"
+                  />
+                  <div className="absolute inset-0 bg-gradient-to-t from-slate-900/80 via-slate-900/20 to-transparent pointer-events-none"></div>
+                  <div className="absolute bottom-6 left-6 right-6 text-white flex items-center gap-4">
+                    <div className="size-12 bg-emerald-500 rounded-full flex items-center justify-center shadow-lg shadow-emerald-500/30">
+                      <span className="material-symbols-outlined text-white text-2xl">qr_code_scanner</span>
                     </div>
-                    <div className="grid grid-cols-2 gap-3">
-                      <div className="rounded-xl border border-slate-200 dark:border-slate-700 p-3">
-                        <p className="text-[11px] text-slate-500">Expiring Soon</p>
-                        <p className="text-lg font-black text-slate-900 dark:text-white">12 Members</p>
-                      </div>
-                      <div className="rounded-xl border border-slate-200 dark:border-slate-700 p-3">
-                        <p className="text-[11px] text-slate-500">Check-ins Today</p>
-                        <p className="text-lg font-black text-slate-900 dark:text-white">76</p>
-                      </div>
+                    <div>
+                      <p className="text-lg font-bold">100% Mobile Ready</p>
+                      <p className="text-sm opacity-90 text-emerald-100 font-medium">Member entry recorded instantly via phone.</p>
                     </div>
                   </div>
                 </div>
+              </div>
+            </div>
+          </section>
+
+          {/* Khata vs LiftLegend Section */}
+          <section className="py-24 px-6 max-w-7xl mx-auto">
+            <div className="text-center max-w-3xl mx-auto mb-16">
+              <h2 className="text-3xl md:text-4xl font-black text-slate-900 dark:text-white mb-4">Gym Management: আগে <span className="text-slate-400">VS</span> এখন</h2>
+              <p className="text-slate-600 dark:text-slate-400 text-lg">খাতার হিসাব থেকে বের হয়ে আসুন ভাই। Gym Manage করুন স্মার্টলি।</p>
+            </div>
+            
+            <div className="grid md:grid-cols-2 gap-8 max-w-5xl mx-auto">
+              {/* The Old Way */}
+              <div className="bg-red-50 dark:bg-red-900/10 border-2 border-red-100 dark:border-red-900/30 rounded-2xl p-8 relative overflow-hidden">
+                <div className="absolute top-0 right-0 bg-red-100 dark:bg-red-900/50 text-red-700 dark:text-red-400 text-xs font-bold px-4 py-1 rounded-bl-lg">আগে (The Old Way)</div>
+                <div className="size-14 bg-red-100 dark:bg-red-900/30 text-red-600 dark:text-red-400 rounded-xl flex items-center justify-center mb-6">
+                  <span className="material-symbols-outlined text-3xl">menu_book</span>
+                </div>
+                <ul className="space-y-4">
+                  <li className="flex items-start gap-3">
+                    <span className="material-symbols-outlined text-red-500 mt-0.5">cancel</span>
+                    <div>
+                      <p className="font-bold text-slate-900 dark:text-white">খাতায় Member Name</p>
+                      <p className="text-sm text-slate-600 dark:text-slate-400">খুঁজে বের করতে সময় নষ্ট।</p>
+                    </div>
+                  </li>
+                  <li className="flex items-start gap-3">
+                    <span className="material-symbols-outlined text-red-500 mt-0.5">cancel</span>
+                    <div>
+                      <p className="font-bold text-slate-900 dark:text-white">হাতে Payment হিসাব</p>
+                      <p className="text-sm text-slate-600 dark:text-slate-400">bKash না Cash? ভুল হওয়ার চান্স।</p>
+                    </div>
+                  </li>
+                  <li className="flex items-start gap-3">
+                    <span className="material-symbols-outlined text-red-500 mt-0.5">cancel</span>
+                    <div>
+                      <p className="font-bold text-slate-900 dark:text-white">Missed Payments</p>
+                      <p className="text-sm text-slate-600 dark:text-slate-400">প্রতি মাসে হাজার টাকা লস।</p>
+                    </div>
+                  </li>
+                  <li className="flex items-start gap-3">
+                    <span className="material-symbols-outlined text-red-500 mt-0.5">cancel</span>
+                    <div>
+                      <p className="font-bold text-slate-900 dark:text-white">Month শেষে Confusion</p>
+                      <p className="text-sm text-slate-600 dark:text-slate-400">হিসাব মেলাতে মাথা নষ্ট।</p>
+                    </div>
+                  </li>
+                </ul>
+              </div>
+
+              {/* The LiftLegend Way */}
+              <div className="bg-emerald-50 dark:bg-emerald-900/10 border-2 border-emerald-500 dark:border-emerald-500/50 rounded-2xl p-8 relative overflow-hidden shadow-lg shadow-emerald-500/10">
+                <div className="absolute top-0 right-0 bg-emerald-500 text-white text-xs font-bold px-4 py-1 rounded-bl-lg">এখন (LiftLegend)</div>
+                <div className="size-14 bg-emerald-100 dark:bg-emerald-900/50 text-emerald-600 dark:text-emerald-400 rounded-xl flex items-center justify-center mb-6">
+                  <span className="material-symbols-outlined text-3xl">phonelink_ring</span>
+                </div>
+                <ul className="space-y-4">
+                  <li className="flex items-start gap-3">
+                    <span className="material-symbols-outlined text-emerald-500 mt-0.5">check_circle</span>
+                    <div>
+                      <p className="font-bold text-slate-900 dark:text-white">App-এ সব Member Info</p>
+                      <p className="text-sm text-slate-600 dark:text-slate-400">১ সেকেন্ডে সব হাতের মুঠোয়।</p>
+                    </div>
+                  </li>
+                  <li className="flex items-start gap-3">
+                    <span className="material-symbols-outlined text-emerald-500 mt-0.5">check_circle</span>
+                    <div>
+                      <p className="font-bold text-slate-900 dark:text-white">Auto Payment Alerts</p>
+                      <p className="text-sm text-slate-600 dark:text-slate-400">Due date আসার আগেই reminder।</p>
+                    </div>
+                  </li>
+                  <li className="flex items-start gap-3">
+                    <span className="material-symbols-outlined text-emerald-500 mt-0.5">check_circle</span>
+                    <div>
+                      <p className="font-bold text-slate-900 dark:text-white">Real-time Tracking</p>
+                      <p className="text-sm text-slate-600 dark:text-slate-400">১০০% payment track হবে।</p>
+                    </div>
+                  </li>
+                  <li className="flex items-start gap-3">
+                    <span className="material-symbols-outlined text-emerald-500 mt-0.5">check_circle</span>
+                    <div>
+                      <p className="font-bold text-slate-900 dark:text-white">সব কিছু Clear</p>
+                      <p className="text-sm text-slate-600 dark:text-slate-400">Month শেষে no tension.</p>
+                    </div>
+                  </li>
+                </ul>
               </div>
             </div>
           </section>
@@ -160,8 +251,8 @@ export default function LandingPage() {
           <section className="py-20 bg-slate-50 dark:bg-slate-900/50">
             <div className="max-w-7xl mx-auto px-6">
               <div className="text-center max-w-3xl mx-auto mb-16">
-                <h2 className="text-3xl md:text-4xl font-black text-slate-900 dark:text-white mb-4">How LiftLegend Works</h2>
-                <p className="text-slate-600 dark:text-slate-400">Run your gym like a business, not a notebook.</p>
+                <h2 className="text-3xl md:text-4xl font-black text-slate-900 dark:text-white mb-4">কিভাবে কাজ করে LiftLegend?</h2>
+                <p className="text-slate-600 dark:text-slate-400">খাতায় আর কতদিন ভাই? এবার স্মার্টভাবে Gym Manage করুন।</p>
               </div>
               <div className="grid md:grid-cols-4 gap-8">
                 {[
@@ -183,7 +274,7 @@ export default function LandingPage() {
           {/* Trust Signals */}
           <section className="py-12 bg-white dark:bg-slate-900/50">
             <div className="max-w-7xl mx-auto px-6">
-              <p className="text-center text-sm font-bold text-slate-400 uppercase tracking-widest mb-10">What gym owners validate before switching</p>
+              <p className="text-center text-sm font-bold text-slate-400 uppercase tracking-widest mb-10">কেন বাংলাদেশের Gym Owner-রা LiftLegend বেছে নিচ্ছেন?</p>
               <div className="grid md:grid-cols-3 gap-4">
                 <div className="rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800/50 p-4">
                   <p className="font-bold text-slate-900 dark:text-white">Dues Collection Ready</p>
@@ -214,8 +305,8 @@ export default function LandingPage() {
           <section className="py-24 px-6 max-w-7xl mx-auto">
             <div className="grid lg:grid-cols-3 gap-12">
               <div className="lg:col-span-1">
-                <h2 className="text-3xl md:text-4xl font-black text-slate-900 dark:text-white leading-tight mb-6">What we demo live before purchase</h2>
-                <p className="text-slate-600 dark:text-slate-400 mb-8">A practical checklist for owners evaluating system reliability.</p>
+                <h2 className="text-3xl md:text-4xl font-black text-slate-900 dark:text-white leading-tight mb-6">কেনার আগে লাইভ দেখে নিন কিভাবে আপনার Gym-এর হিসাব মিলবে</h2>
+                <p className="text-slate-600 dark:text-slate-400 mb-8">Gym owner ভাইদের জন্য প্রাকটিকাল চেকলিস্ট। নিজে দেখে বিশ্বাস করুন।</p>
                 <div className="flex gap-1 text-[#f97316]">
                   <span className="material-symbols-outlined">star</span>
                   <span className="material-symbols-outlined">star</span>
@@ -260,16 +351,75 @@ export default function LandingPage() {
               <div className="absolute top-0 right-0 w-64 h-64 bg-white/10 rounded-full -mr-32 -mt-32 blur-3xl"></div>
               <div className="absolute bottom-0 left-0 w-64 h-64 bg-[#f97316]/20 rounded-full -ml-32 -mb-32 blur-3xl"></div>
               <div className="relative z-10">
-                <h2 className="text-3xl md:text-5xl font-black text-white mb-6">Ready to run your gym like a modern business?</h2>
-                <p className="text-blue-100 text-lg mb-10 max-w-2xl mx-auto">Join the fastest growing gym management platform in Bangladesh and take full control of your fitness business. Start your 30-day free trial today.</p>
+                <h2 className="text-3xl md:text-5xl font-black text-white mb-6">খাতা-কলমের হিসাব বাদ দিন ভাই। স্মার্টলি Gym Manage করার সময় এখনই।</h2>
+                <p className="text-blue-100 text-lg mb-10 max-w-2xl mx-auto">বাংলাদেশের সবচেয়ে দ্রুত বর্ধনশীল Gym Management Platform-এ জয়েন করুন। আজই শুরু করুন আপনার ৩০ দিনের ফ্রি ট্রায়াল।</p>
                 <div className="flex flex-col sm:flex-row justify-center gap-4">
                   <button onClick={() => navigate('/login?signup=true&plan=ADVANCED')} className="bg-white text-[#1978e5] h-14 px-6 sm:px-10 rounded-full text-base sm:text-lg font-bold hover:scale-105 transition-all">Start 30-Day Trial</button>
                   <button onClick={() => navigate('/book-demo')} className="bg-transparent text-white border-2 border-white/30 h-14 px-6 sm:px-10 rounded-full text-base sm:text-lg font-bold hover:bg-white/10 transition-all">Book a 30-Minute Demo for Your Gym</button>
+                </div>
+                <div className="flex flex-col sm:flex-row justify-center items-center gap-6 mt-6">
+                  <div className="flex items-center gap-2 text-sm font-bold text-blue-100">
+                    <span className="text-xl">🇧🇩</span> Proudly Made in Bangladesh
+                  </div>
+                  <div className="flex items-center gap-2 text-sm font-bold text-blue-100">
+                    <span className="text-xl">📱</span> 100% Mobile Ready — Zero Hardware Required
+                  </div>
                 </div>
               </div>
             </div>
           </section>
         </main>
+
+        {/* FAQ Section */}
+        <section className="py-20 px-6 max-w-4xl mx-auto" id="faq">
+          <h2 className="text-3xl md:text-4xl font-black text-slate-900 dark:text-white text-center mb-12">Frequently Asked Questions</h2>
+          <div className="space-y-6">
+            <div className="bg-white dark:bg-slate-800 rounded-xl p-6 border border-slate-200 dark:border-slate-700 shadow-sm">
+              <h3 className="text-xl font-bold text-slate-900 dark:text-white mb-2">Do I need a fingerprint scanner?</h3>
+              <p className="text-slate-600 dark:text-slate-400">No! LiftLegend is 100% mobile-ready. We use secure QR code attendance which can be scanned using any smartphone or tablet. No expensive hardware is required.</p>
+            </div>
+            <div className="bg-white dark:bg-slate-800 rounded-xl p-6 border border-slate-200 dark:border-slate-700 shadow-sm">
+              <h3 className="text-xl font-bold text-slate-900 dark:text-white mb-2">Can I manage multiple gyms with one account?</h3>
+              <p className="text-slate-600 dark:text-slate-400">Yes, our Pro and Elite plans allow you to easily manage multiple gym branches from a single dashboard, giving you complete visibility into your entire business.</p>
+            </div>
+            <div className="bg-white dark:bg-slate-800 rounded-xl p-6 border border-slate-200 dark:border-slate-700 shadow-sm">
+              <h3 className="text-xl font-bold text-slate-900 dark:text-white mb-2">How long does it take to migrate my current members?</h3>
+              <p className="text-slate-600 dark:text-slate-400">You can migrate your existing member data in minutes. Simply upload your member list, and our system will automatically create profiles and track their active subscriptions.</p>
+            </div>
+          </div>
+          <script type="application/ld+json" dangerouslySetInnerHTML={{
+            __html: JSON.stringify({
+              "@context": "https://schema.org",
+              "@type": "FAQPage",
+              "mainEntity": [
+                {
+                  "@type": "Question",
+                  "name": "Do I need a fingerprint scanner?",
+                  "acceptedAnswer": {
+                    "@type": "Answer",
+                    "text": "No! LiftLegend is 100% mobile-ready. We use secure QR code attendance which can be scanned using any smartphone or tablet. No expensive hardware is required."
+                  }
+                },
+                {
+                  "@type": "Question",
+                  "name": "Can I manage multiple gyms with one account?",
+                  "acceptedAnswer": {
+                    "@type": "Answer",
+                    "text": "Yes, our Pro and Elite plans allow you to easily manage multiple gym branches from a single dashboard, giving you complete visibility into your entire business."
+                  }
+                },
+                {
+                  "@type": "Question",
+                  "name": "How long does it take to migrate my current members?",
+                  "acceptedAnswer": {
+                    "@type": "Answer",
+                    "text": "You can migrate your existing member data in minutes. Simply upload your member list, and our system will automatically create profiles and track their active subscriptions."
+                  }
+                }
+              ]
+            })
+          }} />
+        </section>
 
         {/* Footer */}
         <footer className="bg-slate-900 text-slate-400 py-16 px-6 md:px-20">

@@ -8,8 +8,8 @@ export const LandingPricing: React.FC = () => {
     <section className="py-24 bg-slate-50 dark:bg-slate-900/30 px-6" id="pricing">
       <div className="max-w-7xl mx-auto">
         <div className="text-center max-w-3xl mx-auto mb-16">
-          <h2 className="text-4xl font-black text-slate-900 dark:text-white mb-4">Simple, transparent pricing</h2>
-          <p className="text-slate-600 dark:text-slate-400">Choose the perfect plan for your fitness community. No hidden fees.</p>
+          <h2 className="text-4xl font-black text-slate-900 dark:text-white mb-4">আপনার Gym-এর সাইজ অনুযায়ী প্যাকেজ</h2>
+          <p className="text-slate-600 dark:text-slate-400">কোনো লুকানো চার্জ নেই ভাই। আপনার ব্যবসার জন্য যেটা পারফেক্ট, সেটাই বেছে নিন।</p>
         </div>
         <div className="grid md:grid-cols-3 gap-8 max-w-6xl mx-auto">
           <div className="p-10 bg-white dark:bg-slate-800 rounded-lg border border-slate-200 dark:border-slate-700 flex flex-col hover:shadow-2xl transition-all">

@@ -5,8 +5,8 @@ export const LandingFeatures: React.FC = () => {
     <section className="py-24 px-6 max-w-7xl mx-auto" id="features">
       <div className="text-center max-w-3xl mx-auto mb-20">
         <span className="text-[#1978e5] font-bold uppercase tracking-widest text-sm mb-4 block">Core Capabilities</span>
-        <h2 className="text-4xl md:text-5xl font-black text-slate-900 dark:text-white leading-tight">Built for daily gym operations</h2>
-        <p className="mt-4 text-slate-600 dark:text-slate-400 text-lg">Record renewals, track dues, and see today's collections from one dashboard designed for gym owners.</p>
+        <h2 className="text-4xl md:text-5xl font-black text-slate-900 dark:text-white leading-tight">আপনার প্রতিদিনের Gym Management-এর জন্য</h2>
+        <p className="mt-4 text-slate-600 dark:text-slate-400 text-lg">হিসাবের খাতা বাদ দিন ভাই। এক Dashboard-এই সব মেম্বার, পেমেন্ট এবং ডিউ ট্র্যাক করুন খুব সহজেই।</p>
       </div>
       <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6">
         <div className="p-8 rounded-lg bg-white dark:bg-slate-800/50 border border-slate-200 dark:border-slate-700 hover:border-[#1978e5] transition-all group">
