@@ -42,13 +42,13 @@ export const BrandLogo: React.FC<BrandLogoProps> = ({
         <>
           <img
             src="/logo.png"
-            alt={displayName}
+            alt={`${displayName} — Gym Management Software Bangladesh`}
             className={`${className} dark:hidden block object-contain`}
             fetchPriority="high"
           />
           <img
             src="/logo-dark.png"
-            alt={displayName}
+            alt={`${displayName} — Gym Management Software Bangladesh`}
             className={`${className} hidden dark:block object-contain`}
             fetchPriority="high"
           />
@@ -56,11 +56,12 @@ export const BrandLogo: React.FC<BrandLogoProps> = ({
       ) : (
         <img
           src={variant === 'light' ? '/logo-dark.png' : '/logo.png'}
-          alt={displayName}
+          alt={`${displayName} — Gym Management Software Bangladesh`}
           className={`${className} object-contain`}
           fetchPriority="high"
         />
       )}
+
       {showText && (
         <span className="text-xl font-bold text-slate-900 dark:text-white">
           {displayName}

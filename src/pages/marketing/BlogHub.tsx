@@ -2,6 +2,7 @@ import React, { useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { BrandLogo } from '../../components/BrandLogo';
 
+
 const BLOG_POSTS = [
   {
     slug: 'open-gym-dhaka-2026',
@@ -55,14 +56,15 @@ export default function BlogHub() {
 
         <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
           {BLOG_POSTS.map(post => (
-            <div key={post.slug} className="bg-white dark:bg-slate-800 rounded-2xl shadow-lg border border-slate-200 dark:border-slate-700 p-6 flex flex-col h-full hover:scale-105 transition-transform cursor-pointer">
+            <Link to={`/blog/${post.slug}`} key={post.slug} className="bg-white dark:bg-slate-800 rounded-2xl shadow-lg border border-slate-200 dark:border-slate-700 p-6 flex flex-col h-full hover:scale-105 transition-transform cursor-pointer hover:shadow-xl">
               <span className="text-xs font-bold text-slate-400 mb-3">{post.date}</span>
               <h2 className="text-xl font-bold mb-3">{post.title}</h2>
               <p className="text-slate-600 dark:text-slate-400 text-sm mb-6 flex-grow">{post.excerpt}</p>
               <span className="text-[#1978e5] font-bold text-sm flex items-center gap-1">Read Article <span className="material-symbols-outlined text-sm">arrow_forward</span></span>
-            </div>
+            </Link>
           ))}
         </div>
+
       </main>
     </div>
   );

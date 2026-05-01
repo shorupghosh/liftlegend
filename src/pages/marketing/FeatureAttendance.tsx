@@ -29,7 +29,7 @@ export default function FeatureAttendance() {
           <span className="text-[#1978e5] font-bold tracking-wider uppercase text-sm">Feature Deep Dive</span>
           <h1 className="text-4xl md:text-6xl font-black mt-2 mb-6">QR Code Gym Attendance in Bangladesh</h1>
           <p className="text-xl text-slate-600 dark:text-slate-400 max-w-2xl mx-auto">
-            100% Mobile Ready. Zero Expensive Hardware Required.
+            100% Mobile Ready. Zero Hardware Required.
           </p>
         </div>
 

@@ -7,6 +7,15 @@ import { LandingTestimonials } from '../components/landing/LandingTestimonials';
 import { enterDemoMode } from '../lib/demoUtils';
 import { BrandLogo } from '../components/BrandLogo';
 
+const FAQ_ITEMS = [
+  { q: 'Do I need to buy any hardware or fingerprint scanner?', a: 'No. LiftLegend is 100% software-based. You can track gym attendance using QR codes on any smartphone or tablet. No expensive turnstiles, fingerprint scanners, or any other hardware are required.' },
+  { q: 'Does LiftLegend support bKash payments?', a: 'Yes. You can log bKash, cash, and card payments directly inside LiftLegend. Each transaction is recorded with the bKash transaction ID, amount, and date so you always have a clean digital record.' },
+  { q: 'Is LiftLegend available in Bangla?', a: 'LiftLegend is designed for gym owners in Bangladesh and all pricing, support, and communication is done in Bangla and English. Our support team is available via WhatsApp during Dhaka business hours.' },
+  { q: 'How much does LiftLegend cost in BDT?', a: 'LiftLegend plans start from ৳ 1,000/month with transparent, upfront pricing shown on our website. There are no hidden setup fees and no "inbox for price" surprises. You can start with a 30-day free trial without a credit card.' },
+  { q: 'Can I manage multiple gym branches?', a: 'Yes. LiftLegend supports multi-branch management. Each branch has its own member database, attendance records, and payment tracking, all accessible from a single owner account.' },
+  { q: 'What happens if I need help setting it up?', a: 'Our team provides personal onboarding support via WhatsApp. Most gyms are fully set up within one hour. We also have demo videos and a live demo mode on our website you can explore before signing up.' },
+];
+
 /** Set page-level SEO meta tags on mount */
 function useLandingSEO() {
   useEffect(() => {
@@ -36,6 +45,29 @@ function useLandingSEO() {
     setOG('og:title', 'LiftLegend — Gym Management Software for Bangladesh');
     setOG('og:description', 'Track members, payments, and attendance. Built for modern gyms in Dhaka, Chittagong, and across Bangladesh. Start free.');
     setOG('og:url', 'https://liftlegend.com/');
+
+    // FAQPage JSON-LD Schema for Google rich results
+    const faqSchema = {
+      '@context': 'https://schema.org',
+      '@type': 'FAQPage',
+      mainEntity: FAQ_ITEMS.map(item => ({
+        '@type': 'Question',
+        name: item.q,
+        acceptedAnswer: { '@type': 'Answer', text: item.a },
+      })),
+    };
+    let faqScript = document.getElementById('faq-schema') as HTMLScriptElement | null;
+    if (!faqScript) {
+      faqScript = document.createElement('script');
+      faqScript.id = 'faq-schema';
+      faqScript.type = 'application/ld+json';
+      document.head.appendChild(faqScript);
+    }
+    faqScript.textContent = JSON.stringify(faqSchema);
+
+    return () => {
+      document.getElementById('faq-schema')?.remove();
+    };
   }, []);
 }
 
@@ -107,8 +139,8 @@ export default function LandingPage() {
                   <span className="material-symbols-outlined text-sm">verified_user</span>
                   Built for Bangladesh gym operations
                 </div>
-                <h1 className="text-4xl sm:text-5xl md:text-6xl font-black leading-[1.1] tracking-tight text-slate-900 dark:text-white">
-                  Stop Losing Money on Expired Memberships. <span className="text-[#1978e5]">Manage Your Gym Without a Khata.</span>
+                <h1 className="text-4xl sm:text-5xl md:text-7xl font-black leading-[1.1] tracking-tight text-slate-900 dark:text-white">
+                  Stop Losing Money on <span className="text-[#1978e5]">Expired Gym Memberships</span>
                 </h1>
                 <p className="text-lg md:text-xl text-slate-600 dark:text-slate-400 leading-relaxed max-w-xl">
                   LiftLegend helps gym owners track members, payments, and renewals without paper records.
@@ -345,6 +377,29 @@ export default function LandingPage() {
             </div>
           </section>
 
+          {/* FAQ Section */}
+          <section className="py-20 px-6 bg-white dark:bg-slate-900/50" id="faq">
+            <div className="max-w-4xl mx-auto">
+              <div className="text-center mb-12">
+                <h2 className="text-3xl md:text-4xl font-black text-slate-900 dark:text-white mb-4">Frequently Asked Questions</h2>
+                <p className="text-slate-600 dark:text-slate-400">Everything gym owners in Bangladesh ask before switching.</p>
+              </div>
+              <div className="space-y-4">
+                {FAQ_ITEMS.map((item, i) => (
+                  <details key={i} className="group bg-slate-50 dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700 overflow-hidden">
+                    <summary className="flex items-center justify-between p-5 cursor-pointer list-none font-bold text-slate-900 dark:text-white hover:text-[#1978e5] transition-colors gap-4">
+                      <span>{item.q}</span>
+                      <span className="material-symbols-outlined flex-shrink-0 text-[#1978e5] group-open:rotate-180 transition-transform duration-200">expand_more</span>
+                    </summary>
+                    <div className="px-5 pb-5 text-slate-600 dark:text-slate-400 leading-relaxed text-sm border-t border-slate-200 dark:border-slate-700 pt-4">
+                      {item.a}
+                    </div>
+                  </details>
+                ))}
+              </div>
+            </div>
+          </section>
+
           {/* CTA Section */}
           <section className="py-20 px-6">
             <div className="max-w-5xl mx-auto bg-[#1978e5] rounded-xl p-10 md:p-20 text-center relative overflow-hidden">
@@ -370,56 +425,7 @@ export default function LandingPage() {
           </section>
         </main>
 
-        {/* FAQ Section */}
-        <section className="py-20 px-6 max-w-4xl mx-auto" id="faq">
-          <h2 className="text-3xl md:text-4xl font-black text-slate-900 dark:text-white text-center mb-12">Frequently Asked Questions</h2>
-          <div className="space-y-6">
-            <div className="bg-white dark:bg-slate-800 rounded-xl p-6 border border-slate-200 dark:border-slate-700 shadow-sm">
-              <h3 className="text-xl font-bold text-slate-900 dark:text-white mb-2">Do I need a fingerprint scanner?</h3>
-              <p className="text-slate-600 dark:text-slate-400">No! LiftLegend is 100% mobile-ready. We use secure QR code attendance which can be scanned using any smartphone or tablet. No expensive hardware is required.</p>
-            </div>
-            <div className="bg-white dark:bg-slate-800 rounded-xl p-6 border border-slate-200 dark:border-slate-700 shadow-sm">
-              <h3 className="text-xl font-bold text-slate-900 dark:text-white mb-2">Can I manage multiple gyms with one account?</h3>
-              <p className="text-slate-600 dark:text-slate-400">Yes, our Pro and Elite plans allow you to easily manage multiple gym branches from a single dashboard, giving you complete visibility into your entire business.</p>
-            </div>
-            <div className="bg-white dark:bg-slate-800 rounded-xl p-6 border border-slate-200 dark:border-slate-700 shadow-sm">
-              <h3 className="text-xl font-bold text-slate-900 dark:text-white mb-2">How long does it take to migrate my current members?</h3>
-              <p className="text-slate-600 dark:text-slate-400">You can migrate your existing member data in minutes. Simply upload your member list, and our system will automatically create profiles and track their active subscriptions.</p>
-            </div>
-          </div>
-          <script type="application/ld+json" dangerouslySetInnerHTML={{
-            __html: JSON.stringify({
-              "@context": "https://schema.org",
-              "@type": "FAQPage",
-              "mainEntity": [
-                {
-                  "@type": "Question",
-                  "name": "Do I need a fingerprint scanner?",
-                  "acceptedAnswer": {
-                    "@type": "Answer",
-                    "text": "No! LiftLegend is 100% mobile-ready. We use secure QR code attendance which can be scanned using any smartphone or tablet. No expensive hardware is required."
-                  }
-                },
-                {
-                  "@type": "Question",
-                  "name": "Can I manage multiple gyms with one account?",
-                  "acceptedAnswer": {
-                    "@type": "Answer",
-                    "text": "Yes, our Pro and Elite plans allow you to easily manage multiple gym branches from a single dashboard, giving you complete visibility into your entire business."
-                  }
-                },
-                {
-                  "@type": "Question",
-                  "name": "How long does it take to migrate my current members?",
-                  "acceptedAnswer": {
-                    "@type": "Answer",
-                    "text": "You can migrate your existing member data in minutes. Simply upload your member list, and our system will automatically create profiles and track their active subscriptions."
-                  }
-                }
-              ]
-            })
-          }} />
-        </section>
+
 
         {/* Footer */}
         <footer className="bg-slate-900 text-slate-400 py-16 px-6 md:px-20">
@@ -445,6 +451,9 @@ export default function LandingPage() {
                 <li><a className="hover:text-[#1978e5] transition-colors" href="#pricing">Pricing</a></li>
                 <li><Link className="hover:text-[#1978e5] transition-colors" to="/book-demo">Book Demo</Link></li>
                 <li><button className="hover:text-[#1978e5] transition-colors text-left" onClick={enterDemoMode}>Explore Live Demo</button></li>
+                <li><Link className="hover:text-[#1978e5] transition-colors" to="/compare/mysoftheaven-alternative">vs MySoftHeaven</Link></li>
+                <li><Link className="hover:text-[#1978e5] transition-colors" to="/features/gym-billing-software-bangladesh">Payment Tracking</Link></li>
+                <li><Link className="hover:text-[#1978e5] transition-colors" to="/features/qr-code-gym-attendance-bangladesh">QR Attendance</Link></li>
               </ul>
             </div>
             <div>

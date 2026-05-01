@@ -29,6 +29,9 @@ const CompareMySoftHeaven = lazy(() => import('./pages/marketing/CompareMySoftHe
 const FeaturePaymentTracking = lazy(() => import('./pages/marketing/FeaturePaymentTracking'));
 const FeatureAttendance = lazy(() => import('./pages/marketing/FeatureAttendance'));
 const BlogHub = lazy(() => import('./pages/marketing/BlogHub'));
+const BlogOpenGymDhaka = lazy(() => import('./pages/marketing/BlogOpenGymDhaka'));
+const BlogGymProfitMargins = lazy(() => import('./pages/marketing/BlogGymProfitMargins'));
+const BlogStopUnpaidMembers = lazy(() => import('./pages/marketing/BlogStopUnpaidMembers'));
 const AdminDashboard = lazy(() => import('./pages/AdminDashboard'));
 const MembersManagement = lazy(() => import('./pages/MembersManagement'));
 const MemberDetail = lazy(() => import('./pages/MemberDetail'));
@@ -78,6 +81,9 @@ export default function App() {
               <Route path="/features/gym-billing-software-bangladesh" element={<FeaturePaymentTracking />} />
               <Route path="/features/qr-code-gym-attendance-bangladesh" element={<FeatureAttendance />} />
               <Route path="/blog" element={<BlogHub />} />
+              <Route path="/blog/open-gym-dhaka-2026" element={<BlogOpenGymDhaka />} />
+              <Route path="/blog/calculate-gym-profit-margins" element={<BlogGymProfitMargins />} />
+              <Route path="/blog/stop-unpaid-gym-members" element={<BlogStopUnpaidMembers />} />
               <Route path="/demo" element={<AdminLayout><AdminDashboard /></AdminLayout>} />
 
               {/* Super Admin Routes */}
