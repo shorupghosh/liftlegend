@@ -16,7 +16,7 @@ export default function BookDemo() {
 
   // You can replace this URL with your actual Calendly, Cal.com, or Google Calendar booking link.
   // We use Calendly here because it automatically handles email notifications to both you and the customer.
-  const CALENDAR_URL = "https://calendly.com/liftlegend2/30min"; 
+  const CALENDAR_URL = "https://cal.com/liftlegend-dmvyjo/30-minute-demo"; 
 
   return (
     <div className="min-h-screen bg-[#f6f7f8] dark:bg-[#111821] text-slate-900 dark:text-slate-100 font-display">
