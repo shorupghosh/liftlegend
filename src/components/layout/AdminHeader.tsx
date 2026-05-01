@@ -126,9 +126,8 @@ export const AdminHeader: React.FC<AdminHeaderProps> = ({
         </div>
       )}
 
-      <div className="flex-1 sm:hidden" />
-
-      <div className="flex-1 sm:hidden">
+      {/* Title for mobile */}
+      <div className="flex-1 sm:hidden min-w-0">
         <h2 className="truncate text-base font-bold text-neutral-text dark:text-white">
           {navItems.find(i => isActive(i.path))?.label || 'Dashboard'}
         </h2>

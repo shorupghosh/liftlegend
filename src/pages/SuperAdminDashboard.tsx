@@ -207,7 +207,61 @@ export default function SuperAdminDashboard() {
               />
             </div>
           ) : (
-            <div className="overflow-x-auto">
+            <>
+            {/* Mobile view */}
+            <div className="sm:hidden divide-y divide-slate-100 dark:divide-slate-800 border-y border-slate-200 dark:border-slate-800">
+              {filteredGyms.map((gym) => (
+                <div key={gym.id} className="p-4 hover:bg-slate-50 dark:hover:bg-slate-800/30 space-y-3 flex flex-col relative">
+                  <div className="flex items-center gap-3">
+                    <div className="flex size-10 shrink-0 items-center justify-center rounded-xl bg-primary-default/10 font-bold text-primary-default">
+                      {gym.name?.charAt(0) || '?'}
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <Link to={`/super-admin/gyms/${gym.id}`} className="text-sm font-bold text-neutral-text hover:text-primary-default dark:text-white truncate block">
+                        {gym.name}
+                      </Link>
+                      <p className="text-xs text-slate-500 truncate">{gym.ownerEmail}</p>
+                    </div>
+                    <div className="shrink-0">
+                      <GymStatusBadge status={gym.status} />
+                    </div>
+                  </div>
+                  
+                  <div className="grid grid-cols-2 gap-2 text-xs pt-2 border-t border-slate-100 dark:border-slate-800/50">
+                    <div>
+                       <p className="text-slate-500 mb-0.5">Plan</p>
+                       <p className="font-semibold text-neutral-text dark:text-white">{gym.subscriptionTier || 'BASIC'}</p>
+                    </div>
+                    <div>
+                       <p className="text-slate-500 mb-0.5">Revenue</p>
+                       <p className="font-semibold text-emerald-600 dark:text-emerald-400">৳{gym.usage.revenueMonth.toLocaleString()}</p>
+                    </div>
+                    <div>
+                       <p className="text-slate-500 mb-0.5">Members</p>
+                       <p className="font-semibold text-neutral-text dark:text-white">{gym.usage.memberCount}</p>
+                    </div>
+                    <div className="flex justify-end items-end">
+                        <GymActionMenu
+                          isBusy={busyGymId === gym.id}
+                          canActivate={gym.status !== 'ACTIVE'}
+                          canSuspend={gym.status !== 'SUSPENDED' && gym.status !== 'DELETED'}
+                          onView={() => navigate(`/super-admin/gyms/${gym.id}`)}
+                          onImpersonate={() => withBusy(gym.id, async () => {
+                            await startImpersonation(gym);
+                            window.location.href = '/admin';
+                          })}
+                          onSuspend={() => openStatusConfirm(gym, 'SUSPENDED')}
+                          onActivate={() => openStatusConfirm(gym, 'ACTIVE')}
+                          onDelete={() => openDeleteConfirm(gym)}
+                        />
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+
+            {/* Desktop view */}
+            <div className="hidden sm:block overflow-x-auto">
               <table className="w-full text-left">
                 <thead className="border-y border-slate-200 bg-slate-50 dark:border-slate-800 dark:bg-slate-800/40">
                   <tr>
@@ -283,6 +337,7 @@ export default function SuperAdminDashboard() {
                 </tbody>
               </table>
             </div>
+            </>
           )}
         </div>
 

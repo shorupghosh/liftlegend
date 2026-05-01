@@ -299,7 +299,43 @@ export default function StaffManagement() {
         ))}
       </div>
 
-      <div className="overflow-hidden rounded-xl border border-slate-200 bg-white shadow-sm dark:border-slate-800 dark:bg-slate-900">
+      <div className="space-y-3 sm:hidden">
+        {loading ? Array.from({ length: 3 }).map((_, i) => (
+          <div key={i} className="animate-pulse rounded-xl border border-slate-200 bg-white p-4 dark:border-slate-800 dark:bg-slate-900">
+            <div className="flex items-center gap-3"><div className="size-9 rounded-full bg-slate-100 dark:bg-slate-800" /><div className="h-3 w-20 bg-slate-100 dark:bg-slate-800" /></div>
+          </div>
+        )) : staffList.length === 0 ? (
+          <div className="rounded-xl border border-slate-200 bg-white p-4 dark:border-slate-800 dark:bg-slate-900">
+            <EmptyState icon="badge" title="No staff yet" description="Invite someone to help manage." />
+          </div>
+        ) : filteredStaff.length === 0 ? (
+          <div className="rounded-xl border border-slate-200 bg-white p-4 dark:border-slate-800 dark:bg-slate-900">
+            <EmptyState icon="search_off" title="No match" description="Try a different name." />
+          </div>
+        ) : (
+          filteredStaff.map((staff) => (
+            <div key={staff.id} className="rounded-xl border border-slate-200 bg-white p-4 shadow-sm dark:border-slate-800 dark:bg-slate-900 space-y-3">
+              <div className="flex items-center gap-3">
+                <div className="flex size-9 items-center justify-center rounded-full bg-primary-default/10 text-sm font-bold text-primary-default">{(staff.display_name?.[0] || 'S').toUpperCase()}</div>
+                <div className="flex-1 min-w-0">
+                  <p className="text-sm font-bold text-neutral-text dark:text-white truncate">{staff.display_name || staff.email}</p>
+                  <p className="text-xs text-slate-500 truncate">{staff.email}</p>
+                </div>
+              </div>
+              <div className="flex gap-2">
+                <StatusBadge label={staff.role} tone={toneFromRole(staff.role)} />
+                <StatusBadge label={staff.status} tone={toneFromStatus(staff.status)} />
+              </div>
+              <div className="flex justify-end gap-2 border-t border-slate-100 dark:border-slate-800 pt-3">
+                <button disabled={!canManageMember(staff)} onClick={() => setEditingStaff(staff)} className="h-9 px-3 rounded-lg border border-slate-200 text-xs font-bold uppercase tracking-wider text-slate-600 hover:bg-slate-100 disabled:opacity-40 transition-colors dark:border-slate-700 dark:text-slate-400 dark:hover:bg-slate-800">Edit Role</button>
+                <button disabled={!canManageMember(staff)} onClick={() => setRemovingStaff(staff)} className="h-9 px-3 rounded-lg border border-red-100 text-xs font-bold uppercase tracking-wider text-red-500 hover:bg-red-50 disabled:opacity-40 transition-colors dark:border-red-900/50 dark:hover:bg-red-900/30">Remove</button>
+              </div>
+            </div>
+          ))
+        )}
+      </div>
+
+      <div className="hidden sm:block overflow-hidden rounded-xl border border-slate-200 bg-white shadow-sm dark:border-slate-800 dark:bg-slate-900">
         <div className="overflow-x-auto">
           <table className="w-full border-collapse text-left min-w-[600px]">
             <thead>

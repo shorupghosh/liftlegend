@@ -279,7 +279,58 @@ export default function RetentionSection({
                 <EmptyState icon="insights" title="No retention alerts" description="Everyone has checked in recently or there is not enough data yet" />
               </div>
             ) : (
-              <div className="overflow-x-auto">
+              <>
+              {/* Mobile View */}
+              <div className="sm:hidden divide-y divide-slate-100 dark:divide-slate-800 border-t border-slate-200 dark:border-slate-800">
+                {members.map((member) => (
+                  <div key={member.id} className="p-4 hover:bg-slate-50 dark:hover:bg-slate-800/30 space-y-3">
+                    <div className="flex items-start justify-between">
+                      <div>
+                        <p className="text-sm font-bold text-neutral-text dark:text-white">{member.name}</p>
+                        <p className="mt-0.5 text-xs text-slate-500">{member.phone || 'No phone saved'}</p>
+                      </div>
+                      <RetentionStatusBadge status={member.status} />
+                    </div>
+                    
+                    <div className="grid grid-cols-2 gap-2 text-xs pt-2 border-t border-slate-100 dark:border-slate-800/50">
+                      <div>
+                        <p className="text-slate-500 mb-0.5">Plan</p>
+                        <div className="flex items-center gap-2">
+                          <p className="font-semibold text-neutral-text dark:text-white truncate">{member.planName}</p>
+                        </div>
+                      </div>
+                      <div>
+                        <p className="text-slate-500 mb-0.5">Last Check-in</p>
+                        <p className="font-semibold text-neutral-text dark:text-white">{formatDisplayDate(member.lastCheckIn)}</p>
+                      </div>
+                      <div className="col-span-2">
+                        <p className="text-slate-500 mb-0.5">Inactivity</p>
+                        <p className="font-semibold text-neutral-text dark:text-white">{member.inactivityDays} days</p>
+                      </div>
+                    </div>
+                    
+                    <div className="flex flex-col gap-2 pt-2 border-t border-slate-100 dark:border-slate-800/50">
+                      <button
+                        type="button"
+                        onClick={() => openReminderModal(member)}
+                        className="inline-flex h-10 w-full items-center justify-center rounded-xl bg-slate-900 px-3 text-xs font-black uppercase tracking-widest text-white transition-colors hover:bg-slate-800 dark:bg-white dark:text-slate-900 dark:hover:bg-slate-100"
+                      >
+                        Send Reminder
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => onCopyReminder(member)}
+                        className="inline-flex h-10 w-full items-center justify-center rounded-xl border border-slate-200 px-3 text-xs font-black uppercase tracking-widest text-slate-600 transition-colors hover:bg-slate-100 dark:border-slate-700 dark:text-slate-300 dark:hover:bg-slate-800"
+                      >
+                        Copy Reminder
+                      </button>
+                    </div>
+                  </div>
+                ))}
+              </div>
+
+              {/* Desktop View */}
+              <div className="hidden sm:block overflow-x-auto">
                 <table className="w-full text-left">
                   <thead className="bg-slate-50 dark:bg-slate-800/50">
                     <tr>
@@ -354,6 +405,7 @@ export default function RetentionSection({
                   </tbody>
                 </table>
               </div>
+              </>
             )}
           </div>
         </div>

@@ -97,7 +97,84 @@ export default function SubscriptionManagement() {
       ) : (
         <div className="grid gap-6 xl:grid-cols-[1.7fr,1fr]">
           <div className="rounded-2xl border border-slate-200 bg-white shadow-sm dark:border-slate-800 dark:bg-slate-900">
-            <div className="overflow-x-auto">
+            <>
+            {/* Mobile View */}
+            <div className="sm:hidden divide-y divide-slate-100 dark:divide-slate-800 border-t border-slate-200 dark:border-slate-800">
+              {filteredGyms.map((gym) => (
+                <div key={gym.id} className="p-4 hover:bg-slate-50 dark:hover:bg-slate-800/30 space-y-3">
+                  <div className="flex items-start justify-between">
+                    <div>
+                      <p className="text-sm font-bold text-neutral-text dark:text-white">{gym.name}</p>
+                      <p className="mt-0.5 text-xs text-slate-500">{gym.ownerEmail || 'Unknown owner'}</p>
+                    </div>
+                    <GymStatusBadge status={gym.status} />
+                  </div>
+                  
+                  <div className="grid grid-cols-2 gap-2 text-xs pt-2 border-t border-slate-100 dark:border-slate-800/50">
+                    <div className="flex flex-col gap-1">
+                      <p className="text-slate-500">Plan</p>
+                      <select
+                        value={gym.subscriptionTier || 'BASIC'}
+                        onChange={async (event) => {
+                          await updateGymSubscription(gym, { tier: event.target.value });
+                          await load();
+                        }}
+                        className="h-8 rounded-lg border border-slate-200 bg-white px-2 text-xs font-semibold outline-none focus:border-primary-default focus:ring-2 focus:ring-primary-default/20 dark:border-slate-700 dark:bg-slate-900"
+                      >
+                        {planOptions.map((plan) => (
+                          <option key={plan} value={plan}>{plan}</option>
+                        ))}
+                      </select>
+                    </div>
+                    <div>
+                      <p className="text-slate-500 mb-0.5">Trial / Billing</p>
+                      <p className="font-semibold text-neutral-text dark:text-white">{gym.trialEndsAt ? `Trial ends ${new Date(gym.trialEndsAt).toLocaleDateString()}` : gym.nextBillingDate ? `Billing ${new Date(gym.nextBillingDate).toLocaleDateString()}` : 'No billing date'}</p>
+                    </div>
+                  </div>
+                  
+                  <div className="flex flex-wrap gap-2 pt-2 border-t border-slate-100 dark:border-slate-800/50">
+                    <button
+                      type="button"
+                      onClick={() => setStatus(gym, 'ACTIVE', 'Reactivate Subscription', `Reactivate ${gym.name} and restore normal access?`)}
+                      className="flex-1 rounded-lg bg-emerald-100 px-3 py-1.5 text-xs font-bold text-emerald-700 transition-colors hover:bg-emerald-200 dark:bg-emerald-900/30 dark:text-emerald-300 text-center"
+                    >
+                      Reactivate
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setStatus(gym, 'SUSPENDED', 'Cancel Subscription', `Suspend ${gym.name} and stop normal gym access?`)}
+                      className="flex-1 rounded-lg bg-red-100 px-3 py-1.5 text-xs font-bold text-red-700 transition-colors hover:bg-red-200 dark:bg-red-900/30 dark:text-red-300 text-center"
+                    >
+                      Cancel
+                    </button>
+                  </div>
+                  <div className="flex flex-wrap gap-2">
+                    <button
+                      type="button"
+                      onClick={async () => {
+                        const nextDate = new Date(gym.trialEndsAt || new Date().toISOString());
+                        nextDate.setDate(nextDate.getDate() + 14);
+                        await updateGymSubscription(gym, { trialEndsAt: nextDate.toISOString() });
+                        await load();
+                      }}
+                      className="flex-1 rounded-lg bg-blue-100 px-3 py-1.5 text-xs font-bold text-blue-700 transition-colors hover:bg-blue-200 dark:bg-blue-900/30 dark:text-blue-300 text-center"
+                    >
+                      Extend Trial
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setHistoryGymId(gym.id)}
+                      className="flex-1 rounded-lg bg-slate-100 px-3 py-1.5 text-xs font-bold text-slate-700 transition-colors hover:bg-slate-200 dark:bg-slate-800 dark:text-slate-300 text-center"
+                    >
+                      History
+                    </button>
+                  </div>
+                </div>
+              ))}
+            </div>
+
+            {/* Desktop View */}
+            <div className="hidden sm:block overflow-x-auto">
               <table className="w-full text-left">
                 <thead className="border-b border-slate-200 bg-slate-50 dark:border-slate-800 dark:bg-slate-800/40">
                   <tr>
@@ -177,6 +254,7 @@ export default function SubscriptionManagement() {
                 </tbody>
               </table>
             </div>
+            </>
           </div>
 
           <div className="rounded-2xl border border-slate-200 bg-white shadow-sm dark:border-slate-800 dark:bg-slate-900">
