@@ -19,9 +19,9 @@ DECLARE
   v_plan_tier TEXT;
   v_address TEXT;
 BEGIN
-  -- Extract sign-up form fields
-  v_gym_name := COALESCE(NEW.raw_user_meta_data->>'gym_name', 'My Gym Workspace');
-  v_plan_tier := COALESCE(NEW.raw_user_meta_data->>'selected_plan_tier', 'ADVANCED');
+  -- Extract sign-up form fields with safe fallbacks
+  v_gym_name := COALESCE(NULLIF(TRIM(NEW.raw_user_meta_data->>'gym_name'), ''), 'My Gym Workspace');
+  v_plan_tier := COALESCE(NULLIF(TRIM(NEW.raw_user_meta_data->>'selected_plan_tier'), ''), 'ADVANCED');
   v_address := COALESCE(NEW.raw_user_meta_data->>'address', '');
 
   -- Security Check: Don't create duplicate roles if one accidentally exists
@@ -32,18 +32,38 @@ BEGIN
   -- System Admin Check
   IF NEW.email = 'admin@gym.com' OR NEW.email LIKE 'admin@%' THEN
     INSERT INTO public.user_roles (user_id, role, display_name)
-    VALUES (NEW.id, 'SUPER_ADMIN'::public.user_role, 'System Admin');
+    VALUES (NEW.id, 'SUPER_ADMIN', 'System Admin');
     RETURN NEW;
   END IF;
 
-  -- Create their exclusive Gym Database Workspace
-  INSERT INTO public.gyms (name, status, subscription_tier, branding)
-  VALUES (v_gym_name, 'ACTIVE', v_plan_tier, jsonb_build_object('address', v_address))
-  RETURNING id INTO v_gym_id;
+  -- Create their exclusive Gym Database Workspace using exact string literals
+  -- This bypasses Postgres errors where a TEXT variable cannot be inserted into an ENUM column.
+  IF v_plan_tier = 'TRIAL' THEN
+    INSERT INTO public.gyms (name, status, subscription_tier, branding)
+    VALUES (v_gym_name, 'ACTIVE', 'TRIAL', jsonb_build_object('address', v_address))
+    RETURNING id INTO v_gym_id;
+  ELSIF v_plan_tier = 'FREE' THEN
+    INSERT INTO public.gyms (name, status, subscription_tier, branding)
+    VALUES (v_gym_name, 'ACTIVE', 'FREE', jsonb_build_object('address', v_address))
+    RETURNING id INTO v_gym_id;
+  ELSIF v_plan_tier = 'BASIC' THEN
+    INSERT INTO public.gyms (name, status, subscription_tier, branding)
+    VALUES (v_gym_name, 'ACTIVE', 'BASIC', jsonb_build_object('address', v_address))
+    RETURNING id INTO v_gym_id;
+  ELSIF v_plan_tier = 'PREMIUM' THEN
+    INSERT INTO public.gyms (name, status, subscription_tier, branding)
+    VALUES (v_gym_name, 'ACTIVE', 'PREMIUM', jsonb_build_object('address', v_address))
+    RETURNING id INTO v_gym_id;
+  ELSE
+    INSERT INTO public.gyms (name, status, subscription_tier, branding)
+    VALUES (v_gym_name, 'ACTIVE', 'ADVANCED', jsonb_build_object('address', v_address))
+    RETURNING id INTO v_gym_id;
+  END IF;
 
   -- Explicitly grant them the 'OWNER' permission role
+  -- Using 'OWNER' literal instead of ::public.user_role prevents schema mismatch crashes
   INSERT INTO public.user_roles (user_id, gym_id, role, display_name)
-  VALUES (NEW.id, v_gym_id, 'OWNER'::public.user_role, COALESCE(NEW.raw_user_meta_data->>'full_name', NEW.email));
+  VALUES (NEW.id, v_gym_id, 'OWNER', COALESCE(NULLIF(TRIM(NEW.raw_user_meta_data->>'full_name'), ''), NEW.email));
 
   RETURN NEW;
 EXCEPTION WHEN OTHERS THEN
