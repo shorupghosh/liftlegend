@@ -127,7 +127,7 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
             {isImpersonating && !isDemoMode && (
                 <div className="relative z-[100] flex flex-wrap items-center justify-between gap-3 border-b border-blue-200 bg-blue-50 px-4 py-2 text-xs font-semibold text-blue-800 dark:border-blue-900/30 dark:bg-blue-950/30 dark:text-blue-200">
                     <div className="flex items-center gap-2">
-                        <span className="material-symbols-outlined text-base">admin_panel_settings</span>
+                        <span className="material-symbols-outlined text-base" aria-hidden="true">admin_panel_settings</span>
                         <span>You are viewing {impersonatedGymName || 'this gym'} as Super Admin.</span>
                     </div>
                     <button
@@ -189,7 +189,7 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
                                 <span
                                     className="material-symbols-outlined text-2xl"
                                     style={active ? { fontVariationSettings: "'FILL' 1, 'wght' 600" } : {}}
-                                >
+                                 aria-hidden="true">
                                     {item.icon}
                                 </span>
                                 <span className={`text-[10px] font-bold tracking-tight ${active ? 'text-primary-default' : ''}`}>
@@ -209,7 +209,7 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
                         }`}
                         aria-label="Toggle more menu"
                     >
-                        <span className="material-symbols-outlined text-2xl">
+                        <span className="material-symbols-outlined text-2xl" aria-hidden="true">
                             {moreMenuOpen ? 'close' : 'more_horiz'}
                         </span>
                         <span className="text-[10px] font-bold tracking-tight">More</span>
@@ -240,7 +240,7 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
                                         <span
                                             className="material-symbols-outlined text-xl"
                                             style={active ? { fontVariationSettings: "'FILL' 1, 'wght' 500" } : {}}
-                                        >
+                                         aria-hidden="true">
                                             {item.icon}
                                         </span>
                                         <span className="text-[11px] font-semibold text-center leading-tight">{item.label}</span>
@@ -252,7 +252,7 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
                                 onClick={() => { setMoreMenuOpen(false); signOut(); }}
                                 className="flex flex-col items-center justify-center gap-1.5 p-3 rounded-xl min-h-[72px] text-red-500 hover:bg-red-50 dark:hover:bg-red-950/30 transition-colors"
                             >
-                                <span className="material-symbols-outlined text-xl">logout</span>
+                                <span className="material-symbols-outlined text-xl" aria-hidden="true">logout</span>
                                 <span className="text-[11px] font-semibold">Sign Out</span>
                             </button>
                         </div>

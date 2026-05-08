@@ -35,7 +35,7 @@ export default function FeatureAttendance() {
 
         <div className="grid md:grid-cols-2 gap-12 items-center mb-20">
           <div className="order-2 md:order-1 bg-white dark:bg-slate-800 p-8 rounded-2xl shadow-xl border border-slate-200 dark:border-slate-700 text-center">
-            <span className="material-symbols-outlined text-8xl text-[#1978e5] mb-4">qr_code_scanner</span>
+            <span className="material-symbols-outlined text-8xl text-[#1978e5] mb-4" aria-hidden="true">qr_code_scanner</span>
             <h3 className="text-2xl font-black mb-2">Scan to Enter</h3>
             <p className="text-slate-500">Trainers just use their smartphones.</p>
           </div>
@@ -46,15 +46,15 @@ export default function FeatureAttendance() {
             </p>
             <ul className="space-y-4">
               <li className="flex items-center gap-3">
-                <span className="material-symbols-outlined text-emerald-500">smartphone</span>
+                <span className="material-symbols-outlined text-emerald-500" aria-hidden="true">smartphone</span>
                 <strong>Scan with any phone:</strong> Works perfectly on cheap Androids.
               </li>
               <li className="flex items-center gap-3">
-                <span className="material-symbols-outlined text-emerald-500">block</span>
+                <span className="material-symbols-outlined text-emerald-500" aria-hidden="true">block</span>
                 <strong>Auto-block unpaid members:</strong> Scanner turns red if they owe money.
               </li>
               <li className="flex items-center gap-3">
-                <span className="material-symbols-outlined text-emerald-500">speed</span>
+                <span className="material-symbols-outlined text-emerald-500" aria-hidden="true">speed</span>
                 <strong>Zero Setup Time:</strong> No waiting for IT technicians.
               </li>
             </ul>

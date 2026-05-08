@@ -73,7 +73,7 @@ export function LandingTestimonials() {
       <div className="max-w-7xl mx-auto relative z-10">
         <div className="text-center max-w-3xl mx-auto mb-16">
           <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-emerald-100 dark:bg-emerald-900/30 text-emerald-600 dark:text-emerald-400 text-xs font-bold uppercase tracking-wider mb-4">
-            <span className="material-symbols-outlined text-sm">stars</span>
+            <span className="material-symbols-outlined text-sm" aria-hidden="true">stars</span>
             Success Stories
           </div>
           <h2 className="text-3xl md:text-5xl font-black text-slate-900 dark:text-white mb-4 tracking-tight">
@@ -96,10 +96,10 @@ export function LandingTestimonials() {
               <div key={review.id} className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-8 shadow-lg shadow-slate-200/50 dark:shadow-none hover:-translate-y-1 transition-transform duration-300">
                 <div className="flex gap-1 text-[#f97316] mb-6">
                   {[...Array(review.rating)].map((_, i) => (
-                    <span key={i} className="material-symbols-outlined text-xl" style={{ fontVariationSettings: "'FILL' 1" }}>star</span>
+                    <span key={i} className="material-symbols-outlined text-xl" style={{ fontVariationSettings: "'FILL' 1" }} aria-hidden="true">star</span>
                   ))}
                   {[...Array(5 - review.rating)].map((_, i) => (
-                    <span key={i} className="material-symbols-outlined text-xl text-slate-200 dark:text-slate-700" style={{ fontVariationSettings: "'FILL' 1" }}>star</span>
+                    <span key={i} className="material-symbols-outlined text-xl text-slate-200 dark:text-slate-700" style={{ fontVariationSettings: "'FILL' 1" }} aria-hidden="true">star</span>
                   ))}
                 </div>
                 

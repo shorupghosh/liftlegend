@@ -18,7 +18,7 @@ export function StatCard({
     <div className="rounded-xl border border-slate-200 bg-white p-5 shadow-sm dark:border-slate-800 dark:bg-slate-900">
       <div className="mb-3 flex items-start justify-between gap-3">
         <div className={`flex size-11 items-center justify-center rounded-xl ${iconClassName}`}>
-          <span className="material-symbols-outlined">{icon}</span>
+          <span className="material-symbols-outlined" aria-hidden="true">{icon}</span>
         </div>
         <TrendBadge trend={trend} />
       </div>

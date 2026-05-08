@@ -111,7 +111,7 @@ export default function CommunicationCenter() {
           onClick={markAllRead}
           className="inline-flex h-11 items-center justify-center gap-2 self-start rounded-xl bg-slate-900 px-5 text-sm font-black uppercase tracking-widest text-white transition-colors hover:bg-slate-800 dark:bg-white dark:text-slate-900 dark:hover:bg-slate-100"
         >
-          <span className="material-symbols-outlined text-lg">done_all</span>
+          <span className="material-symbols-outlined text-lg" aria-hidden="true">done_all</span>
           Mark all as read
         </button>
       </div>
@@ -174,7 +174,7 @@ export default function CommunicationCenter() {
           </div>
         ) : filteredNotifications.length === 0 ? (
           <div className="p-12 text-center text-slate-500">
-            <span className="material-symbols-outlined mb-2 text-5xl text-slate-300 dark:text-slate-600">notifications_off</span>
+            <span className="material-symbols-outlined mb-2 text-5xl text-slate-300 dark:text-slate-600" aria-hidden="true">notifications_off</span>
             <p className="font-medium">No notifications found</p>
           </div>
         ) : (
@@ -191,7 +191,7 @@ export default function CommunicationCenter() {
                 }`}
               >
                 <div className={`mt-0.5 flex size-11 shrink-0 items-center justify-center rounded-full border ${styles.bg} ${styles.color}`}>
-                  <span className="material-symbols-outlined">{styles.icon}</span>
+                  <span className="material-symbols-outlined" aria-hidden="true">{styles.icon}</span>
                 </div>
                 <div className="min-w-0 flex-1">
                   <div className="flex flex-wrap items-center gap-2">
@@ -231,7 +231,7 @@ export default function CommunicationCenter() {
                        onClick={() => handleWhatsAppReminder(notification)}
                        className="inline-flex h-9 items-center gap-1.5 rounded-lg bg-[#25D366] px-3 text-[11px] font-black uppercase tracking-widest text-white transition-colors hover:brightness-110"
                      >
-                       <span className="material-symbols-outlined text-sm">chat</span>
+                       <span className="material-symbols-outlined text-sm" aria-hidden="true">chat</span>
                        WhatsApp
                      </button>
                     ) : (
@@ -240,7 +240,7 @@ export default function CommunicationCenter() {
                       onClick={() => handleCopyReminder(notification)}
                       className="inline-flex h-9 items-center gap-1.5 rounded-lg bg-slate-900 px-3 text-[11px] font-black uppercase tracking-widest text-white transition-colors hover:bg-slate-800 dark:bg-white dark:text-slate-900 dark:hover:bg-slate-100"
                     >
-                      <span className="material-symbols-outlined text-sm">content_copy</span>
+                      <span className="material-symbols-outlined text-sm" aria-hidden="true">content_copy</span>
                       Copy
                     </button>
                     )}

@@ -277,13 +277,13 @@ export default function StaffManagement() {
         </div>
         <div className="flex flex-col sm:flex-row gap-3 w-full md:w-auto">
           <div className="relative flex-1 sm:w-64">
-            <span className="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-lg">search</span>
+            <span className="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-lg" aria-hidden="true">search</span>
             <input type="text" value={searchQuery} onChange={(e) => setSearchQuery(e.target.value)} placeholder="Search staff..." className="w-full h-11 pl-10 pr-4 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl text-sm focus:ring-2 focus:ring-primary-default/20 outline-none transition-all dark:text-white" />
           </div>
           {canInviteStaff(userRole) && (
             <UsageLimitGuard resource="staff">
               <button onClick={() => { resetInviteForm(); setShowInviteModal(true); }} className="inline-flex h-11 items-center justify-center gap-2 rounded-xl bg-primary-default px-5 font-bold text-white shadow-lg shadow-primary-default/20 transition-all hover:brightness-110 active:scale-95">
-                <span className="material-symbols-outlined">person_add</span> Invite Staff
+                <span className="material-symbols-outlined" aria-hidden="true">person_add</span> Invite Staff
               </button>
             </UsageLimitGuard>
           )}

@@ -153,12 +153,12 @@ export default function SubscriptionBilling() {
         {/* ═══ Section 1: Current Plan Card ═══ */}
         <section className="relative overflow-hidden bg-gradient-to-br from-slate-900 via-slate-800 to-primary-default/40 rounded-2xl p-6 sm:p-8 text-white shadow-xl">
           <div className="absolute top-0 right-0 opacity-[0.04] p-4">
-            <span className="material-symbols-outlined text-[160px]">workspace_premium</span>
+            <span className="material-symbols-outlined text-[160px]" aria-hidden="true">workspace_premium</span>
           </div>
           <div className="relative z-10 flex flex-col md:flex-row md:items-center justify-between gap-6">
             <div className="flex items-start gap-5">
               <div className="size-14 rounded-2xl bg-white/10 backdrop-blur-sm flex items-center justify-center shrink-0 border border-white/10">
-                <span className="material-symbols-outlined text-3xl text-white" style={{ fontVariationSettings: "'FILL' 1" }}>
+                <span className="material-symbols-outlined text-3xl text-white" style={{ fontVariationSettings: "'FILL' 1" }} aria-hidden="true">
                   {planDisplay.icon}
                 </span>
               </div>
@@ -170,19 +170,19 @@ export default function SubscriptionBilling() {
                 <p className="text-white/60 text-sm">{planDisplay.description}</p>
                 <div className="flex flex-wrap items-center gap-4 mt-3 text-sm">
                   <div className="flex items-center gap-1.5 text-white/80">
-                    <span className="material-symbols-outlined text-base">payments</span>
+                    <span className="material-symbols-outlined text-base" aria-hidden="true">payments</span>
                     <span className="font-bold">{planDisplay.price}</span>
                     <span className="text-white/50">/month</span>
                   </div>
                   {gym?.next_billing_date && (
                     <div className="flex items-center gap-1.5 text-white/60">
-                      <span className="material-symbols-outlined text-base">event</span>
+                      <span className="material-symbols-outlined text-base" aria-hidden="true">event</span>
                       <span>Renews {new Date(gym.next_billing_date).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}</span>
                     </div>
                   )}
                   {trialDaysLeft !== null && (
                     <div className="flex items-center gap-1.5 text-amber-300">
-                      <span className="material-symbols-outlined text-base">hourglass_top</span>
+                      <span className="material-symbols-outlined text-base" aria-hidden="true">hourglass_top</span>
                       <span className="font-bold">Trial ends on {new Date(gym!.trial_ends_at!).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}</span>
                       <span className="border-l border-white/20 pl-2 ml-1">{trialDaysLeft} days left</span>
                     </div>
@@ -196,7 +196,7 @@ export default function SubscriptionBilling() {
         {/* ═══ Section 1.5: Billing Info ═══ */}
         <section className="bg-white dark:bg-slate-900 rounded-2xl p-6 sm:p-8 shadow-sm border border-slate-200 dark:border-slate-800">
           <h2 className="text-lg font-bold mb-6 flex items-center gap-2 text-neutral-text dark:text-white">
-            <span className="material-symbols-outlined text-primary-default">receipt_long</span>
+            <span className="material-symbols-outlined text-primary-default" aria-hidden="true">receipt_long</span>
             Billing Information
           </h2>
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
@@ -229,7 +229,7 @@ export default function SubscriptionBilling() {
         {/* ═══ Section 2: Usage Overview ═══ */}
         <section className="bg-white dark:bg-slate-900 rounded-2xl p-6 sm:p-8 shadow-sm border border-slate-200 dark:border-slate-800">
           <h2 className="text-lg font-bold mb-6 flex items-center gap-2 text-neutral-text dark:text-white">
-            <span className="material-symbols-outlined text-primary-default">monitoring</span>
+            <span className="material-symbols-outlined text-primary-default" aria-hidden="true">monitoring</span>
             Usage Overview
           </h2>
 
@@ -264,7 +264,7 @@ export default function SubscriptionBilling() {
         {/* ═══ Section 3: Plan Comparison ═══ */}
         <section>
           <h2 className="text-lg font-bold mb-6 flex items-center gap-2 text-neutral-text dark:text-white">
-            <span className="material-symbols-outlined text-primary-default">compare_arrows</span>
+            <span className="material-symbols-outlined text-primary-default" aria-hidden="true">compare_arrows</span>
             Compare Plans
           </h2>
 
@@ -375,7 +375,7 @@ export default function SubscriptionBilling() {
 
         {/* ═══ Info Banner ═══ */}
         <div className="rounded-2xl border border-emerald-200 bg-emerald-50 dark:border-emerald-900/40 dark:bg-emerald-950/20 p-5 flex items-start gap-3">
-          <span className="material-symbols-outlined text-emerald-600 dark:text-emerald-400 text-xl mt-0.5 shrink-0">info</span>
+          <span className="material-symbols-outlined text-emerald-600 dark:text-emerald-400 text-xl mt-0.5 shrink-0" aria-hidden="true">info</span>
           <div>
             <p className="text-sm font-semibold text-emerald-900 dark:text-emerald-200">Online billing is coming soon</p>
             <p className="text-sm text-emerald-700 dark:text-emerald-300 mt-0.5">
@@ -507,11 +507,11 @@ function ChangePlanModal({ currentTier, targetTier, submitting, onConfirm, onClo
         {/* Header */}
         <div className={`px-6 py-6 ${upgrading ? 'bg-gradient-to-br from-primary-default to-blue-700' : 'bg-gradient-to-br from-slate-700 to-slate-800'} text-white relative overflow-hidden`}>
           <div className="absolute top-0 right-0 opacity-[0.06] p-2">
-            <span className="material-symbols-outlined text-[100px]">{upgrading ? 'upgrade' : 'download'}</span>
+            <span className="material-symbols-outlined text-[100px]" aria-hidden="true">{upgrading ? 'upgrade' : 'download'}</span>
           </div>
           <div className="relative z-10">
             <div className="inline-flex items-center gap-2 rounded-full bg-white/15 px-3 py-1 text-[10px] font-black uppercase tracking-widest mb-3">
-              <span className="material-symbols-outlined text-xs">{upgrading ? 'arrow_upward' : 'arrow_downward'}</span>
+              <span className="material-symbols-outlined text-xs" aria-hidden="true">{upgrading ? 'arrow_upward' : 'arrow_downward'}</span>
               {upgrading ? 'Upgrade' : 'Downgrade'}
             </div>
             <h2 className="text-xl font-black tracking-tight">
@@ -534,7 +534,7 @@ function ChangePlanModal({ currentTier, targetTier, submitting, onConfirm, onClo
               <p className="font-bold text-slate-900 dark:text-white text-sm">{currentPlan?.name}</p>
               <p className="text-xs text-slate-500">{currentPlan?.price}/mo</p>
             </div>
-            <span className="material-symbols-outlined text-xl text-primary-default shrink-0">arrow_forward</span>
+            <span className="material-symbols-outlined text-xl text-primary-default shrink-0" aria-hidden="true">arrow_forward</span>
             <div className="flex-1 rounded-xl bg-primary-default/10 dark:bg-primary-default/20 p-3 text-center border border-primary-default/20">
               <p className="text-[10px] font-bold uppercase tracking-widest text-primary-default mb-1">TO</p>
               <p className="font-bold text-slate-900 dark:text-white text-sm">{targetPlan?.name}</p>
@@ -568,7 +568,7 @@ function ChangePlanModal({ currentTier, targetTier, submitting, onConfirm, onClo
               <ul className="space-y-1.5">
                 {newFeatures.map(f => (
                   <li key={f} className="flex items-center gap-2 text-sm text-slate-700 dark:text-slate-300">
-                    <span className="material-symbols-outlined text-sm text-emerald-500" style={{ fontVariationSettings: "'FILL' 1" }}>check_circle</span>
+                    <span className="material-symbols-outlined text-sm text-emerald-500" style={{ fontVariationSettings: "'FILL' 1" }} aria-hidden="true">check_circle</span>
                     {f}
                   </li>
                 ))}
@@ -579,7 +579,7 @@ function ChangePlanModal({ currentTier, targetTier, submitting, onConfirm, onClo
           {/* Downgrade warning */}
           {!upgrading && (
             <div className="rounded-xl border border-amber-200 bg-amber-50 dark:border-amber-900/40 dark:bg-amber-950/20 p-4 flex items-start gap-2">
-              <span className="material-symbols-outlined text-amber-600 text-lg mt-0.5 shrink-0">warning</span>
+              <span className="material-symbols-outlined text-amber-600 text-lg mt-0.5 shrink-0" aria-hidden="true">warning</span>
               <p className="text-sm text-amber-700 dark:text-amber-300">
                 Downgrading may restrict access to some features and reduce your usage limits. If you exceed the new limits, some features will be locked.
               </p>

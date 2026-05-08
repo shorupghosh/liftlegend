@@ -153,7 +153,7 @@ export default function GymSettings() {
         {/* Gym Profile */}
         <section className="bg-white dark:bg-slate-900 rounded-2xl p-6 shadow-sm border border-slate-200 dark:border-slate-800">
           <h2 className="text-lg font-bold mb-5 flex items-center gap-2 text-neutral-text dark:text-white">
-            <span className="material-symbols-outlined text-primary-default">domain</span> Gym Profile
+            <span className="material-symbols-outlined text-primary-default" aria-hidden="true">domain</span> Gym Profile
           </h2>
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
@@ -162,7 +162,7 @@ export default function GymSettings() {
                 <label htmlFor="gym-logo" className="text-sm font-medium text-slate-700 dark:text-slate-300">Logo URL (Optional)</label>
                 {!canAccess('whiteLabel') && (
                   <button onClick={() => openUpgradeModal('whiteLabel')} className="text-[10px] font-bold text-amber-500 bg-amber-50 dark:bg-amber-500/10 px-1.5 py-0.5 rounded flex items-center gap-1 hover:bg-amber-100 transition-colors">
-                    <span className="material-symbols-outlined text-[12px]" style={{ fontVariationSettings: "'FILL' 1" }}>lock</span>
+                    <span className="material-symbols-outlined text-[12px]" style={{ fontVariationSettings: "'FILL' 1" }} aria-hidden="true">lock</span>
                     PREMIUM
                   </button>
                 )}
@@ -172,7 +172,7 @@ export default function GymSettings() {
                   {formData.logo_url ? (
                     <img src={formData.logo_url} alt="Gym Logo" className="w-full h-full object-contain p-2" />
                   ) : (
-                    <span className="material-symbols-outlined text-3xl text-slate-300">image</span>
+                    <span className="material-symbols-outlined text-3xl text-slate-300" aria-hidden="true">image</span>
                   )}
                 </div>
                 <input id="gym-logo" value={formData.logo_url} onChange={(e) => setFormData({ ...formData, logo_url: e.target.value })}
@@ -188,7 +188,7 @@ export default function GymSettings() {
                 <label htmlFor="gym-name" className="text-sm font-medium text-slate-700 dark:text-slate-300">Gym Name</label>
                 {!canAccess('whiteLabel') && (
                   <button onClick={() => openUpgradeModal('whiteLabel')} className="text-[10px] font-bold text-amber-500 bg-amber-50 dark:bg-amber-500/10 px-1.5 py-0.5 rounded flex items-center gap-1 hover:bg-amber-100 transition-colors">
-                    <span className="material-symbols-outlined text-[12px]" style={{ fontVariationSettings: "'FILL' 1" }}>lock</span>
+                    <span className="material-symbols-outlined text-[12px]" style={{ fontVariationSettings: "'FILL' 1" }} aria-hidden="true">lock</span>
                     PREMIUM
                   </button>
                 )}
@@ -218,12 +218,12 @@ export default function GymSettings() {
         {/* Account & Security */}
         <section className="bg-white dark:bg-slate-900 rounded-2xl p-6 shadow-sm border border-slate-200 dark:border-slate-800">
           <h2 className="text-lg font-bold mb-5 flex items-center gap-2 text-neutral-text dark:text-white">
-            <span className="material-symbols-outlined text-primary-default">lock</span> Security
+            <span className="material-symbols-outlined text-primary-default" aria-hidden="true">lock</span> Security
           </h2>
           <div className="flex flex-col sm:flex-row sm:items-center justify-between p-4 bg-slate-50 dark:bg-slate-800/50 rounded-xl border border-slate-200 dark:border-slate-800 gap-4">
             <div className="flex items-center gap-4">
               <div className="size-12 rounded-xl bg-slate-200 dark:bg-slate-700 flex items-center justify-center text-slate-600 dark:text-slate-300">
-                <span className="material-symbols-outlined">key</span>
+                <span className="material-symbols-outlined" aria-hidden="true">key</span>
               </div>
               <div>
                 <p className="font-bold text-neutral-text dark:text-white">Account Password</p>
@@ -244,14 +244,14 @@ export default function GymSettings() {
         <section className="bg-white dark:bg-slate-900 rounded-2xl p-6 shadow-sm border border-slate-200 dark:border-slate-800">
           <div className="flex items-center justify-between mb-5">
             <h2 className="text-lg font-bold flex items-center gap-2 text-neutral-text dark:text-white">
-              <span className="material-symbols-outlined text-primary-default">credit_card</span> Subscription
+              <span className="material-symbols-outlined text-primary-default" aria-hidden="true">credit_card</span> Subscription
             </h2>
             <StatusBadge label={gym?.status || 'UNKNOWN'} tone={toneFromStatus(gym?.status)} />
           </div>
           <div className="flex flex-col md:flex-row md:items-center justify-between p-4 bg-slate-50 dark:bg-slate-800/50 rounded-xl border border-slate-200 dark:border-slate-800 gap-4">
             <div className="flex items-center gap-4">
               <div className="size-12 rounded-xl bg-primary-default/20 flex items-center justify-center text-primary-default">
-                <span className="material-symbols-outlined">workspace_premium</span>
+                <span className="material-symbols-outlined" aria-hidden="true">workspace_premium</span>
               </div>
               <div>
                 <p className="font-bold text-neutral-text dark:text-white">{planName} Plan</p>

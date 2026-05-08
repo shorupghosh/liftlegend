@@ -81,9 +81,9 @@ function LockedFeatureView({ feature, showPreview, onUpgrade, children }: Locked
         <div className="w-full max-w-sm rounded-3xl border border-white/15 bg-white/95 dark:bg-slate-900/95 p-7 text-center shadow-2xl backdrop-blur-xl transition-transform duration-300 group-hover:scale-[1.02]">
           {/* Lock icon */}
           <div className="relative mx-auto mb-5 flex size-16 items-center justify-center rounded-2xl bg-gradient-to-br from-amber-400 to-orange-500 text-white shadow-lg shadow-amber-500/30">
-            <span className="material-symbols-outlined text-3xl" style={{ fontVariationSettings: "'FILL' 1" }}>lock</span>
+            <span className="material-symbols-outlined text-3xl" style={{ fontVariationSettings: "'FILL' 1" }} aria-hidden="true">lock</span>
             <div className="absolute -bottom-1 -right-1 size-6 rounded-full bg-primary-default text-white flex items-center justify-center shadow-md">
-              <span className="material-symbols-outlined text-xs">{meta.icon}</span>
+              <span className="material-symbols-outlined text-xs" aria-hidden="true">{meta.icon}</span>
             </div>
           </div>
 
@@ -102,7 +102,7 @@ function LockedFeatureView({ feature, showPreview, onUpgrade, children }: Locked
 
           {/* Required plan badge */}
           <div className="mt-4 inline-flex items-center gap-2 rounded-full bg-primary-default/10 px-4 py-1.5">
-            <span className="material-symbols-outlined text-sm text-primary-default">{requiredPlanDisplay?.icon || 'bolt'}</span>
+            <span className="material-symbols-outlined text-sm text-primary-default" aria-hidden="true">{requiredPlanDisplay?.icon || 'bolt'}</span>
             <span className="text-xs font-black uppercase tracking-widest text-primary-default">
               {requiredPlanDisplay?.name || 'Advanced'} Plan
             </span>
@@ -154,7 +154,7 @@ export function FeatureGateInline({ feature, children }: FeatureGateInlineProps)
         className="absolute inset-0 z-10 flex items-center justify-center gap-1.5 rounded-xl bg-slate-900/5 hover:bg-slate-900/10 dark:bg-white/5 dark:hover:bg-white/10 transition-colors cursor-pointer"
         title={`Upgrade to ${meta.requiredPlan} to access ${meta.label}`}
       >
-        <span className="material-symbols-outlined text-amber-500 text-sm" style={{ fontVariationSettings: "'FILL' 1" }}>lock</span>
+        <span className="material-symbols-outlined text-amber-500 text-sm" style={{ fontVariationSettings: "'FILL' 1" }} aria-hidden="true">lock</span>
         <span className="text-[10px] font-black uppercase tracking-widest text-slate-600 dark:text-slate-400">{meta.requiredPlan}</span>
       </button>
     </div>

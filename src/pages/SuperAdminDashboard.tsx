@@ -164,7 +164,7 @@ export default function SuperAdminDashboard() {
 
           <div className="flex flex-col gap-3 p-5 lg:flex-row lg:items-center">
             <div className="relative flex-1">
-              <span className="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-slate-400">search</span>
+              <span className="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" aria-hidden="true">search</span>
               <input
                 value={search}
                 onChange={(event) => setSearch(event.target.value)}
@@ -390,7 +390,7 @@ export default function SuperAdminDashboard() {
               </div>
               <Link to="/super-admin/subscriptions" className="inline-flex items-center gap-2 font-bold text-primary-default hover:underline">
                 Manage subscriptions
-                <span className="material-symbols-outlined text-base">arrow_forward</span>
+                <span className="material-symbols-outlined text-base" aria-hidden="true">arrow_forward</span>
               </Link>
             </div>
           </div>

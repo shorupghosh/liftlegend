@@ -22,7 +22,7 @@ const StatCard = React.memo(({ label, value, icon, color, onClick, isLoading }: 
   >
     <div className="flex justify-between items-start mb-2">
       <div className={`p-2 bg-${color}-50 dark:bg-${color}-900/20 rounded-lg text-${color}-600 dark:text-${color}-400`}>
-        <span className="material-symbols-outlined">{icon}</span>
+        <span className="material-symbols-outlined" aria-hidden="true">{icon}</span>
       </div>
     </div>
     <div className="space-y-1">
@@ -129,7 +129,7 @@ export default function BasicDashboard() {
             {metrics.expiringSoon > 0 ? (
                 <div className="p-4 rounded-xl border-l-4 border-amber-500 bg-amber-50 dark:bg-amber-500/10 flex flex-col gap-2">
                     <div className="flex items-center gap-2 text-amber-600">
-                        <span className="material-symbols-outlined">notification_important</span>
+                        <span className="material-symbols-outlined" aria-hidden="true">notification_important</span>
                         <span className="font-bold">{metrics.expiringSoon} Members Expiring Soon</span>
                     </div>
                     <button onClick={() => navigate('/admin/members?status=EXPIRING_SOON')} className="self-start text-xs font-bold text-amber-600 hover:underline">View Members</button>
@@ -142,7 +142,7 @@ export default function BasicDashboard() {
             
             <div className="p-4 rounded-xl border-l-4 border-slate-300 bg-slate-50 dark:bg-slate-800/50 flex flex-col gap-2">
                 <div className="flex items-center gap-2 text-slate-600 dark:text-slate-400">
-                    <span className="material-symbols-outlined">receipt_long</span>
+                    <span className="material-symbols-outlined" aria-hidden="true">receipt_long</span>
                     <span className="font-bold">Payment Due Check</span>
                 </div>
                 <button onClick={() => navigate('/admin/members?status=PAYMENT_DUE')} className="self-start text-xs font-bold text-slate-600 dark:text-slate-400 hover:underline">View Unpaid</button>

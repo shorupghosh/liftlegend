@@ -40,7 +40,7 @@ export default function NotificationDropdown({
         onClick={onToggle}
         className="relative flex size-11 items-center justify-center rounded-xl text-slate-500 transition-colors hover:bg-slate-100 dark:hover:bg-slate-800"
       >
-        <span className="material-symbols-outlined">notifications</span>
+        <span className="material-symbols-outlined" aria-hidden="true">notifications</span>
         {unreadCount > 0 && (
           <>
             <span className="absolute right-1.5 top-1.5 flex min-w-[18px] items-center justify-center rounded-full bg-accent-default px-1.5 text-[10px] font-black text-white">
@@ -61,7 +61,7 @@ export default function NotificationDropdown({
               onClick={onMarkAllRead}
               className="flex items-center gap-1 text-sm font-semibold text-emerald-600 transition-colors hover:text-emerald-700 dark:text-emerald-500"
             >
-              <span className="material-symbols-outlined text-[16px]">done_all</span>
+              <span className="material-symbols-outlined text-[16px]" aria-hidden="true">done_all</span>
               Mark all as read
             </button>
           </div>
@@ -73,7 +73,7 @@ export default function NotificationDropdown({
               </div>
             ) : notifications.length === 0 ? (
               <div className="px-5 py-10 text-center">
-                <span className="material-symbols-outlined text-4xl text-slate-300 dark:text-slate-600">notifications_off</span>
+                <span className="material-symbols-outlined text-4xl text-slate-300 dark:text-slate-600" aria-hidden="true">notifications_off</span>
                 <p className="mt-3 font-bold text-slate-900 dark:text-white">No notifications yet</p>
                 <p className="mt-1 text-sm text-slate-500">New alerts will appear here when action is needed.</p>
               </div>
@@ -90,7 +90,7 @@ export default function NotificationDropdown({
                   }`}
                 >
                   <div className="mt-0.5 flex size-10 shrink-0 items-center justify-center rounded-full border border-slate-200 bg-slate-50 text-slate-600 shadow-sm dark:border-slate-700 dark:bg-slate-800 dark:text-slate-300">
-                    <span className="material-symbols-outlined text-[20px]">{typeIcon(notification.type)}</span>
+                    <span className="material-symbols-outlined text-[20px]" aria-hidden="true">{typeIcon(notification.type)}</span>
                   </div>
                   <div className="min-w-0 flex-1">
                     <div className="mb-1 flex items-start justify-between gap-2">

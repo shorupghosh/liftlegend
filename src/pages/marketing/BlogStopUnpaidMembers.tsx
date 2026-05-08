@@ -66,7 +66,7 @@ export default function BlogStopUnpaidMembers() {
           <div className="space-y-4">
             <div className="flex gap-4 items-start">
               <div className="flex-shrink-0 w-8 h-8 bg-red-100 dark:bg-red-900/30 rounded-full flex items-center justify-center">
-                <span className="material-symbols-outlined text-red-500 text-sm">book</span>
+                <span className="material-symbols-outlined text-red-500 text-sm" aria-hidden="true">book</span>
               </div>
               <div>
                 <p className="font-bold mb-1">Root Cause 1: The Khata Can't Warn You</p>
@@ -75,7 +75,7 @@ export default function BlogStopUnpaidMembers() {
             </div>
             <div className="flex gap-4 items-start">
               <div className="flex-shrink-0 w-8 h-8 bg-red-100 dark:bg-red-900/30 rounded-full flex items-center justify-center">
-                <span className="material-symbols-outlined text-red-500 text-sm">people</span>
+                <span className="material-symbols-outlined text-red-500 text-sm" aria-hidden="true">people</span>
               </div>
               <div>
                 <p className="font-bold mb-1">Root Cause 2: Front Desk Staff Don't Check</p>
@@ -84,7 +84,7 @@ export default function BlogStopUnpaidMembers() {
             </div>
             <div className="flex gap-4 items-start">
               <div className="flex-shrink-0 w-8 h-8 bg-red-100 dark:bg-red-900/30 rounded-full flex items-center justify-center">
-                <span className="material-symbols-outlined text-red-500 text-sm">social_distance</span>
+                <span className="material-symbols-outlined text-red-500 text-sm" aria-hidden="true">social_distance</span>
               </div>
               <div>
                 <p className="font-bold mb-1">Root Cause 3: Social Awkwardness</p>
@@ -187,15 +187,15 @@ export default function BlogStopUnpaidMembers() {
           </p>
           <ul className="space-y-3 mb-6">
             <li className="flex gap-3 items-center">
-              <span className="material-symbols-outlined text-[#1978e5]">table_view</span>
+              <span className="material-symbols-outlined text-[#1978e5]" aria-hidden="true">table_view</span>
               <span className="text-slate-700 dark:text-slate-300"><strong>Expired this week:</strong> A list of every member whose membership lapsed in the last 7 days, sorted by how much they owe.</span>
             </li>
             <li className="flex gap-3 items-center">
-              <span className="material-symbols-outlined text-[#1978e5]">trending_down</span>
+              <span className="material-symbols-outlined text-[#1978e5]" aria-hidden="true">trending_down</span>
               <span className="text-slate-700 dark:text-slate-300"><strong>At-risk members:</strong> Members who have not scanned their QR code in 7+ days — potential churners before they even leave.</span>
             </li>
             <li className="flex gap-3 items-center">
-              <span className="material-symbols-outlined text-[#1978e5]">notifications</span>
+              <span className="material-symbols-outlined text-[#1978e5]" aria-hidden="true">notifications</span>
               <span className="text-slate-700 dark:text-slate-300"><strong>Renewal pipeline:</strong> Members expiring in the next 3, 7, and 14 days — so you can proactively reach out before they slip away.</span>
             </li>
           </ul>

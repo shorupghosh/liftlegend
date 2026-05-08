@@ -41,15 +41,15 @@ export default function FeaturePaymentTracking() {
             </p>
             <ul className="space-y-4">
               <li className="flex items-center gap-3">
-                <span className="material-symbols-outlined text-emerald-500">check_circle</span>
+                <span className="material-symbols-outlined text-emerald-500" aria-hidden="true">check_circle</span>
                 <strong>Track bKash easily:</strong> Log bKash transaction IDs directly.
               </li>
               <li className="flex items-center gap-3">
-                <span className="material-symbols-outlined text-emerald-500">check_circle</span>
+                <span className="material-symbols-outlined text-emerald-500" aria-hidden="true">check_circle</span>
                 <strong>Partial Payments:</strong> Handle split payments seamlessly.
               </li>
               <li className="flex items-center gap-3">
-                <span className="material-symbols-outlined text-emerald-500">check_circle</span>
+                <span className="material-symbols-outlined text-emerald-500" aria-hidden="true">check_circle</span>
                 <strong>Automated Alerts:</strong> See who is due today at a glance.
               </li>
             </ul>

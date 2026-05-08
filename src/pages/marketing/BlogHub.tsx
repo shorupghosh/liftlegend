@@ -60,7 +60,7 @@ export default function BlogHub() {
               <span className="text-xs font-bold text-slate-400 mb-3">{post.date}</span>
               <h2 className="text-xl font-bold mb-3">{post.title}</h2>
               <p className="text-slate-600 dark:text-slate-400 text-sm mb-6 flex-grow">{post.excerpt}</p>
-              <span className="text-[#1978e5] font-bold text-sm flex items-center gap-1">Read Article <span className="material-symbols-outlined text-sm">arrow_forward</span></span>
+              <span className="text-[#1978e5] font-bold text-sm flex items-center gap-1">Read Article <span className="material-symbols-outlined text-sm" aria-hidden="true">arrow_forward</span></span>
             </Link>
           ))}
         </div>

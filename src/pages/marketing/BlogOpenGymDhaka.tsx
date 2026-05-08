@@ -157,7 +157,7 @@ export default function BlogOpenGymDhaka() {
                 <ul className="space-y-1">
                   {section.items.map(item => (
                     <li key={item} className="flex items-center gap-2 text-sm text-slate-600 dark:text-slate-400">
-                      <span className="material-symbols-outlined text-emerald-500 text-sm">check</span>
+                      <span className="material-symbols-outlined text-emerald-500 text-sm" aria-hidden="true">check</span>
                       {item}
                     </li>
                   ))}
@@ -212,9 +212,9 @@ export default function BlogOpenGymDhaka() {
             The biggest mistake new gym owners make is managing members in a notebook or WhatsApp group. You will lose money — guaranteed. Here is why digital management from Day 1 is critical:
           </p>
           <ul className="space-y-3 mb-6">
-            <li className="flex gap-3"><span className="material-symbols-outlined text-red-400">cancel</span><span className="text-slate-600 dark:text-slate-400"><strong>With a Khata:</strong> You forget who expired 3 days ago. 5–10% of members work out for free every month.</span></li>
-            <li className="flex gap-3"><span className="material-symbols-outlined text-red-400">cancel</span><span className="text-slate-600 dark:text-slate-400"><strong>With WhatsApp:</strong> bKash payments get mixed up. You can't tell if someone paid for 1 month or 3.</span></li>
-            <li className="flex gap-3"><span className="material-symbols-outlined text-emerald-500">check_circle</span><span className="text-slate-600 dark:text-slate-400"><strong>With LiftLegend:</strong> Every member has a digital file. Automated alerts fire 3 days before expiry. bKash transactions are logged with IDs. You see today's revenue in one tap.</span></li>
+            <li className="flex gap-3"><span className="material-symbols-outlined text-red-400" aria-hidden="true">cancel</span><span className="text-slate-600 dark:text-slate-400"><strong>With a Khata:</strong> You forget who expired 3 days ago. 5–10% of members work out for free every month.</span></li>
+            <li className="flex gap-3"><span className="material-symbols-outlined text-red-400" aria-hidden="true">cancel</span><span className="text-slate-600 dark:text-slate-400"><strong>With WhatsApp:</strong> bKash payments get mixed up. You can't tell if someone paid for 1 month or 3.</span></li>
+            <li className="flex gap-3"><span className="material-symbols-outlined text-emerald-500" aria-hidden="true">check_circle</span><span className="text-slate-600 dark:text-slate-400"><strong>With LiftLegend:</strong> Every member has a digital file. Automated alerts fire 3 days before expiry. bKash transactions are logged with IDs. You see today's revenue in one tap.</span></li>
           </ul>
           <p className="text-slate-600 dark:text-slate-400 leading-relaxed">
             Software like LiftLegend starts at under ৳ 1,500/month — less than one member's fee. The ROI from stopping payment leakage alone pays for it in Week 1.

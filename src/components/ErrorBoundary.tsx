@@ -33,7 +33,7 @@ export class ErrorBoundary extends React.Component<ErrorBoundaryProps, ErrorBoun
                 <div className="min-h-screen bg-slate-50 dark:bg-slate-950 flex items-center justify-center p-6">
                     <div className="max-w-md w-full text-center">
                         <div className="inline-flex items-center justify-center size-16 rounded-2xl bg-red-100 dark:bg-red-950/30 text-red-500 mb-6">
-                            <span className="material-symbols-outlined text-4xl">error</span>
+                            <span className="material-symbols-outlined text-4xl" aria-hidden="true">error</span>
                         </div>
                         <h1 className="text-2xl font-display font-extrabold text-neutral-text dark:text-white mb-2">Something went wrong</h1>
                         <p className="text-slate-500 text-sm mb-6">

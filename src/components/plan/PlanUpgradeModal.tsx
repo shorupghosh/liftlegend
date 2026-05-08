@@ -61,19 +61,19 @@ export default function PlanUpgradeModal() {
           className="absolute top-4 right-4 z-10 size-9 flex items-center justify-center rounded-full bg-white/10 text-white hover:bg-white/20 transition-colors"
           aria-label="Close"
         >
-          <span className="material-symbols-outlined text-xl">close</span>
+          <span className="material-symbols-outlined text-xl" aria-hidden="true">close</span>
         </button>
 
         {/* Header */}
         <div className="relative overflow-hidden bg-gradient-to-br from-slate-950 via-slate-900 to-primary-default px-6 sm:px-8 py-8 text-white">
           <div className="absolute top-0 right-0 opacity-5 p-6">
-            <span className="material-symbols-outlined text-[120px]">workspace_premium</span>
+            <span className="material-symbols-outlined text-[120px]" aria-hidden="true">workspace_premium</span>
           </div>
 
           <div className="relative z-10">
             {featureMeta && (
               <div className="inline-flex items-center gap-2 rounded-full bg-white/10 px-3 py-1.5 text-xs font-bold tracking-wider text-white/80 mb-4">
-                <span className="material-symbols-outlined text-sm text-amber-400" style={{ fontVariationSettings: "'FILL' 1" }}>lock</span>
+                <span className="material-symbols-outlined text-sm text-amber-400" style={{ fontVariationSettings: "'FILL' 1" }} aria-hidden="true">lock</span>
                 <span>Feature requires upgrade</span>
               </div>
             )}
@@ -201,7 +201,7 @@ export default function PlanUpgradeModal() {
 
           {/* Info banner */}
           <div className="mt-6 rounded-2xl border border-emerald-200 bg-emerald-50 dark:border-emerald-900/40 dark:bg-emerald-950/20 p-4 flex items-start gap-3">
-            <span className="material-symbols-outlined text-emerald-600 dark:text-emerald-400 text-xl mt-0.5 shrink-0">info</span>
+            <span className="material-symbols-outlined text-emerald-600 dark:text-emerald-400 text-xl mt-0.5 shrink-0" aria-hidden="true">info</span>
             <div>
               <p className="text-sm font-semibold text-emerald-900 dark:text-emerald-200">
                 No payment integration yet

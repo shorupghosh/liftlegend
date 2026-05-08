@@ -132,7 +132,7 @@ export default function SystemHealth() {
                     {services.map((service) => (
                         <div key={service.name} className="p-4 flex items-center gap-4 hover:bg-slate-50 dark:hover:bg-slate-800/30 transition-colors">
                             <div className="size-10 rounded-xl bg-slate-100 dark:bg-slate-800 flex items-center justify-center text-slate-600 dark:text-slate-400">
-                                <span className="material-symbols-outlined">{service.icon}</span>
+                                <span className="material-symbols-outlined" aria-hidden="true">{service.icon}</span>
                             </div>
                             <div className="flex-1">
                                 <p className="font-semibold text-sm text-neutral-text dark:text-white">{service.name}</p>

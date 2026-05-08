@@ -19,7 +19,7 @@ function EmptyStateLocal({ title, message }: { title: string; message: string })
   return (
     <div className="flex flex-col items-center justify-center rounded-2xl border border-dashed border-slate-700 bg-slate-950/40 px-6 py-10 text-center">
       <div className="mb-3 flex size-12 items-center justify-center rounded-2xl bg-slate-800 text-slate-400">
-        <span className="material-symbols-outlined">insights</span>
+        <span className="material-symbols-outlined" aria-hidden="true">insights</span>
       </div>
       <p className="text-base font-bold text-white">{title}</p>
       <p className="mt-2 max-w-xs text-sm text-slate-400">{message}</p>
@@ -44,7 +44,7 @@ function RetentionSummaryCard({
     <div className="rounded-xl border border-slate-200 bg-white p-5 shadow-sm dark:border-slate-800 dark:bg-slate-900">
       <div className="mb-3 flex items-center gap-3">
         <div className={`flex size-10 items-center justify-center rounded-xl ${iconClassName}`}>
-          <span className="material-symbols-outlined">{icon}</span>
+          <span className="material-symbols-outlined" aria-hidden="true">{icon}</span>
         </div>
         <div>
           <p className="text-sm font-bold text-neutral-text dark:text-white">{title}</p>
@@ -111,7 +111,7 @@ function ReminderActionModal({
               onClick={onClose}
               className="flex size-10 items-center justify-center rounded-xl text-slate-400 transition-colors hover:bg-slate-100 hover:text-slate-700 dark:hover:bg-slate-800 dark:hover:text-white"
             >
-              <span className="material-symbols-outlined">close</span>
+              <span className="material-symbols-outlined" aria-hidden="true">close</span>
             </button>
           </div>
         </div>
@@ -260,7 +260,7 @@ export default function RetentionSection({
               <div className="space-y-3">
                 {insights.map((insight) => (
                   <div key={insight} className="flex items-start gap-3 rounded-2xl border border-slate-800 bg-slate-950/60 px-4 py-3">
-                    <span className="material-symbols-outlined mt-0.5 text-base text-primary-default">notifications_active</span>
+                    <span className="material-symbols-outlined mt-0.5 text-base text-primary-default" aria-hidden="true">notifications_active</span>
                     <p className="text-sm font-medium text-slate-200">{insight}</p>
                   </div>
                 ))}

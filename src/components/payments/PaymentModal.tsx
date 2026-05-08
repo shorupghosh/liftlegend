@@ -69,7 +69,7 @@ export const PaymentModal: React.FC<PaymentModalProps> = ({
             className="rounded-lg p-2 text-slate-400 transition-colors hover:bg-slate-100 dark:hover:bg-slate-800"
             aria-label="Close modal"
           >
-            <span className="material-symbols-outlined">close</span>
+            <span className="material-symbols-outlined" aria-hidden="true">close</span>
           </button>
         </div>
 
@@ -202,7 +202,7 @@ export const PaymentModal: React.FC<PaymentModalProps> = ({
 
           {formData.end_date && formData.start_date && formData.end_date < formData.start_date && (
             <p className="flex items-center gap-1 text-xs font-medium text-red-500">
-              <span className="material-symbols-outlined text-sm">warning</span>
+              <span className="material-symbols-outlined text-sm" aria-hidden="true">warning</span>
               End date must be after start date.
             </p>
           )}

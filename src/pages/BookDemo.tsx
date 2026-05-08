@@ -27,7 +27,7 @@ export default function BookDemo() {
             <BrandLogo className="h-14 sm:h-16 w-auto object-contain mx-auto" variant="auto" />
           </Link>
           <Link to="/" className="text-sm font-semibold text-slate-600 dark:text-slate-300 hover:text-[#1978e5] transition-colors flex items-center gap-1">
-            <span className="material-symbols-outlined text-sm">arrow_back</span>
+            <span className="material-symbols-outlined text-sm" aria-hidden="true">arrow_back</span>
             Back to Home
           </Link>
         </div>
@@ -38,7 +38,7 @@ export default function BookDemo() {
           {/* Left: Info */}
           <div className="flex flex-col gap-6 lg:col-span-2 pt-4">
             <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-[#1978e5]/10 border border-[#1978e5]/20 text-[#1978e5] text-xs font-bold uppercase tracking-wider w-fit">
-              <span className="material-symbols-outlined text-sm">event</span>
+              <span className="material-symbols-outlined text-sm" aria-hidden="true">event</span>
               30-Minute Demo Session
             </div>
             <h1 className="text-3xl md:text-5xl font-black leading-tight tracking-tight text-slate-900 dark:text-white">
@@ -56,7 +56,7 @@ export default function BookDemo() {
               ].map((item) => (
                 <div key={item.label} className="flex items-center gap-3">
                   <div className="size-10 rounded-xl bg-green-100 dark:bg-green-900/20 flex items-center justify-center text-green-600">
-                    <span className="material-symbols-outlined text-lg">{item.icon}</span>
+                    <span className="material-symbols-outlined text-lg" aria-hidden="true">{item.icon}</span>
                   </div>
                   <span className="text-sm font-medium text-slate-700 dark:text-slate-300">{item.label}</span>
                 </div>

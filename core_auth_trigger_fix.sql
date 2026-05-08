@@ -37,8 +37,8 @@ BEGIN
   END IF;
 
   -- Create their exclusive Gym Database Workspace
-  INSERT INTO public.gyms (name, status, subscription_tier, address)
-  VALUES (v_gym_name, 'ACTIVE', v_plan_tier, v_address)
+  INSERT INTO public.gyms (name, status, subscription_tier, branding)
+  VALUES (v_gym_name, 'ACTIVE', v_plan_tier, jsonb_build_object('address', v_address))
   RETURNING id INTO v_gym_id;
 
   -- Explicitly grant them the 'OWNER' permission role
@@ -47,8 +47,9 @@ BEGIN
 
   RETURN NEW;
 EXCEPTION WHEN OTHERS THEN
-  -- Standardize failsafe to keep transactions clean
-  RETURN NEW;
+  -- Instead of silently returning NEW (which creates orphaned users),
+  -- we raise the error so the signup transaction is rolled back and the user can try again.
+  RAISE EXCEPTION 'Failed to create gym/role during signup: %', SQLERRM;
 END;
 $$;
 
@@ -83,11 +84,12 @@ BEGIN
             INSERT INTO public.user_roles (user_id, role, display_name)
             VALUES (u_record.id, 'SUPER_ADMIN'::public.user_role, COALESCE(u_record.raw_user_meta_data->>'full_name', 'System Admin'));
         ELSE
-            INSERT INTO public.gyms (name, status, subscription_tier)
+            INSERT INTO public.gyms (name, status, subscription_tier, branding)
             VALUES (
                 COALESCE(u_record.raw_user_meta_data->>'gym_name', 'My Gym Workspace'), 
                 'ACTIVE', 
-                'ADVANCED'
+                'ADVANCED',
+                jsonb_build_object('address', COALESCE(u_record.raw_user_meta_data->>'address', ''))
             )
             RETURNING id INTO v_gym_id;
 

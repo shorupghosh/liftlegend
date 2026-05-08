@@ -163,7 +163,7 @@ export default function BlogGymProfitMargins() {
             <div className="bg-white dark:bg-slate-800 rounded-2xl border border-slate-200 dark:border-slate-700 p-6">
               <div className="flex items-start gap-4">
                 <div className="flex-shrink-0 w-10 h-10 rounded-full bg-emerald-100 dark:bg-emerald-900/30 flex items-center justify-center">
-                  <span className="material-symbols-outlined text-emerald-600">notifications_active</span>
+                  <span className="material-symbols-outlined text-emerald-600" aria-hidden="true">notifications_active</span>
                 </div>
                 <div>
                   <h3 className="text-lg font-black mb-2">Lever 1: Automated Renewal Reminders (+8–12% Revenue)</h3>
@@ -176,7 +176,7 @@ export default function BlogGymProfitMargins() {
             <div className="bg-white dark:bg-slate-800 rounded-2xl border border-slate-200 dark:border-slate-700 p-6">
               <div className="flex items-start gap-4">
                 <div className="flex-shrink-0 w-10 h-10 rounded-full bg-blue-100 dark:bg-blue-900/30 flex items-center justify-center">
-                  <span className="material-symbols-outlined text-blue-600">trending_up</span>
+                  <span className="material-symbols-outlined text-blue-600" aria-hidden="true">trending_up</span>
                 </div>
                 <div>
                   <h3 className="text-lg font-black mb-2">Lever 2: Annual/Quarterly Upfront Plans (+15% Cash Flow)</h3>
@@ -189,7 +189,7 @@ export default function BlogGymProfitMargins() {
             <div className="bg-white dark:bg-slate-800 rounded-2xl border border-slate-200 dark:border-slate-700 p-6">
               <div className="flex items-start gap-4">
                 <div className="flex-shrink-0 w-10 h-10 rounded-full bg-orange-100 dark:bg-orange-900/30 flex items-center justify-center">
-                  <span className="material-symbols-outlined text-orange-600">lock</span>
+                  <span className="material-symbols-outlined text-orange-600" aria-hidden="true">lock</span>
                 </div>
                 <div>
                   <h3 className="text-lg font-black mb-2">Lever 3: Stop Free Entry for Expired Members (+5–10%)</h3>

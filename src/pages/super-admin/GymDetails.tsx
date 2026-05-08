@@ -61,7 +61,7 @@ export default function GymDetails() {
       <div className="flex flex-col gap-4 md:flex-row md:items-start md:justify-between">
         <div>
           <Link to="/super-admin" className="inline-flex items-center gap-2 text-sm font-bold text-primary-default hover:underline">
-            <span className="material-symbols-outlined text-base">arrow_back</span>
+            <span className="material-symbols-outlined text-base" aria-hidden="true">arrow_back</span>
             Back to Platform Overview
           </Link>
           <div className="mt-3 flex flex-wrap items-center gap-3">

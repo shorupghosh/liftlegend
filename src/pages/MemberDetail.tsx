@@ -227,7 +227,7 @@ export default function MemberDetail() {
                             className="size-9 rounded-xl bg-white/15 backdrop-blur-sm flex items-center justify-center text-white hover:bg-white/25 transition-colors shrink-0 mt-1"
                             aria-label="Back to members"
                         >
-                            <span className="material-symbols-outlined text-lg">arrow_back</span>
+                            <span className="material-symbols-outlined text-lg" aria-hidden="true">arrow_back</span>
                         </button>
                         <div className="flex flex-col sm:flex-row sm:items-center gap-4 flex-1 min-w-0">
                             <div className="size-16 sm:size-20 rounded-2xl bg-white/20 backdrop-blur-sm flex items-center justify-center text-white text-3xl sm:text-4xl font-black shrink-0">
@@ -263,7 +263,7 @@ export default function MemberDetail() {
                                 onClick={() => { setEditing(true); setActiveTab('info'); }}
                                 className="flex items-center gap-1.5 h-9 px-4 rounded-xl bg-white/15 backdrop-blur-sm text-white text-sm font-bold hover:bg-white/25 transition-colors"
                             >
-                                <span className="material-symbols-outlined text-sm">edit</span>
+                                <span className="material-symbols-outlined text-sm" aria-hidden="true">edit</span>
                                 Edit
                             </button>
                             <button
@@ -290,7 +290,7 @@ export default function MemberDetail() {
                                 : 'text-slate-500 hover:text-slate-700 dark:hover:text-slate-300'
                                 }`}
                         >
-                            <span className="material-symbols-outlined text-lg">{tab.icon}</span>
+                            <span className="material-symbols-outlined text-lg" aria-hidden="true">{tab.icon}</span>
                             <span className="hidden xs:inline">{tab.label}</span>
                             {tab.count !== undefined && tab.count > 0 && (
                                 <span className="inline-flex items-center justify-center min-w-[20px] h-5 px-1.5 rounded-full bg-slate-200 dark:bg-slate-700 text-[10px] font-bold text-slate-600 dark:text-slate-300">
@@ -311,7 +311,7 @@ export default function MemberDetail() {
                     onClick={() => { setEditing(true); setActiveTab('info'); }}
                     className="flex-1 flex items-center justify-center gap-1.5 h-11 rounded-xl bg-slate-100 dark:bg-slate-800 text-sm font-bold text-slate-600 dark:text-slate-300 hover:bg-slate-200 transition-colors"
                 >
-                    <span className="material-symbols-outlined text-sm">edit</span> Edit
+                    <span className="material-symbols-outlined text-sm" aria-hidden="true">edit</span> Edit
                 </button>
                 <button
                     onClick={() => setShowStatusConfirm(true)}
@@ -333,7 +333,7 @@ export default function MemberDetail() {
                         <div className="bg-white dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-800 shadow-sm overflow-hidden">
                             <div className="px-5 py-4 border-b border-slate-200 dark:border-slate-800 flex items-center justify-between">
                                 <h3 className="font-bold text-neutral-text dark:text-white flex items-center gap-2">
-                                    <span className="material-symbols-outlined text-primary-default text-xl">badge</span>
+                                    <span className="material-symbols-outlined text-primary-default text-xl" aria-hidden="true">badge</span>
                                     Personal Details
                                 </h3>
                                 {!editing && (
@@ -341,7 +341,7 @@ export default function MemberDetail() {
                                         onClick={() => setEditing(true)}
                                         className="text-xs text-primary-default font-bold hover:underline flex items-center gap-1"
                                     >
-                                        <span className="material-symbols-outlined text-sm">edit</span>
+                                        <span className="material-symbols-outlined text-sm" aria-hidden="true">edit</span>
                                         Edit
                                     </button>
                                 )}
@@ -358,7 +358,7 @@ export default function MemberDetail() {
                                         <div key={f.key}>
                                             <label htmlFor={`detail-${f.key}`} className="text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">{f.label}</label>
                                             <div className="relative mt-1.5">
-                                                <span className="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-lg">{f.icon}</span>
+                                                <span className="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-lg" aria-hidden="true">{f.icon}</span>
                                                 <input
                                                     id={`detail-${f.key}`}
                                                     type={f.type}
@@ -388,7 +388,7 @@ export default function MemberDetail() {
                                     ].map(item => (
                                         <div key={item.label} className="flex items-center gap-3">
                                             <div className="size-9 rounded-lg bg-slate-100 dark:bg-slate-800 flex items-center justify-center shrink-0">
-                                                <span className="material-symbols-outlined text-slate-500 text-lg">{item.icon}</span>
+                                                <span className="material-symbols-outlined text-slate-500 text-lg" aria-hidden="true">{item.icon}</span>
                                             </div>
                                             <div className="min-w-0">
                                                 <p className="text-[10px] text-slate-400 uppercase font-bold tracking-wider">{item.label}</p>
@@ -404,7 +404,7 @@ export default function MemberDetail() {
                         <div className="bg-white dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-800 shadow-sm overflow-hidden">
                             <div className="px-5 py-4 border-b border-slate-200 dark:border-slate-800">
                                 <h3 className="font-bold text-neutral-text dark:text-white flex items-center gap-2">
-                                    <span className="material-symbols-outlined text-primary-default text-xl">card_membership</span>
+                                    <span className="material-symbols-outlined text-primary-default text-xl" aria-hidden="true">card_membership</span>
                                     Membership
                                 </h3>
                             </div>
@@ -419,7 +419,7 @@ export default function MemberDetail() {
                                 ].map(item => (
                                     <div key={item.label} className="flex items-center gap-3">
                                         <div className="size-9 rounded-lg bg-slate-100 dark:bg-slate-800 flex items-center justify-center shrink-0">
-                                            <span className="material-symbols-outlined text-slate-500 text-lg">{item.icon}</span>
+                                            <span className="material-symbols-outlined text-slate-500 text-lg" aria-hidden="true">{item.icon}</span>
                                         </div>
                                         <div className="flex-1 min-w-0">
                                             <p className="text-[10px] text-slate-400 uppercase font-bold tracking-wider">{item.label}</p>
@@ -451,7 +451,7 @@ export default function MemberDetail() {
                         <div className="lg:col-span-2 bg-white dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-800 shadow-sm overflow-hidden">
                             <div className="px-5 py-4 border-b border-slate-200 dark:border-slate-800 flex items-center justify-between">
                                 <h3 className="font-bold text-neutral-text dark:text-white flex items-center gap-2">
-                                    <span className="material-symbols-outlined text-primary-default text-xl">qr_code_2</span>
+                                    <span className="material-symbols-outlined text-primary-default text-xl" aria-hidden="true">qr_code_2</span>
                                     Member QR Code
                                 </h3>
                                 {member.qr_generated_at && (
@@ -467,7 +467,7 @@ export default function MemberDetail() {
                                         </div>
                                     ) : (
                                         <div className="size-40 sm:size-48 bg-slate-100 dark:bg-slate-800 rounded-xl flex items-center justify-center">
-                                            <span className="material-symbols-outlined text-5xl text-slate-300 dark:text-slate-600">qr_code</span>
+                                            <span className="material-symbols-outlined text-5xl text-slate-300 dark:text-slate-600" aria-hidden="true">qr_code</span>
                                         </div>
                                     )}
                                 </div>
@@ -493,7 +493,7 @@ export default function MemberDetail() {
                                             disabled={!member.qr_code_value}
                                             className="flex items-center gap-1.5 h-9 px-4 rounded-xl bg-emerald-600 text-white text-sm font-bold hover:brightness-110 transition-all shadow-sm disabled:opacity-40"
                                         >
-                                            <span className="material-symbols-outlined text-sm">download</span>
+                                            <span className="material-symbols-outlined text-sm" aria-hidden="true">download</span>
                                             Download
                                         </button>
                                         <button
@@ -504,7 +504,7 @@ export default function MemberDetail() {
                                             {isRegenerating ? (
                                                 <div className="size-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
                                             ) : (
-                                                <span className="material-symbols-outlined text-sm">refresh</span>
+                                                <span className="material-symbols-outlined text-sm" aria-hidden="true">refresh</span>
                                             )}
                                             Regenerate
                                         </button>
@@ -513,7 +513,7 @@ export default function MemberDetail() {
                                             className="flex items-center gap-1.5 h-9 px-4 rounded-xl bg-slate-200 dark:bg-slate-700 text-slate-500 dark:text-slate-400 text-sm font-bold cursor-not-allowed"
                                             title="Coming soon"
                                         >
-                                            <span className="material-symbols-outlined text-sm">send</span>
+                                            <span className="material-symbols-outlined text-sm" aria-hidden="true">send</span>
                                             Send QR
                                         </button>
                                     </div>
@@ -531,7 +531,7 @@ export default function MemberDetail() {
                                 <div key={stat.label} className="bg-white dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-800 shadow-sm p-4 sm:p-5">
                                     <div className="flex items-center gap-3">
                                         <div className={`size-10 rounded-xl flex items-center justify-center ${stat.color}`}>
-                                            <span className="material-symbols-outlined text-xl">{stat.icon}</span>
+                                            <span className="material-symbols-outlined text-xl" aria-hidden="true">{stat.icon}</span>
                                         </div>
                                         <div>
                                             <p className="text-[10px] sm:text-xs text-slate-400 uppercase font-bold tracking-wider">{stat.label}</p>
@@ -549,7 +549,7 @@ export default function MemberDetail() {
                     <div className="bg-white dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-800 shadow-sm overflow-hidden">
                         <div className="px-5 py-4 border-b border-slate-200 dark:border-slate-800 flex items-center justify-between">
                             <h3 className="font-bold text-neutral-text dark:text-white flex items-center gap-2">
-                                <span className="material-symbols-outlined text-primary-default text-xl">receipt_long</span>
+                                <span className="material-symbols-outlined text-primary-default text-xl" aria-hidden="true">receipt_long</span>
                                 Payment History
                             </h3>
                             <span className="text-xs text-slate-500 font-medium">{payments.length} records</span>
@@ -558,7 +558,7 @@ export default function MemberDetail() {
                         {payments.length === 0 ? (
                             <div className="p-12 text-center">
                                 <div className="size-16 mx-auto rounded-2xl bg-slate-100 dark:bg-slate-800 flex items-center justify-center mb-4">
-                                    <span className="material-symbols-outlined text-3xl text-slate-400">payments</span>
+                                    <span className="material-symbols-outlined text-3xl text-slate-400" aria-hidden="true">payments</span>
                                 </div>
                                 <p className="text-slate-500 font-medium">No payment records</p>
                                 <p className="text-xs text-slate-400 mt-1">Payment history will appear here once payments are made.</p>
@@ -641,7 +641,7 @@ export default function MemberDetail() {
                             <div className="bg-white dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-800 shadow-sm p-4 sm:p-5">
                                 <div className="flex items-center gap-3">
                                     <div className="size-10 rounded-xl bg-blue-50 dark:bg-blue-950/30 flex items-center justify-center text-blue-600">
-                                        <span className="material-symbols-outlined text-xl">bar_chart</span>
+                                        <span className="material-symbols-outlined text-xl" aria-hidden="true">bar_chart</span>
                                     </div>
                                     <div>
                                         <p className="text-[10px] sm:text-xs text-slate-400 uppercase font-bold tracking-wider">Total Visits</p>
@@ -652,7 +652,7 @@ export default function MemberDetail() {
                             <div className="bg-white dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-800 shadow-sm p-4 sm:p-5">
                                 <div className="flex items-center gap-3">
                                     <div className="size-10 rounded-xl bg-purple-50 dark:bg-purple-950/30 flex items-center justify-center text-purple-600">
-                                        <span className="material-symbols-outlined text-xl">schedule</span>
+                                        <span className="material-symbols-outlined text-xl" aria-hidden="true">schedule</span>
                                     </div>
                                     <div>
                                         <p className="text-[10px] sm:text-xs text-slate-400 uppercase font-bold tracking-wider">Last Visit</p>
@@ -665,7 +665,7 @@ export default function MemberDetail() {
                             <div className="col-span-2 sm:col-span-1 bg-white dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-800 shadow-sm p-4 sm:p-5">
                                 <div className="flex items-center gap-3">
                                     <div className="size-10 rounded-xl bg-amber-50 dark:bg-amber-950/30 flex items-center justify-center text-amber-600">
-                                        <span className="material-symbols-outlined text-xl">trending_up</span>
+                                        <span className="material-symbols-outlined text-xl" aria-hidden="true">trending_up</span>
                                     </div>
                                     <div>
                                         <p className="text-[10px] sm:text-xs text-slate-400 uppercase font-bold tracking-wider">This Month</p>
@@ -685,7 +685,7 @@ export default function MemberDetail() {
                         <div className="bg-white dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-800 shadow-sm overflow-hidden">
                             <div className="px-5 py-4 border-b border-slate-200 dark:border-slate-800 flex items-center justify-between">
                                 <h3 className="font-bold text-neutral-text dark:text-white flex items-center gap-2">
-                                    <span className="material-symbols-outlined text-primary-default text-xl">fact_check</span>
+                                    <span className="material-symbols-outlined text-primary-default text-xl" aria-hidden="true">fact_check</span>
                                     Check-in History
                                 </h3>
                                 <span className="text-xs text-slate-500 font-medium">{attendance.length} records</span>
@@ -694,7 +694,7 @@ export default function MemberDetail() {
                             {attendance.length === 0 ? (
                                 <div className="p-12 text-center">
                                     <div className="size-16 mx-auto rounded-2xl bg-slate-100 dark:bg-slate-800 flex items-center justify-center mb-4">
-                                        <span className="material-symbols-outlined text-3xl text-slate-400">fact_check</span>
+                                        <span className="material-symbols-outlined text-3xl text-slate-400" aria-hidden="true">fact_check</span>
                                     </div>
                                     <p className="text-slate-500 font-medium">No check-in records</p>
                                     <p className="text-xs text-slate-400 mt-1">Attendance will appear here when the member checks in.</p>

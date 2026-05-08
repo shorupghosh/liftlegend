@@ -70,7 +70,7 @@ export default function AdminDashboard() {
       {!onboardingCompleted && (
         <div className="bg-amber-500/10 border-b border-amber-500/20 px-4 py-3 flex items-center justify-between">
           <div className="flex items-center gap-3 text-amber-600 dark:text-amber-500">
-            <span className="material-symbols-outlined text-xl">flag</span>
+            <span className="material-symbols-outlined text-xl" aria-hidden="true">flag</span>
             <span className="text-sm font-bold">Complete your setup: We noticed you skipped the wizard.</span>
           </div>
           <button onClick={() => window.location.href='/setup'} className="text-xs font-black uppercase tracking-widest bg-amber-500 text-white px-4 py-1.5 rounded-lg shadow hover:bg-amber-600 transition-colors">

@@ -35,7 +35,7 @@ export default function LeaveReview() {
       <div className="min-h-screen bg-slate-50 dark:bg-slate-950 flex flex-col items-center justify-center p-4">
         <div className="max-w-md w-full bg-white dark:bg-slate-900 rounded-2xl p-8 border border-slate-200 dark:border-slate-800 shadow-xl text-center">
           <div className="inline-flex items-center justify-center size-16 bg-emerald-100 dark:bg-emerald-900/30 text-emerald-600 rounded-full mb-6">
-            <span className="material-symbols-outlined text-4xl">check_circle</span>
+            <span className="material-symbols-outlined text-4xl" aria-hidden="true">check_circle</span>
           </div>
           <h1 className="text-2xl font-black text-slate-900 dark:text-white mb-2">Thank You!</h1>
           <p className="text-slate-600 dark:text-slate-400 mb-8">
@@ -71,7 +71,7 @@ export default function LeaveReview() {
           <form onSubmit={handleSubmit} className="p-8 space-y-6">
             {status === 'error' && (
               <div className="bg-rose-50 dark:bg-rose-900/20 text-rose-600 dark:text-rose-400 p-4 rounded-xl text-sm font-bold flex gap-2 items-center">
-                <span className="material-symbols-outlined">error</span>
+                <span className="material-symbols-outlined" aria-hidden="true">error</span>
                 Failed to submit review. Please try again.
               </div>
             )}
@@ -150,7 +150,7 @@ export default function LeaveReview() {
               {status === 'submitting' ? (
                 <div className="size-5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
               ) : (
-                <>Submit Review <span className="material-symbols-outlined text-sm">send</span></>
+                <>Submit Review <span className="material-symbols-outlined text-sm" aria-hidden="true">send</span></>
               )}
             </button>
           </form>

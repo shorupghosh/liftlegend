@@ -65,7 +65,7 @@ export default function AuditLogs() {
             {filtered.map((entry) => (
               <div key={entry.id} className="flex items-start gap-4 px-5 py-4 hover:bg-slate-50/60 dark:hover:bg-slate-800/30">
                 <div className="flex size-10 items-center justify-center rounded-xl bg-primary-default/10 text-primary-default">
-                  <span className="material-symbols-outlined text-lg">history</span>
+                  <span className="material-symbols-outlined text-lg" aria-hidden="true">history</span>
                 </div>
                 <div className="min-w-0 flex-1">
                   <p className="text-sm font-bold text-neutral-text dark:text-white">{entry.action}</p>

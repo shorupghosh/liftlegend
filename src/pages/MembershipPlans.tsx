@@ -198,7 +198,7 @@ export default function MembershipPlans() {
           onClick={openCreateModal}
           className="flex items-center gap-2 bg-primary-default hover:brightness-110 text-white px-5 py-2.5 rounded-xl font-bold shadow-lg shadow-primary-default/30 transition-all active:scale-95"
         >
-          <span className="material-symbols-outlined text-xl">add</span>
+          <span className="material-symbols-outlined text-xl" aria-hidden="true">add</span>
           Create New Plan
         </button>
       </div>
@@ -239,7 +239,7 @@ export default function MembershipPlans() {
                     <p className={`text-xs ${colorSet.sub} uppercase tracking-widest font-bold`}>{plan.duration_days} {plan.duration_type?.toLowerCase()}</p>
                   </div>
                   <span className="bg-slate-100 dark:bg-slate-800 p-2 rounded-lg">
-                    <span className="material-symbols-outlined text-primary-default">card_membership</span>
+                    <span className="material-symbols-outlined text-primary-default" aria-hidden="true">card_membership</span>
                   </span>
                 </div>
                 <div className="mb-6">
@@ -254,14 +254,14 @@ export default function MembershipPlans() {
                     onClick={() => openEditModal(plan)}
                     className="flex-1 bg-primary-default text-white py-3 rounded-xl font-bold hover:brightness-110 transition-all flex items-center justify-center gap-2 shadow-md shadow-primary-default/20"
                   >
-                    <span className="material-symbols-outlined text-lg">edit</span> Edit
+                    <span className="material-symbols-outlined text-lg" aria-hidden="true">edit</span> Edit
                   </button>
                   <button
                     onClick={() => handleDelete(plan)}
                     className="w-12 bg-red-500/10 text-red-500 py-3 rounded-xl font-bold hover:bg-red-500/20 transition-all flex items-center justify-center"
                     aria-label={`Delete ${plan.name}`}
                   >
-                    <span className="material-symbols-outlined text-lg">delete</span>
+                    <span className="material-symbols-outlined text-lg" aria-hidden="true">delete</span>
                   </button>
                 </div>
               </div>
@@ -274,7 +274,7 @@ export default function MembershipPlans() {
             className="flex flex-col items-center justify-center bg-slate-50 dark:bg-slate-800/30 rounded-2xl border-2 border-dashed border-slate-300 dark:border-slate-700 p-8 min-h-[300px] hover:bg-slate-100 dark:hover:bg-slate-800/50 transition-all cursor-pointer group"
           >
             <div className="size-16 rounded-full bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 flex items-center justify-center mb-4 group-hover:scale-110 transition-transform shadow-sm">
-              <span className="material-symbols-outlined text-primary-default text-3xl font-bold">add</span>
+              <span className="material-symbols-outlined text-primary-default text-3xl font-bold" aria-hidden="true">add</span>
             </div>
             <h3 className="text-lg font-bold mb-2 text-neutral-text dark:text-white">Create Custom Plan</h3>
             <p className="text-sm text-slate-500 text-center max-w-[200px]">Define your own rules, features, and pricing.</p>
@@ -298,7 +298,7 @@ export default function MembershipPlans() {
             <div className="flex items-center justify-between px-6 py-4 border-b border-slate-100 dark:border-slate-800">
               <h3 id="plan-modal-title" className="text-lg font-bold text-neutral-text dark:text-white">{editingPlan ? 'Edit Plan' : 'Create New Plan'}</h3>
               <button onClick={handleCloseModal} className="p-2 text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-lg transition-colors" aria-label="Close modal">
-                <span className="material-symbols-outlined">close</span>
+                <span className="material-symbols-outlined" aria-hidden="true">close</span>
               </button>
             </div>
 

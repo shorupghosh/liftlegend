@@ -44,7 +44,7 @@ export default function UsageLimitBanner({ resource, className = '' }: UsageLimi
                 : 'bg-amber-100 text-amber-600 dark:bg-amber-900/30 dark:text-amber-400'
             }`}
           >
-            <span className="material-symbols-outlined text-xl">
+            <span className="material-symbols-outlined text-xl" aria-hidden="true">
               {reached ? 'block' : 'warning'}
             </span>
           </div>
@@ -107,7 +107,7 @@ export default function UsageLimitBanner({ resource, className = '' }: UsageLimi
               : 'bg-gradient-to-r from-amber-600 to-amber-500 shadow-amber-500/20'
           }`}
         >
-          <span className="material-symbols-outlined text-sm">upgrade</span>
+          <span className="material-symbols-outlined text-sm" aria-hidden="true">upgrade</span>
           Upgrade Plan
         </button>
       </div>
@@ -151,7 +151,7 @@ export function UsageLimitGuard({ resource, children }: UsageLimitGuardProps) {
         title={`${labels[resource]} limit reached (${data.current}/${data.limit}). Upgrade to add more.`}
       >
         <span className="flex items-center gap-1.5 rounded-lg bg-red-50 dark:bg-red-900/20 px-3 py-1.5 text-[10px] font-black text-red-600 dark:text-red-400 uppercase tracking-wider border border-red-200 dark:border-red-900/30 shadow-sm">
-          <span className="material-symbols-outlined text-xs">block</span>
+          <span className="material-symbols-outlined text-xs" aria-hidden="true">block</span>
           Limit Reached
         </span>
       </button>

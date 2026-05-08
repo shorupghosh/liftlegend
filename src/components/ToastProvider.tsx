@@ -47,10 +47,10 @@ export function ToastProvider({ children }: { children: React.ReactNode }) {
                         className={`pointer-events-auto flex items-center gap-3 px-4 py-3 rounded-xl shadow-2xl min-w-[280px] max-w-sm animate-slide-up ${colorMap[toast.type]}`}
                         onClick={() => removeToast(toast.id)}
                     >
-                        <span className="material-symbols-outlined text-xl shrink-0">{iconMap[toast.type]}</span>
+                        <span className="material-symbols-outlined text-xl shrink-0" aria-hidden="true">{iconMap[toast.type]}</span>
                         <p className="text-sm font-medium flex-1">{toast.message}</p>
                         <button className="opacity-60 hover:opacity-100 transition-opacity shrink-0">
-                            <span className="material-symbols-outlined text-lg">close</span>
+                            <span className="material-symbols-outlined text-lg" aria-hidden="true">close</span>
                         </button>
                     </div>
                 ))}

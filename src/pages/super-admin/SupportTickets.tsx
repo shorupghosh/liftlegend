@@ -119,7 +119,7 @@ export default function SupportTickets() {
           {tickets.map((ticket) => (
             <div key={ticket.id} className="bg-white dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-800 p-4 flex items-start gap-4 shadow-sm hover:shadow-md transition-shadow">
               <div className="size-10 rounded-xl flex items-center justify-center shrink-0 bg-slate-100 dark:bg-slate-800">
-                <span className="material-symbols-outlined text-lg text-slate-600 dark:text-slate-300">{statusIcon[ticket.status]}</span>
+                <span className="material-symbols-outlined text-lg text-slate-600 dark:text-slate-300" aria-hidden="true">{statusIcon[ticket.status]}</span>
               </div>
               <div className="flex-1 min-w-0">
                 <div className="flex items-start justify-between gap-2 mb-1">

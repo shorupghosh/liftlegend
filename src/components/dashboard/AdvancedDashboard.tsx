@@ -25,7 +25,7 @@ const StatCard = React.memo(({ label, value, trend, icon, color, onClick }: {
     <div className={`absolute top-0 right-0 -translate-y-1/2 translate-x-1/2 size-24 bg-${color}-500/5 rounded-full blur-2xl group-hover:bg-${color}-500/10 transition-colors pointer-events-none`} />
     <div className="flex justify-between items-start mb-4">
       <div className={`p-2.5 bg-slate-50 dark:bg-slate-800/50 rounded-xl text-slate-600 dark:text-slate-400 group-hover:text-primary-default transition-colors`}>
-        <span className="material-symbols-outlined">{icon}</span>
+        <span className="material-symbols-outlined" aria-hidden="true">{icon}</span>
       </div>
       {trend && (
         <span className={`text-[10px] font-black px-2 py-1 rounded-full ${trend.positive ? 'bg-emerald-500/10 text-emerald-600' : 'bg-slate-100 text-slate-600 dark:bg-slate-800 dark:text-slate-300'}`}>
@@ -47,7 +47,7 @@ const SmartAlert = React.memo(({ type, title, desc, action, onAction }: { type: 
   return (
     <div className={`p-4 rounded-xl border-l-4 ${colors[type]} flex items-center justify-between gap-4 transition-all hover:brightness-95`}>
       <div className="flex items-center gap-3">
-        <span className="material-symbols-outlined text-2xl">
+        <span className="material-symbols-outlined text-2xl" aria-hidden="true">
           {type === 'urgent' ? 'warning' : type === 'opportunity' ? 'rocket_launch' : 'info'}
         </span>
         <div className="min-w-0">
@@ -64,7 +64,7 @@ const LockedOverlay = ({ message = "Unlock Business Intelligence", plan = "ADVAN
   <div className="absolute inset-x-0 inset-y-0 z-10 backdrop-blur-[2px] bg-slate-50/10 dark:bg-slate-900/10 flex items-center justify-center p-6 text-center group">
     <div className="bg-white/90 dark:bg-slate-800/90 shadow-2xl rounded-2xl p-6 border border-slate-200 dark:border-slate-700 max-w-[240px] transform transition-transform group-hover:scale-105">
       <div className="size-12 rounded-full bg-primary-default/10 text-primary-default flex items-center justify-center mx-auto mb-4">
-        <span className="material-symbols-outlined text-2xl">lock</span>
+        <span className="material-symbols-outlined text-2xl" aria-hidden="true">lock</span>
       </div>
       <h5 className="text-sm font-black text-slate-900 dark:text-white mb-1 uppercase tracking-tight">{message}</h5>
       <p className="text-[10px] text-slate-500 mb-4 font-bold">Expert-level analytics are available on the <span className="text-primary-default">{plan}</span> plan.</p>
@@ -204,7 +204,7 @@ export default function AdvancedDashboard({ previewUnlocked = false }: AdvancedD
         <div className="flex items-center gap-2">
            {!isBasicPlan && (
              <button onClick={() => navigate('/admin/analytics')} className="h-10 px-4 rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 text-xs font-bold text-slate-600 dark:text-slate-300 flex items-center gap-2 hover:bg-slate-50 transition-colors shrink-0">
-               <span className="material-symbols-outlined text-lg">calendar_today</span>
+               <span className="material-symbols-outlined text-lg" aria-hidden="true">calendar_today</span>
                Last 30 Days
              </button>
            )}

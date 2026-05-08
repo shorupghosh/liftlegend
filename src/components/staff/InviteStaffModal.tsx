@@ -39,7 +39,7 @@ export default function InviteStaffModal({
         <div className="flex items-center justify-between border-b border-slate-100 px-6 py-4 dark:border-slate-800">
           <h3 className="text-lg font-bold text-neutral-text dark:text-white">Invite Staff Member</h3>
           <button onClick={onClose} className="rounded-lg p-2 text-slate-400 transition-colors hover:bg-slate-100 dark:hover:bg-slate-800">
-            <span className="material-symbols-outlined">close</span>
+            <span className="material-symbols-outlined" aria-hidden="true">close</span>
           </button>
         </div>
 

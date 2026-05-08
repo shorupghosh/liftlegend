@@ -90,7 +90,7 @@ export default function RevenueDashboard() {
               <div key={card.label} className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm dark:border-slate-800 dark:bg-slate-900">
                 <div className="flex items-center justify-between">
                   <p className="text-xs font-bold uppercase tracking-wider text-slate-400">{card.label}</p>
-                  <span className="material-symbols-outlined text-xl text-primary-default">{card.icon}</span>
+                  <span className="material-symbols-outlined text-xl text-primary-default" aria-hidden="true">{card.icon}</span>
                 </div>
                 <p className="mt-3 text-2xl font-black text-neutral-text dark:text-white">{card.value}</p>
               </div>

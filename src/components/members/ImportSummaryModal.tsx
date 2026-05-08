@@ -24,7 +24,7 @@ export function ImportSummaryModal({ isOpen, onClose, summary, onDownloadErrors 
       <div className="w-full max-w-lg rounded-2xl border border-slate-200 bg-white shadow-2xl dark:border-slate-800 dark:bg-slate-900">
         <div className="flex flex-col items-center justify-center border-b border-slate-100 p-6 dark:border-slate-800">
           <div className="mb-4 flex size-14 items-center justify-center rounded-full bg-blue-100 text-blue-600 dark:bg-blue-900/30 dark:text-blue-400">
-            <span className="material-symbols-outlined text-3xl">cloud_done</span>
+            <span className="material-symbols-outlined text-3xl" aria-hidden="true">cloud_done</span>
           </div>
           <h3 className="text-xl font-bold text-neutral-text dark:text-white">Import Complete</h3>
           <p className="mt-1 text-sm text-slate-500">Here is the summary of your file import.</p>

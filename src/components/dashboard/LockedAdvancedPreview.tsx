@@ -36,7 +36,7 @@ export default function LockedAdvancedPreview({ onUpgrade }: LockedAdvancedPrevi
       <div className="absolute inset-0 flex items-center justify-center p-4 sm:p-6">
         <div className="w-full max-w-md rounded-3xl border border-white/20 bg-white/92 p-6 text-center shadow-2xl backdrop-blur-xl transition-transform duration-200 group-hover:scale-[1.01] dark:bg-slate-900/88">
           <div className="mx-auto mb-5 flex size-16 items-center justify-center rounded-2xl bg-amber-500 text-white shadow-lg shadow-amber-500/30">
-            <span className="material-symbols-outlined text-3xl">lock</span>
+            <span className="material-symbols-outlined text-3xl" aria-hidden="true">lock</span>
           </div>
 
           <h2 className="text-2xl font-black tracking-tight text-slate-900 dark:text-white">
@@ -52,7 +52,7 @@ export default function LockedAdvancedPreview({ onUpgrade }: LockedAdvancedPrevi
                 key={feature}
                 className="flex items-center gap-3 rounded-2xl bg-slate-100/80 px-4 py-3 dark:bg-slate-800/70"
               >
-                <span className="material-symbols-outlined text-base text-primary-default">insights</span>
+                <span className="material-symbols-outlined text-base text-primary-default" aria-hidden="true">insights</span>
                 <span className="text-sm font-semibold text-slate-700 dark:text-slate-200">{feature}</span>
               </div>
             ))}

@@ -564,7 +564,7 @@ export default function PaymentManagement() {
           onClick={() => setShowAddModal(true)}
           className="flex h-11 w-full justify-center items-center gap-2 rounded-xl bg-primary-default px-4 text-sm font-bold text-white shadow-lg shadow-primary-default/20 transition-all hover:brightness-110 active:scale-95 sm:w-auto sm:px-5"
         >
-          <span className="material-symbols-outlined text-lg">add_card</span>
+          <span className="material-symbols-outlined text-lg" aria-hidden="true">add_card</span>
           Record Payment
         </button>
       </div>
@@ -597,7 +597,7 @@ export default function PaymentManagement() {
 
       <div className="flex flex-col gap-3 sm:flex-row">
         <div className="relative flex-1">
-          <span className="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-xl text-slate-400">search</span>
+          <span className="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-xl text-slate-400" aria-hidden="true">search</span>
           <input
             value={searchQuery}
             onChange={(event) => setSearchQuery(event.target.value)}
@@ -648,7 +648,7 @@ export default function PaymentManagement() {
                 onClick={() => setLatestReceipt(null)}
                 className="rounded-lg p-2 text-slate-400 hover:bg-slate-100 hover:text-slate-600 dark:hover:bg-slate-800 dark:hover:text-slate-300"
               >
-                <span className="material-symbols-outlined">close</span>
+                <span className="material-symbols-outlined" aria-hidden="true">close</span>
               </button>
             </div>
             
@@ -699,7 +699,7 @@ export default function PaymentManagement() {
                   onClick={() => downloadReceipt(latestReceipt)}
                   className="flex-1 inline-flex h-11 items-center justify-center gap-2 rounded-xl border border-slate-200 bg-white px-4 text-sm font-bold text-slate-600 transition-colors hover:bg-slate-50 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-300 dark:hover:bg-slate-700"
                 >
-                  <span className="material-symbols-outlined text-lg">download</span>
+                  <span className="material-symbols-outlined text-lg" aria-hidden="true">download</span>
                   Download
                 </button>
                 <button
@@ -707,7 +707,7 @@ export default function PaymentManagement() {
                   onClick={handleShareReceipt}
                   className="flex-1 inline-flex h-11 items-center justify-center gap-2 rounded-xl bg-emerald-600 px-4 text-sm font-bold text-white transition-colors hover:bg-emerald-500 shadow-lg shadow-emerald-600/20 active:scale-95"
                 >
-                  <span className="material-symbols-outlined text-lg">send</span>
+                  <span className="material-symbols-outlined text-lg" aria-hidden="true">send</span>
                   WhatsApp
                 </button>
               </div>

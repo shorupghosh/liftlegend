@@ -49,7 +49,7 @@ export default function SubscriptionLock() {
                         {/* Welcome / Lock Icon */}
                         <div className="text-center mb-8">
                             <div className="inline-flex items-center justify-center size-20 rounded-2xl bg-primary-default/10 text-primary-default mb-6">
-                                <span className="material-symbols-outlined text-5xl">verified</span>
+                                <span className="material-symbols-outlined text-5xl" aria-hidden="true">verified</span>
                             </div>
                             <h1 className="text-3xl font-display font-extrabold text-neutral-text dark:text-white tracking-tight">
                                 Welcome to LiftLegend
@@ -70,7 +70,7 @@ export default function SubscriptionLock() {
                                 </div>
                                 <div className="flex items-center gap-4 p-4 bg-slate-50 dark:bg-slate-800/50 rounded-xl">
                                     <div className={`size-12 rounded-xl flex items-center justify-center ${currentPlanDisplay.priceNumeric > 0 ? 'bg-primary-default/20 text-primary-default' : 'bg-slate-200 text-slate-600 dark:bg-slate-700 dark:text-slate-300'}`}>
-                                        <span className="material-symbols-outlined">{currentPlanDisplay.icon || 'workspace_premium'}</span>
+                                        <span className="material-symbols-outlined" aria-hidden="true">{currentPlanDisplay.icon || 'workspace_premium'}</span>
                                     </div>
                                     <div className="flex-1">
                                         <p className="font-bold text-neutral-text dark:text-white">{currentPlanDisplay.name}</p>
@@ -96,7 +96,7 @@ export default function SubscriptionLock() {
                                         { icon: 'people', label: 'Staff Management' },
                                     ].map((item) => (
                                         <div key={item.label} className="flex items-center gap-2 p-2.5 rounded-lg bg-slate-50 dark:bg-slate-800/50">
-                                            <span className="material-symbols-outlined text-slate-400 text-lg">{item.icon}</span>
+                                            <span className="material-symbols-outlined text-slate-400 text-lg" aria-hidden="true">{item.icon}</span>
                                             <span className="text-sm text-slate-600 dark:text-slate-400">{item.label}</span>
                                         </div>
                                     ))}
@@ -106,7 +106,7 @@ export default function SubscriptionLock() {
                             {/* Actions */}
                             <div className="p-6 space-y-3">
                                 <button onClick={() => setActiveView('renew')} className="w-full bg-primary-default hover:brightness-110 text-white font-bold py-3.5 rounded-xl shadow-lg shadow-primary-default/20 flex items-center justify-center gap-2 transition-all active:scale-[0.98]">
-                                    <span className="material-symbols-outlined">credit_card</span>
+                                    <span className="material-symbols-outlined" aria-hidden="true">credit_card</span>
                                     Renew Subscription
                                 </button>
                                 <div className="flex gap-3">
@@ -126,7 +126,7 @@ export default function SubscriptionLock() {
                 {activeView === 'plans' && (
                     <div className="space-y-6">
                         <button onClick={() => setActiveView('main')} className="flex items-center gap-2 text-sm font-semibold text-primary-default hover:underline">
-                            <span className="material-symbols-outlined text-sm">arrow_back</span>Back
+                            <span className="material-symbols-outlined text-sm" aria-hidden="true">arrow_back</span>Back
                         </button>
 
                         {/* Plans container card */}
@@ -198,12 +198,12 @@ export default function SubscriptionLock() {
                 {activeView === 'renew' && (
                     <div className="space-y-6">
                         <button onClick={() => setActiveView('main')} className="flex items-center gap-2 text-sm font-semibold text-primary-default hover:underline">
-                            <span className="material-symbols-outlined text-sm">arrow_back</span>Back
+                            <span className="material-symbols-outlined text-sm" aria-hidden="true">arrow_back</span>Back
                         </button>
                         <div className="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-lg overflow-hidden">
                             <div className="p-8 text-center">
                                 <div className="inline-flex items-center justify-center size-16 rounded-2xl bg-[#e2136e]/10 text-[#e2136e] mb-4">
-                                    <span className="material-symbols-outlined text-4xl">qr_code_2</span>
+                                    <span className="material-symbols-outlined text-4xl" aria-hidden="true">qr_code_2</span>
                                 </div>
                                 <h2 className="text-xl font-extrabold text-neutral-text dark:text-white mb-1">Pay with bKash</h2>
                                 <p className="text-slate-500 text-sm mb-6">Scan the QR code below or send money to our personal number.</p>
@@ -212,7 +212,7 @@ export default function SubscriptionLock() {
                                 <div className="mx-auto max-w-[260px] aspect-square bg-white dark:bg-slate-800 rounded-2xl border border-slate-200 dark:border-slate-700 shadow-sm flex flex-col items-center justify-center overflow-hidden mb-6 relative p-3">
                                     {bkashImgError ? (
                                         <>
-                                            <span className="material-symbols-outlined text-5xl text-slate-400 mb-2">qr_code_2</span>
+                                            <span className="material-symbols-outlined text-5xl text-slate-400 mb-2" aria-hidden="true">qr_code_2</span>
                                             <p className="text-xs text-slate-500 font-medium px-4 text-center">Scan via bKash app<br/>or send to the number below</p>
                                         </>
                                     ) : (
@@ -241,7 +241,7 @@ export default function SubscriptionLock() {
 
                                 <div className="bg-amber-50 dark:bg-amber-950/20 border border-amber-200 dark:border-amber-800 rounded-xl p-4 text-left">
                                     <div className="flex items-start gap-3">
-                                        <span className="material-symbols-outlined text-amber-600 text-xl mt-0.5">info</span>
+                                        <span className="material-symbols-outlined text-amber-600 text-xl mt-0.5" aria-hidden="true">info</span>
                                         <div>
                                             <p className="text-sm font-bold text-amber-800 dark:text-amber-400">Next Steps</p>
                                             <p className="text-xs text-amber-700 dark:text-amber-500 mt-1 leading-relaxed">After successfully sending the money, click the button below to message Support with your <b>Transaction ID</b> and Gym Name. We'll activate your subscription instantly.</p>
@@ -265,13 +265,13 @@ export default function SubscriptionLock() {
                 {activeView === 'contact' && (
                     <div className="space-y-6">
                         <button onClick={() => { setActiveView('main'); setContactSent(false); }} className="flex items-center gap-2 text-sm font-semibold text-primary-default hover:underline">
-                            <span className="material-symbols-outlined text-sm">arrow_back</span>Back
+                            <span className="material-symbols-outlined text-sm" aria-hidden="true">arrow_back</span>Back
                         </button>
                         <div className="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-lg overflow-hidden">
                             {contactSent ? (
                                 <div className="p-10 text-center flex flex-col items-center">
                                     <div className="inline-flex items-center justify-center size-16 rounded-full bg-green-100 dark:bg-green-900/20 text-green-600 mb-4">
-                                        <span className="material-symbols-outlined text-4xl">check_circle</span>
+                                        <span className="material-symbols-outlined text-4xl" aria-hidden="true">check_circle</span>
                                     </div>
                                     <h2 className="text-2xl font-black text-neutral-text dark:text-white mb-2">Message Sent!</h2>
                                     <p className="text-slate-500 text-sm mb-6 max-w-sm">Thank you. Our team is verifying your payment and will activate your subscription shortly. You'll receive an email confirmation.</p>
@@ -281,7 +281,7 @@ export default function SubscriptionLock() {
                                 <form onSubmit={handleContactSubmit} className="p-8 space-y-5">
                                     <div className="text-center mb-4">
                                         <div className="inline-flex items-center justify-center size-14 rounded-2xl bg-primary-default/10 text-primary-default mb-3">
-                                            <span className="material-symbols-outlined text-3xl">mark_email_read</span>
+                                            <span className="material-symbols-outlined text-3xl" aria-hidden="true">mark_email_read</span>
                                         </div>
                                         <h2 className="text-xl font-extrabold text-neutral-text dark:text-white">Verify Payment</h2>
                                         <p className="text-slate-500 text-sm mt-1">Send us your Transaction ID to activate your plan.</p>
@@ -315,7 +315,7 @@ export default function SubscriptionLock() {
                                             <div className="size-5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
                                         ) : (
                                             <>
-                                                <span className="material-symbols-outlined text-sm">send</span>
+                                                <span className="material-symbols-outlined text-sm" aria-hidden="true">send</span>
                                                 Submit & Activate Account
                                             </>
                                         )}

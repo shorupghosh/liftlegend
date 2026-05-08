@@ -39,8 +39,8 @@ export const MembersTable: React.FC<MembersTableProps> = ({
   toggleFavorite
 }) => {
   const SortIcon = ({ column }: { column: string }) => {
-    if (sortConfig.key !== column) return <span className="material-symbols-outlined text-xs ml-1 opacity-0 group-hover:opacity-100 transition-opacity">unfold_more</span>;
-    return <span className="material-symbols-outlined text-xs ml-1 text-primary-default">{sortConfig.direction === 'asc' ? 'expand_less' : 'expand_more'}</span>;
+    if (sortConfig.key !== column) return <span className="material-symbols-outlined text-xs ml-1 opacity-0 group-hover:opacity-100 transition-opacity" aria-hidden="true">unfold_more</span>;
+    return <span className="material-symbols-outlined text-xs ml-1 text-primary-default" aria-hidden="true">{sortConfig.direction === 'asc' ? 'expand_less' : 'expand_more'}</span>;
   };
 
   return (
@@ -145,10 +145,10 @@ export const MembersTable: React.FC<MembersTableProps> = ({
                   </div>
                   <div className="flex gap-2">
                     <button onClick={() => onEdit(member)} className="size-8 flex items-center justify-center text-slate-400 hover:text-primary-default bg-slate-50 dark:bg-slate-800 hover:bg-primary-default/10 rounded-lg transition-colors border border-slate-200 dark:border-slate-700" aria-label={`Edit ${member.full_name}`}>
-                      <span className="material-symbols-outlined text-[16px]">edit</span>
+                      <span className="material-symbols-outlined text-[16px]" aria-hidden="true">edit</span>
                     </button>
                     <button onClick={() => onDelete(member)} className="size-8 flex items-center justify-center text-slate-400 hover:text-red-500 bg-slate-50 dark:bg-slate-800 hover:bg-red-50 dark:hover:bg-red-950/50 rounded-lg transition-colors border border-slate-200 dark:border-slate-700" aria-label={`Delete ${member.full_name}`}>
-                      <span className="material-symbols-outlined text-[16px]">delete</span>
+                      <span className="material-symbols-outlined text-[16px]" aria-hidden="true">delete</span>
                     </button>
                   </div>
                 </div>
@@ -293,7 +293,7 @@ export const MembersTable: React.FC<MembersTableProps> = ({
                               {member.plan_name}
                             </span>
                             <span className="text-[10px] text-amber-600 font-bold flex items-center gap-0.5">
-                              <span className="material-symbols-outlined text-xs">warning</span> FIX PLAN
+                              <span className="material-symbols-outlined text-xs" aria-hidden="true">warning</span> FIX PLAN
                             </span>
                           </div>
                         ) : (
@@ -348,10 +348,10 @@ export const MembersTable: React.FC<MembersTableProps> = ({
                       <td className="px-5 py-4">
                         <div className="flex gap-1">
                           <button onClick={() => onEdit(member)} className="size-9 flex items-center justify-center text-slate-400 hover:text-primary-default hover:bg-primary-default/10 rounded-lg transition-colors" aria-label={`Edit ${member.full_name}`}>
-                            <span className="material-symbols-outlined text-lg">edit</span>
+                            <span className="material-symbols-outlined text-lg" aria-hidden="true">edit</span>
                           </button>
                           <button onClick={() => onDelete(member)} className="size-9 flex items-center justify-center text-slate-400 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-950/50 rounded-lg transition-colors" aria-label={`Delete ${member.full_name}`}>
-                            <span className="material-symbols-outlined text-lg">delete</span>
+                            <span className="material-symbols-outlined text-lg" aria-hidden="true">delete</span>
                           </button>
                         </div>
                       </td>

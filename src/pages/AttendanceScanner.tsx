@@ -410,11 +410,11 @@ export default function AttendanceScanner() {
             }}
             className="flex-1 sm:flex-none flex justify-center items-center gap-2 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 px-5 py-2.5 rounded-xl font-bold transition-colors active:scale-95 w-full sm:w-auto h-11"
           >
-            <span className="material-symbols-outlined text-lg">qr_code_scanner</span>
+            <span className="material-symbols-outlined text-lg" aria-hidden="true">qr_code_scanner</span>
             <span className="truncate">Scan QR</span>
             {!canAccess('qrCheckin') && (
               <span className="ml-1 text-[10px] font-bold text-amber-500 bg-amber-50 dark:bg-amber-500/10 px-1.5 py-0.5 rounded flex items-center gap-1">
-                <span className="material-symbols-outlined text-[12px]" style={{ fontVariationSettings: "'FILL' 1" }}>lock</span>
+                <span className="material-symbols-outlined text-[12px]" style={{ fontVariationSettings: "'FILL' 1" }} aria-hidden="true">lock</span>
                 PREMIUM
               </span>
             )}
@@ -423,7 +423,7 @@ export default function AttendanceScanner() {
             onClick={() => setShowManualModal(true)}
             className="flex-1 sm:flex-none flex justify-center items-center gap-2 bg-primary-default hover:brightness-110 text-white px-5 py-2.5 rounded-xl font-bold shadow-lg shadow-primary-default/30 transition-all active:scale-95 w-full sm:w-auto h-11"
           >
-            <span className="material-symbols-outlined text-lg">person_add</span>
+            <span className="material-symbols-outlined text-lg" aria-hidden="true">person_add</span>
             <span className="truncate">Manual</span>
           </button>
         </div>
@@ -440,7 +440,7 @@ export default function AttendanceScanner() {
             <p className="text-xs opacity-80">{notification.detail}</p>
           </div>
           <button onClick={() => setNotification(null)} className="opacity-50 hover:opacity-100">
-            <span className="material-symbols-outlined text-sm">close</span>
+            <span className="material-symbols-outlined text-sm" aria-hidden="true">close</span>
           </button>
         </div>
       )}
@@ -497,7 +497,7 @@ export default function AttendanceScanner() {
                     {checkin.members?.full_name?.charAt(0) || '?'}
                   </div>
                   <div className={`absolute -bottom-1 -right-1 size-5 ${checkin.members?.status === 'ACTIVE' ? 'bg-emerald-500' : 'bg-rose-500'} border-2 border-white dark:border-slate-900 rounded-full flex items-center justify-center`}>
-                    <span className="material-symbols-outlined text-[12px] text-white font-bold">{checkin.members?.status === 'ACTIVE' ? 'check' : 'close'}</span>
+                    <span className="material-symbols-outlined text-[12px] text-white font-bold" aria-hidden="true">{checkin.members?.status === 'ACTIVE' ? 'check' : 'close'}</span>
                   </div>
                 </div>
                 <div className="flex-1 min-w-0">
@@ -536,7 +536,7 @@ export default function AttendanceScanner() {
                 className="p-2 text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-lg transition-colors"
                 aria-label="Close modal"
               >
-                <span className="material-symbols-outlined">close</span>
+                <span className="material-symbols-outlined" aria-hidden="true">close</span>
               </button>
             </div>
             <div className="p-4 border-b border-slate-100 dark:border-slate-800">
@@ -622,14 +622,14 @@ export default function AttendanceScanner() {
                 className="size-8 rounded-full hover:bg-slate-200 dark:hover:bg-slate-700 flex items-center justify-center text-slate-500 transition-colors"
                 aria-label="Close modal"
               >
-                <span className="material-symbols-outlined text-xl">close</span>
+                <span className="material-symbols-outlined text-xl" aria-hidden="true">close</span>
               </button>
             </div>
 
             <div className="bg-black relative aspect-[4/3] w-full flex items-center justify-center overflow-hidden">
               {isDemoMode ? (
                 <div className="flex flex-col items-center gap-4 px-6 text-center text-white">
-                  <span className="material-symbols-outlined text-6xl text-white/70">qr_code_scanner</span>
+                  <span className="material-symbols-outlined text-6xl text-white/70" aria-hidden="true">qr_code_scanner</span>
                   <p className="text-sm font-semibold">Simulate a member QR scan in demo mode.</p>
                   <button
                     onClick={() => handleQrScan('DEMO_SCAN')}

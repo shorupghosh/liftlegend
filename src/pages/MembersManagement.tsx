@@ -665,17 +665,17 @@ export default function MembersManagement() {
         </div>
         <div className="flex sm:flex-nowrap items-center gap-2 w-full sm:w-auto">
           <button onClick={handleExportCSV} disabled={isExporting} className="flex-1 sm:flex-none flex items-center justify-center gap-2 rounded-xl h-11 px-3 sm:px-4 bg-emerald-600 text-white text-sm font-bold shadow-lg shadow-emerald-600/20 hover:brightness-110 active:scale-95 transition-all disabled:opacity-50">
-            <span className="material-symbols-outlined text-lg">download</span>
+            <span className="material-symbols-outlined text-lg" aria-hidden="true">download</span>
             <span className="hidden sm:inline">{isExporting ? 'Exporting...' : 'Export'}</span>
           </button>
           <input ref={csvInputRef} type="file" accept=".csv" className="hidden" onChange={handleImportCSV} />
           <button onClick={() => csvInputRef.current?.click()} disabled={isImporting} className="flex-1 sm:flex-none flex items-center justify-center gap-2 rounded-xl h-11 px-3 sm:px-4 bg-blue-600 text-white text-sm font-bold shadow-lg shadow-blue-600/20 hover:brightness-110 active:scale-95 transition-all disabled:opacity-50">
-            <span className="material-symbols-outlined text-lg">upload</span>
+            <span className="material-symbols-outlined text-lg" aria-hidden="true">upload</span>
             <span className="hidden sm:inline">{isImporting ? 'Importing...' : 'Import'}</span>
           </button>
           <UsageLimitGuard resource="members">
             <button onClick={openAddModal} className="flex-1 sm:flex-none flex items-center justify-center gap-2 rounded-xl h-11 px-4 sm:px-5 bg-accent-default text-white text-sm font-bold shadow-lg shadow-orange-500/20 hover:brightness-110 active:scale-95 transition-all w-full">
-              <span className="material-symbols-outlined text-lg">person_add</span>
+              <span className="material-symbols-outlined text-lg" aria-hidden="true">person_add</span>
               <span className="hidden xs:inline">Add</span>
             </button>
           </UsageLimitGuard>
@@ -684,7 +684,7 @@ export default function MembersManagement() {
 
       <div className="flex flex-col lg:flex-row gap-3">
         <form onSubmit={(e) => { e.preventDefault(); (document.activeElement as HTMLElement)?.blur?.(); }} className="relative flex-1">
-          <span className="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-xl pointer-events-none">search</span>
+          <span className="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-xl pointer-events-none" aria-hidden="true">search</span>
           <input 
             value={searchQuery} 
             onChange={(e) => { 
@@ -701,13 +701,13 @@ export default function MembersManagement() {
             onClick={() => { setFilterPlan('All Plans'); setFilterStatus('All Status'); setSearchQuery(''); setPage(1); setSearchParams({}, { replace: true }); }}
             className="flex items-center justify-center h-11 px-4 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-600 font-bold transition-colors dark:bg-slate-800 dark:hover:bg-slate-700 dark:text-slate-300"
           >
-            <span className="material-symbols-outlined mr-2">restart_alt</span>
+            <span className="material-symbols-outlined mr-2" aria-hidden="true">restart_alt</span>
             Reset
           </button>
         )}
         <div className="flex gap-3">
           <div className="flex-1 sm:flex-none relative">
-            <span className="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-lg pointer-events-none">package</span>
+            <span className="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-lg pointer-events-none" aria-hidden="true">package</span>
             <select value={filterPlan} onChange={(e) => { setFilterPlan(e.target.value); setPage(1); }} className="w-full sm:w-44 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl h-11 pl-10 pr-10 text-sm focus:ring-2 focus:ring-primary-default/20 focus:border-primary-default outline-none transition-all appearance-none cursor-pointer text-neutral-text dark:text-white" style={{ backgroundImage: 'url("data:image/svg+xml,%3Csvg xmlns=\'http://www.w3.org/2000/svg\' fill=\'none\' viewBox=\'0 0 24 24\' stroke=\'%2364748b\'%3E%3Cpath stroke-linecap=\'round\' stroke-linejoin=\'round\' stroke-width=\'2\' d=\'M19 9l-7 7-7-7\'%3E%3C/path%3E%3C/svg%3E")', backgroundPosition: 'right 12px center', backgroundRepeat: 'no-repeat', backgroundSize: '16px' }}>
               <option value="All Plans">All Plans</option>
               <option value="No Plan">No Plan</option>
@@ -715,7 +715,7 @@ export default function MembersManagement() {
             </select>
           </div>
           <div className="flex-1 sm:flex-none relative">
-            <span className="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-lg pointer-events-none">filter_list</span>
+            <span className="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-lg pointer-events-none" aria-hidden="true">filter_list</span>
             <select value={filterStatus} onChange={(e) => { setFilterStatus(e.target.value); setPage(1); }} className="w-full sm:w-44 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl h-11 pl-10 pr-10 text-sm focus:ring-2 focus:ring-primary-default/20 focus:border-primary-default outline-none transition-all appearance-none cursor-pointer text-neutral-text dark:text-white" style={{ backgroundImage: 'url("data:image/svg+xml,%3Csvg xmlns=\'http://www.w3.org/2000/svg\' fill=\'none\' viewBox=\'0 0 24 24\' stroke=\'%2364748b\'%3E%3Cpath stroke-linecap=\'round\' stroke-linejoin=\'round\' stroke-width=\'2\' d=\'M19 9l-7 7-7-7\'%3E%3C/path%3E%3C/svg%3E")', backgroundPosition: 'right 12px center', backgroundRepeat: 'no-repeat', backgroundSize: '16px' }}>
               <option value="All Status">All Status</option>
               <option value="Active">Active</option>

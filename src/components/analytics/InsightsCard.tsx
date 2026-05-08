@@ -39,7 +39,7 @@ export function InsightsCard({
         <div className="mt-5 space-y-3">
           {insights.map((insight) => (
             <div key={insight} className="flex items-start gap-3 rounded-2xl border border-slate-800 bg-slate-950/50 px-4 py-3">
-              <span className="material-symbols-outlined mt-0.5 text-base text-primary-default">lightbulb</span>
+              <span className="material-symbols-outlined mt-0.5 text-base text-primary-default" aria-hidden="true">lightbulb</span>
               <p className="text-sm font-medium text-slate-200">{insight}</p>
             </div>
           ))}

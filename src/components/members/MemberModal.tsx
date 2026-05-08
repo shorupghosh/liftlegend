@@ -63,7 +63,7 @@ export const MemberModal: React.FC<MemberModalProps> = ({
             className="p-2 text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-lg transition-colors"
             aria-label="Close modal"
           >
-            <span className="material-symbols-outlined">close</span>
+            <span className="material-symbols-outlined" aria-hidden="true">close</span>
           </button>
         </div>
 
@@ -147,7 +147,7 @@ export const MemberModal: React.FC<MemberModalProps> = ({
                 onClick={() => setFormData({ ...formData, expiry_date: expiryDate })}
                 className="text-[10px] text-primary-default font-bold hover:underline mt-1 flex items-center gap-0.5"
               >
-                <span className="material-symbols-outlined text-xs">auto_fix</span>
+                <span className="material-symbols-outlined text-xs" aria-hidden="true">auto_fix</span>
                 RESET TO {new Date(expiryDate).toLocaleDateString('en-GB')} BASED ON PLAN
               </button>
             )}

@@ -50,7 +50,7 @@ export default function UpgradeModal({ isOpen, onClose }: UpgradeModalProps) {
       >
         <div className="bg-gradient-to-br from-slate-950 via-slate-900 to-primary-default px-6 py-7 text-white">
           <div className="mb-4 inline-flex size-14 items-center justify-center rounded-2xl bg-white/10">
-            <span className="material-symbols-outlined text-3xl">rocket_launch</span>
+            <span className="material-symbols-outlined text-3xl" aria-hidden="true">rocket_launch</span>
           </div>
           <p className="text-xs font-black uppercase tracking-[0.3em] text-white/70">Pro Plan</p>
           <h2 id="upgrade-modal-title" className="mt-2 text-3xl font-black tracking-tight">
@@ -69,7 +69,7 @@ export default function UpgradeModal({ isOpen, onClose }: UpgradeModalProps) {
                 className="flex items-start gap-3 rounded-2xl border border-slate-200 bg-slate-50 p-4 dark:border-slate-800 dark:bg-slate-950/60"
               >
                 <div className="mt-0.5 flex size-8 shrink-0 items-center justify-center rounded-full bg-primary-default/10 text-primary-default">
-                  <span className="material-symbols-outlined text-base">check_circle</span>
+                  <span className="material-symbols-outlined text-base" aria-hidden="true">check_circle</span>
                 </div>
                 <p className="text-sm font-medium text-slate-700 dark:text-slate-200">{benefit}</p>
               </div>

@@ -84,10 +84,10 @@ export default function LandingPage() {
           <div className="max-w-7xl mx-auto w-full flex items-center justify-between">
             <div className="flex items-center gap-6">
               <a href="mailto:liftlegend2@gmail.com" className="flex items-center gap-1.5 hover:text-white transition-colors">
-                <span className="material-symbols-outlined text-[14px]">mail</span> liftlegend2@gmail.com
+                <span className="material-symbols-outlined text-[14px]" aria-hidden="true">mail</span> liftlegend2@gmail.com
               </a>
               <a href="tel:+8801756625762" className="flex items-center gap-1.5 hover:text-white transition-colors">
-                <span className="material-symbols-outlined text-[14px]">call</span> +880 1756 625762
+                <span className="material-symbols-outlined text-[14px]" aria-hidden="true">call</span> +880 1756 625762
               </a>
             </div>
             <div className="flex items-center gap-4">
@@ -118,7 +118,7 @@ export default function LandingPage() {
                 onClick={enterDemoMode}
                 className="hidden lg:flex items-center gap-2 px-5 py-2 text-sm font-bold text-[#1978e5] border border-[#1978e5]/20 hover:bg-[#1978e5]/5 rounded-full transition-all"
               >
-                <span className="material-symbols-outlined text-lg">visibility</span>
+                <span className="material-symbols-outlined text-lg" aria-hidden="true">visibility</span>
                 Explore Live Demo
               </button>
               <Link to="/login" className="hidden sm:block px-5 py-2 text-sm font-bold text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-full transition-all">Login</Link>
@@ -127,7 +127,7 @@ export default function LandingPage() {
                 className="md:hidden p-2 text-slate-600 dark:text-slate-300 flex items-center justify-center"
                 onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
               >
-                <span className="material-symbols-outlined">{isMobileMenuOpen ? 'close' : 'menu'}</span>
+                <span className="material-symbols-outlined" aria-hidden="true">{isMobileMenuOpen ? 'close' : 'menu'}</span>
               </button>
             </div>
           </div>
@@ -144,10 +144,10 @@ export default function LandingPage() {
               {/* Mobile Contact Info */}
               <div className="flex flex-col gap-3 mb-2 text-sm text-slate-600 dark:text-slate-400">
                 <a href="mailto:liftlegend2@gmail.com" className="flex items-center gap-2 hover:text-[#1978e5] transition-colors">
-                  <span className="material-symbols-outlined text-[16px]">mail</span> liftlegend2@gmail.com
+                  <span className="material-symbols-outlined text-[16px]" aria-hidden="true">mail</span> liftlegend2@gmail.com
                 </a>
                 <a href="tel:+8801756625762" className="flex items-center gap-2 hover:text-[#1978e5] transition-colors">
-                  <span className="material-symbols-outlined text-[16px]">call</span> +880 1756 625762
+                  <span className="material-symbols-outlined text-[16px]" aria-hidden="true">call</span> +880 1756 625762
                 </a>
                 <a href="https://instagram.com/liftlegend_bd" target="_blank" rel="noreferrer" className="flex items-center gap-2 hover:text-[#1978e5] transition-colors">
                   <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 24 24" aria-hidden="true">
@@ -163,7 +163,7 @@ export default function LandingPage() {
                 onClick={() => { setIsMobileMenuOpen(false); enterDemoMode(); }}
                 className="flex items-center justify-center gap-2 w-full py-3 text-sm font-bold text-[#1978e5] bg-[#1978e5]/5 rounded-xl border border-[#1978e5]/10 mt-2"
               >
-                <span className="material-symbols-outlined text-lg">visibility</span>
+                <span className="material-symbols-outlined text-lg" aria-hidden="true">visibility</span>
                 Explore Live Demo
               </button>
             </div>
@@ -176,7 +176,7 @@ export default function LandingPage() {
             <div className="grid lg:grid-cols-2 gap-12 items-center">
               <div className="flex flex-col gap-8">
                 <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-[#1978e5]/10 border border-[#1978e5]/20 text-[#1978e5] text-xs font-bold uppercase tracking-wider w-fit">
-                  <span className="material-symbols-outlined text-sm">verified_user</span>
+                  <span className="material-symbols-outlined text-sm" aria-hidden="true">verified_user</span>
                   Built for Bangladesh gym operations
                 </div>
                 <h1 className="text-4xl sm:text-5xl md:text-7xl font-black leading-[1.1] tracking-tight text-slate-900 dark:text-white">
@@ -191,10 +191,10 @@ export default function LandingPage() {
                 <div className="flex flex-col sm:flex-row gap-4">
                   <Link to="/login?signup=true&plan=ADVANCED" className="bg-[#1978e5] text-white h-14 px-6 sm:px-8 rounded-full text-base sm:text-lg font-bold shadow-xl shadow-[#1978e5]/40 flex items-center justify-center gap-2 hover:bg-blue-600 transition-all cursor-pointer">
                     Start 30-Day Trial
-                    <span className="material-symbols-outlined">arrow_forward</span>
+                    <span className="material-symbols-outlined" aria-hidden="true">arrow_forward</span>
                   </Link>
                   <button onClick={enterDemoMode} className="bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700 h-14 px-6 sm:px-8 rounded-full text-base sm:text-lg font-bold flex items-center justify-center gap-2 hover:bg-slate-50 dark:hover:bg-slate-700 transition-all border-2">
-                    <span className="material-symbols-outlined">visibility</span>
+                    <span className="material-symbols-outlined" aria-hidden="true">visibility</span>
                     Explore Live Demo
                   </button>
                 </div>
@@ -221,7 +221,7 @@ export default function LandingPage() {
                   <div className="absolute inset-0 bg-gradient-to-t from-slate-900/80 via-slate-900/20 to-transparent pointer-events-none"></div>
                   <div className="absolute bottom-6 left-6 right-6 text-white flex items-center gap-4">
                     <div className="size-12 bg-emerald-500 rounded-full flex items-center justify-center shadow-lg shadow-emerald-500/30">
-                      <span className="material-symbols-outlined text-white text-2xl">qr_code_scanner</span>
+                      <span className="material-symbols-outlined text-white text-2xl" aria-hidden="true">qr_code_scanner</span>
                     </div>
                     <div>
                       <p className="text-lg font-bold">100% Mobile Ready</p>
@@ -245,32 +245,32 @@ export default function LandingPage() {
               <div className="bg-red-50 dark:bg-red-900/10 border-2 border-red-100 dark:border-red-900/30 rounded-2xl p-8 relative overflow-hidden">
                 <div className="absolute top-0 right-0 bg-red-100 dark:bg-red-900/50 text-red-700 dark:text-red-400 text-xs font-bold px-4 py-1 rounded-bl-lg">আগে (The Old Way)</div>
                 <div className="size-14 bg-red-100 dark:bg-red-900/30 text-red-600 dark:text-red-400 rounded-xl flex items-center justify-center mb-6">
-                  <span className="material-symbols-outlined text-3xl">menu_book</span>
+                  <span className="material-symbols-outlined text-3xl" aria-hidden="true">menu_book</span>
                 </div>
                 <ul className="space-y-4">
                   <li className="flex items-start gap-3">
-                    <span className="material-symbols-outlined text-red-500 mt-0.5">cancel</span>
+                    <span className="material-symbols-outlined text-red-500 mt-0.5" aria-hidden="true">cancel</span>
                     <div>
                       <p className="font-bold text-slate-900 dark:text-white">খাতায় Member Name</p>
                       <p className="text-sm text-slate-600 dark:text-slate-400">খুঁজে বের করতে সময় নষ্ট।</p>
                     </div>
                   </li>
                   <li className="flex items-start gap-3">
-                    <span className="material-symbols-outlined text-red-500 mt-0.5">cancel</span>
+                    <span className="material-symbols-outlined text-red-500 mt-0.5" aria-hidden="true">cancel</span>
                     <div>
                       <p className="font-bold text-slate-900 dark:text-white">হাতে Payment হিসাব</p>
                       <p className="text-sm text-slate-600 dark:text-slate-400">bKash না Cash? ভুল হওয়ার চান্স।</p>
                     </div>
                   </li>
                   <li className="flex items-start gap-3">
-                    <span className="material-symbols-outlined text-red-500 mt-0.5">cancel</span>
+                    <span className="material-symbols-outlined text-red-500 mt-0.5" aria-hidden="true">cancel</span>
                     <div>
                       <p className="font-bold text-slate-900 dark:text-white">Missed Payments</p>
                       <p className="text-sm text-slate-600 dark:text-slate-400">প্রতি মাসে হাজার টাকা লস।</p>
                     </div>
                   </li>
                   <li className="flex items-start gap-3">
-                    <span className="material-symbols-outlined text-red-500 mt-0.5">cancel</span>
+                    <span className="material-symbols-outlined text-red-500 mt-0.5" aria-hidden="true">cancel</span>
                     <div>
                       <p className="font-bold text-slate-900 dark:text-white">Month শেষে Confusion</p>
                       <p className="text-sm text-slate-600 dark:text-slate-400">হিসাব মেলাতে মাথা নষ্ট।</p>
@@ -283,32 +283,32 @@ export default function LandingPage() {
               <div className="bg-emerald-50 dark:bg-emerald-900/10 border-2 border-emerald-500 dark:border-emerald-500/50 rounded-2xl p-8 relative overflow-hidden shadow-lg shadow-emerald-500/10">
                 <div className="absolute top-0 right-0 bg-emerald-500 text-white text-xs font-bold px-4 py-1 rounded-bl-lg">এখন (LiftLegend)</div>
                 <div className="size-14 bg-emerald-100 dark:bg-emerald-900/50 text-emerald-600 dark:text-emerald-400 rounded-xl flex items-center justify-center mb-6">
-                  <span className="material-symbols-outlined text-3xl">phonelink_ring</span>
+                  <span className="material-symbols-outlined text-3xl" aria-hidden="true">phonelink_ring</span>
                 </div>
                 <ul className="space-y-4">
                   <li className="flex items-start gap-3">
-                    <span className="material-symbols-outlined text-emerald-500 mt-0.5">check_circle</span>
+                    <span className="material-symbols-outlined text-emerald-500 mt-0.5" aria-hidden="true">check_circle</span>
                     <div>
                       <p className="font-bold text-slate-900 dark:text-white">App-এ সব Member Info</p>
                       <p className="text-sm text-slate-600 dark:text-slate-400">১ সেকেন্ডে সব হাতের মুঠোয়।</p>
                     </div>
                   </li>
                   <li className="flex items-start gap-3">
-                    <span className="material-symbols-outlined text-emerald-500 mt-0.5">check_circle</span>
+                    <span className="material-symbols-outlined text-emerald-500 mt-0.5" aria-hidden="true">check_circle</span>
                     <div>
                       <p className="font-bold text-slate-900 dark:text-white">Auto Payment Alerts</p>
                       <p className="text-sm text-slate-600 dark:text-slate-400">Due date আসার আগেই reminder।</p>
                     </div>
                   </li>
                   <li className="flex items-start gap-3">
-                    <span className="material-symbols-outlined text-emerald-500 mt-0.5">check_circle</span>
+                    <span className="material-symbols-outlined text-emerald-500 mt-0.5" aria-hidden="true">check_circle</span>
                     <div>
                       <p className="font-bold text-slate-900 dark:text-white">Real-time Tracking</p>
                       <p className="text-sm text-slate-600 dark:text-slate-400">১০০% payment track হবে।</p>
                     </div>
                   </li>
                   <li className="flex items-start gap-3">
-                    <span className="material-symbols-outlined text-emerald-500 mt-0.5">check_circle</span>
+                    <span className="material-symbols-outlined text-emerald-500 mt-0.5" aria-hidden="true">check_circle</span>
                     <div>
                       <p className="font-bold text-slate-900 dark:text-white">সব কিছু Clear</p>
                       <p className="text-sm text-slate-600 dark:text-slate-400">Month শেষে no tension.</p>
@@ -380,11 +380,11 @@ export default function LandingPage() {
                 <h2 className="text-3xl md:text-4xl font-black text-slate-900 dark:text-white leading-tight mb-6">কেনার আগে লাইভ দেখে নিন কিভাবে আপনার Gym-এর হিসাব মিলবে</h2>
                 <p className="text-slate-600 dark:text-slate-400 mb-8">Gym owner ভাইদের জন্য প্রাকটিকাল চেকলিস্ট। নিজে দেখে বিশ্বাস করুন।</p>
                 <div className="flex gap-1 text-[#f97316]">
-                  <span className="material-symbols-outlined">star</span>
-                  <span className="material-symbols-outlined">star</span>
-                  <span className="material-symbols-outlined">star</span>
-                  <span className="material-symbols-outlined">star</span>
-                  <span className="material-symbols-outlined">star</span>
+                  <span className="material-symbols-outlined" aria-hidden="true">star</span>
+                  <span className="material-symbols-outlined" aria-hidden="true">star</span>
+                  <span className="material-symbols-outlined" aria-hidden="true">star</span>
+                  <span className="material-symbols-outlined" aria-hidden="true">star</span>
+                  <span className="material-symbols-outlined" aria-hidden="true">star</span>
                 </div>
                 <p className="text-sm font-bold mt-2">End-to-end workflows shown with real product screens</p>
               </div>
@@ -393,7 +393,7 @@ export default function LandingPage() {
                   <p className="text-slate-700 dark:text-slate-300 italic mb-6">"Show me due balances, partial payments, receipt sharing, and renewal actions in one flow."</p>
                   <div className="flex items-center gap-4">
                     <div className="size-12 rounded-full bg-primary-default/10 flex items-center justify-center">
-                      <span className="material-symbols-outlined text-primary-default">payments</span>
+                      <span className="material-symbols-outlined text-primary-default" aria-hidden="true">payments</span>
                     </div>
                     <div>
                       <p className="font-bold text-slate-900 dark:text-white">Payments Workflow</p>
@@ -405,7 +405,7 @@ export default function LandingPage() {
                   <p className="text-slate-700 dark:text-slate-300 italic mb-6">"Show me staff access, mobile check-ins, and how alerts turn into real follow-up actions."</p>
                   <div className="flex items-center gap-4">
                     <div className="size-12 rounded-full bg-primary-default/10 flex items-center justify-center">
-                      <span className="material-symbols-outlined text-primary-default">groups</span>
+                      <span className="material-symbols-outlined text-primary-default" aria-hidden="true">groups</span>
                     </div>
                     <div>
                       <p className="font-bold text-slate-900 dark:text-white">Operations Workflow</p>
@@ -429,7 +429,7 @@ export default function LandingPage() {
                   <details key={i} className="group bg-slate-50 dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700 overflow-hidden">
                     <summary className="flex items-center justify-between p-5 cursor-pointer list-none font-bold text-slate-900 dark:text-white hover:text-[#1978e5] transition-colors gap-4">
                       <span>{item.q}</span>
-                      <span className="material-symbols-outlined flex-shrink-0 text-[#1978e5] group-open:rotate-180 transition-transform duration-200">expand_more</span>
+                      <span className="material-symbols-outlined flex-shrink-0 text-[#1978e5] group-open:rotate-180 transition-transform duration-200" aria-hidden="true">expand_more</span>
                     </summary>
                     <div className="px-5 pb-5 text-slate-600 dark:text-slate-400 leading-relaxed text-sm border-t border-slate-200 dark:border-slate-700 pt-4">
                       {item.a}
@@ -509,15 +509,15 @@ export default function LandingPage() {
               <p className="text-white font-bold mb-6">Contact</p>
               <ul className="space-y-4 text-sm">
                 <li className="flex items-center gap-2">
-                  <span className="material-symbols-outlined text-sm">call</span>
+                  <span className="material-symbols-outlined text-sm" aria-hidden="true">call</span>
                   <a href="tel:+8801756625762" className="hover:text-white transition-colors">+880 1756 625762</a>
                 </li>
                 <li className="flex items-center gap-2">
-                  <span className="material-symbols-outlined text-sm">mail</span>
+                  <span className="material-symbols-outlined text-sm" aria-hidden="true">mail</span>
                   <a href="mailto:liftlegend2@gmail.com" className="hover:text-white transition-colors">liftlegend2@gmail.com</a>
                 </li>
                 <li className="flex items-center gap-2">
-                  <span className="material-symbols-outlined text-sm">location_on</span>
+                  <span className="material-symbols-outlined text-sm" aria-hidden="true">location_on</span>
                   Dhanmondi, Dhaka, Bangladesh, 1205
                 </li>
               </ul>

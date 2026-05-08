@@ -66,7 +66,7 @@ export const AdminSidebar: React.FC<AdminSidebarProps> = ({
                   onClick={() => setSidebarOpen(false)}
                   className="ml-auto size-10 flex items-center justify-center text-slate-400 hover:text-slate-600 lg:hidden rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800"
               >
-                  <span className="material-symbols-outlined text-xl">close</span>
+                  <span className="material-symbols-outlined text-xl" aria-hidden="true">close</span>
               </button>
           </div>
 
@@ -84,9 +84,9 @@ export const AdminSidebar: React.FC<AdminSidebarProps> = ({
                         title="Requires Premium Plan"
                         className="flex items-center gap-3 px-3 py-3 rounded-xl text-sm font-medium transition-all duration-200 group min-h-[44px] w-full text-left text-slate-400 dark:text-slate-600 opacity-50 cursor-not-allowed"
                       >
-                        <span className="material-symbols-outlined text-xl text-slate-300 dark:text-slate-600">{item.icon}</span>
+                        <span className="material-symbols-outlined text-xl text-slate-300 dark:text-slate-600" aria-hidden="true">{item.icon}</span>
                         <span className="flex-1">{item.label}</span>
-                        <span className="material-symbols-outlined text-sm text-amber-500" style={{ fontVariationSettings: "'FILL' 1" }}>lock</span>
+                        <span className="material-symbols-outlined text-sm text-amber-500" style={{ fontVariationSettings: "'FILL' 1" }} aria-hidden="true">lock</span>
                       </button>
                     );
                   }
@@ -140,7 +140,7 @@ export const AdminSidebar: React.FC<AdminSidebarProps> = ({
                       className="size-10 rounded-lg flex items-center justify-center text-slate-400 hover:bg-red-50 hover:text-red-500 dark:hover:bg-red-950/50 transition-colors"
                       title="Sign Out"
                   >
-                      <span className="material-symbols-outlined text-xl">logout</span>
+                      <span className="material-symbols-outlined text-xl" aria-hidden="true">logout</span>
                   </button>
               </div>
           </div>

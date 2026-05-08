@@ -42,7 +42,7 @@ export default function DashboardModeToggle({
       >
         <span>Advanced</span>
         {isAdvancedLocked && (
-          <span className="material-symbols-outlined text-sm text-amber-500">lock</span>
+          <span className="material-symbols-outlined text-sm text-amber-500" aria-hidden="true">lock</span>
         )}
       </button>
     </div>

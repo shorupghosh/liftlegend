@@ -23,31 +23,31 @@ export const LandingPricing: React.FC = () => {
             </div>
             <ul className="space-y-4 mb-10 flex-1">
               <li className="flex items-center gap-3 text-sm">
-                <span className="material-symbols-outlined text-green-500">check_circle</span>
+                <span className="material-symbols-outlined text-green-500" aria-hidden="true">check_circle</span>
                 Up to 250 Members
               </li>
               <li className="flex items-center gap-3 text-sm">
-                <span className="material-symbols-outlined text-green-500">check_circle</span>
+                <span className="material-symbols-outlined text-green-500" aria-hidden="true">check_circle</span>
                 Manual Attendance
               </li>
               <li className="flex items-center gap-3 text-sm">
-                <span className="material-symbols-outlined text-green-500">check_circle</span>
+                <span className="material-symbols-outlined text-green-500" aria-hidden="true">check_circle</span>
                 Basic Analytics
               </li>
               <li className="flex items-center gap-3 text-sm">
-                <span className="material-symbols-outlined text-green-500">check_circle</span>
+                <span className="material-symbols-outlined text-green-500" aria-hidden="true">check_circle</span>
                 Member management
               </li>
               <li className="flex items-center gap-3 text-sm">
-                <span className="material-symbols-outlined text-green-500">check_circle</span>
+                <span className="material-symbols-outlined text-green-500" aria-hidden="true">check_circle</span>
                 Membership plans
               </li>
               <li className="flex items-center gap-3 text-sm">
-                <span className="material-symbols-outlined text-green-500">check_circle</span>
+                <span className="material-symbols-outlined text-green-500" aria-hidden="true">check_circle</span>
                 Payment tracking
               </li>
               <li className="flex items-center gap-3 text-sm">
-                <span className="material-symbols-outlined text-green-500">check_circle</span>
+                <span className="material-symbols-outlined text-green-500" aria-hidden="true">check_circle</span>
                 Membership expiry tracking
               </li>
             </ul>
@@ -65,31 +65,31 @@ export const LandingPricing: React.FC = () => {
             </div>
             <ul className="space-y-4 mb-10 flex-1">
               <li className="flex items-center gap-3 text-sm">
-                <span className="material-symbols-outlined text-green-500">check_circle</span>
+                <span className="material-symbols-outlined text-green-500" aria-hidden="true">check_circle</span>
                 Up to 1200 members
               </li>
               <li className="flex items-center gap-3 text-sm">
-                <span className="material-symbols-outlined text-green-500">check_circle</span>
+                <span className="material-symbols-outlined text-green-500" aria-hidden="true">check_circle</span>
                 3 staff accounts
               </li>
               <li className="flex items-center gap-3 text-sm">
-                <span className="material-symbols-outlined text-green-500">check_circle</span>
+                <span className="material-symbols-outlined text-green-500" aria-hidden="true">check_circle</span>
                 Attendance tracking
               </li>
               <li className="flex items-center gap-3 text-sm">
-                <span className="material-symbols-outlined text-green-500">check_circle</span>
+                <span className="material-symbols-outlined text-green-500" aria-hidden="true">check_circle</span>
                 Advanced analytics dashboard
               </li>
               <li className="flex items-center gap-3 text-sm">
-                <span className="material-symbols-outlined text-green-500">check_circle</span>
+                <span className="material-symbols-outlined text-green-500" aria-hidden="true">check_circle</span>
                 Member activity tracking
               </li>
               <li className="flex items-center gap-3 text-sm">
-                <span className="material-symbols-outlined text-green-500">check_circle</span>
+                <span className="material-symbols-outlined text-green-500" aria-hidden="true">check_circle</span>
                 Export reports
               </li>
               <li className="flex items-center gap-3 text-sm">
-                <span className="material-symbols-outlined text-green-500">check_circle</span>
+                <span className="material-symbols-outlined text-green-500" aria-hidden="true">check_circle</span>
                 Priority support
               </li>
             </ul>
@@ -106,31 +106,31 @@ export const LandingPricing: React.FC = () => {
             </div>
             <ul className="space-y-4 mb-10 flex-1">
               <li className="flex items-center gap-3 text-sm">
-                <span className="material-symbols-outlined text-green-500">check_circle</span>
+                <span className="material-symbols-outlined text-green-500" aria-hidden="true">check_circle</span>
                 Unlimited Members & Staff
               </li>
               <li className="flex items-center gap-3 text-sm font-bold text-[#1978e5]">
-                <span className="material-symbols-outlined">check_circle</span>
+                <span className="material-symbols-outlined" aria-hidden="true">check_circle</span>
                 Everything in Advanced
               </li>
               <li className="flex items-center gap-3 text-sm">
-                <span className="material-symbols-outlined text-green-500">check_circle</span>
+                <span className="material-symbols-outlined text-green-500" aria-hidden="true">check_circle</span>
                 QR Code Check-in System
               </li>
               <li className="flex items-center gap-3 text-sm">
-                <span className="material-symbols-outlined text-green-500">check_circle</span>
+                <span className="material-symbols-outlined text-green-500" aria-hidden="true">check_circle</span>
                 Full Staff Management System
               </li>
               <li className="flex items-center gap-3 text-sm">
-                <span className="material-symbols-outlined text-green-500">check_circle</span>
+                <span className="material-symbols-outlined text-green-500" aria-hidden="true">check_circle</span>
                 Bulk SMS & WhatsApp Marketing
               </li>
               <li className="flex items-center gap-3 text-sm">
-                <span className="material-symbols-outlined text-green-500">check_circle</span>
+                <span className="material-symbols-outlined text-green-500" aria-hidden="true">check_circle</span>
                 Dedicated Success Manager
               </li>
               <li className="flex items-center gap-3 text-sm">
-                <span className="material-symbols-outlined text-green-500">check_circle</span>
+                <span className="material-symbols-outlined text-green-500" aria-hidden="true">check_circle</span>
                 Custom API & Integrations
               </li>
             </ul>

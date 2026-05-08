@@ -108,13 +108,13 @@ export const AdminHeader: React.FC<AdminHeaderProps> = ({
         onClick={() => setSidebarOpen(true)}
         className="flex size-11 items-center justify-center rounded-xl text-slate-500 transition-colors hover:bg-slate-100 dark:hover:bg-slate-800 lg:hidden"
       >
-        <span className="material-symbols-outlined">menu</span>
+        <span className="material-symbols-outlined" aria-hidden="true">menu</span>
       </button>
 
       {!['/admin/members', '/admin/staff', '/admin/attendance', '/admin/payments', '/admin/plans'].some(path => location.pathname.startsWith(path)) && (
         <div className="hidden max-w-md flex-1 sm:flex">
           <form onSubmit={handleSearch} className="flex w-full items-center rounded-xl border border-slate-200 bg-slate-50 px-3 py-2 dark:border-slate-700 dark:bg-slate-800">
-            <span className="material-symbols-outlined mr-2 text-lg text-slate-400">search</span>
+            <span className="material-symbols-outlined mr-2 text-lg text-slate-400" aria-hidden="true">search</span>
             <input
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
@@ -144,7 +144,7 @@ export const AdminHeader: React.FC<AdminHeaderProps> = ({
            onClick={() => navigate('/admin/settings/subscription')}
            className="hidden sm:flex items-center gap-1.5 rounded-full border border-amber-300 bg-amber-50 px-3 py-1 text-[11px] font-black uppercase tracking-widest text-amber-700 hover:bg-amber-100 transition-colors dark:border-amber-800 dark:bg-amber-950/40 dark:text-amber-200 dark:hover:bg-amber-900/60"
         >
-          <span className="material-symbols-outlined text-[14px]">hourglass_top</span>
+          <span className="material-symbols-outlined text-[14px]" aria-hidden="true">hourglass_top</span>
           {trialDaysLeft} Days Left
         </button>
       )}
@@ -154,7 +154,7 @@ export const AdminHeader: React.FC<AdminHeaderProps> = ({
            onClick={() => navigate('/admin/settings/subscription')}
            className="hidden sm:flex items-center gap-1.5 rounded-full border border-red-300 bg-red-50 px-3 py-1 text-[11px] font-black uppercase tracking-widest text-red-700 hover:bg-red-100 transition-colors dark:border-red-800 dark:bg-red-950/40 dark:text-red-200 dark:hover:bg-red-900/60"
         >
-          <span className="material-symbols-outlined text-[14px]">warning</span>
+          <span className="material-symbols-outlined text-[14px]" aria-hidden="true">warning</span>
           Trial Expired
         </button>
       )}
@@ -165,7 +165,7 @@ export const AdminHeader: React.FC<AdminHeaderProps> = ({
            className="hidden md:flex items-center gap-1.5 rounded-full border border-emerald-300 bg-emerald-50 px-3 py-1 text-[11px] font-black uppercase tracking-widest text-emerald-700 hover:bg-emerald-100 transition-colors dark:border-emerald-800 dark:bg-emerald-950/40 dark:text-emerald-200 dark:hover:bg-emerald-900/60"
            title="Leave a review for LiftLegend"
         >
-          <span className="material-symbols-outlined text-[14px]">rate_review</span>
+          <span className="material-symbols-outlined text-[14px]" aria-hidden="true">rate_review</span>
           Review Us
         </button>
       )}
@@ -188,7 +188,7 @@ export const AdminHeader: React.FC<AdminHeaderProps> = ({
         className="flex size-11 items-center justify-center rounded-xl text-slate-500 transition-colors hover:bg-slate-100 dark:hover:bg-slate-800 sm:hidden"
         title="Sign Out"
       >
-        <span className="material-symbols-outlined">logout</span>
+        <span className="material-symbols-outlined" aria-hidden="true">logout</span>
       </button>
     </header>
   );
